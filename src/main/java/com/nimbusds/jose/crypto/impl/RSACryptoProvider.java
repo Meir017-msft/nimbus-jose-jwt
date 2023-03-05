@@ -66,6 +66,12 @@ public abstract class RSACryptoProvider extends BaseJWEProvider {
 
 
 	/**
+	 * The Additional Authenticated Data (AAD).
+	 */
+	private final byte[] aad;
+
+
+	/**
 	 * The supported encryption methods by the RSA crypto provider class.
 	 */
 	public static final Set<EncryptionMethod> SUPPORTED_ENCRYPTION_METHODS = ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS;
@@ -83,10 +89,29 @@ public abstract class RSACryptoProvider extends BaseJWEProvider {
 
 
 	/**
+	 * Returns the Additional Authenticated Data (AAD).
+	 *
+	 * @return The AAD.
+	 */
+	protected byte[] getAad() {
+
+		return aad;
+	}
+
+	/**
 	 * Creates a new RSA encryption / decryption provider.
 	 */
 	protected RSACryptoProvider() {
 
+	    this(null);
+	}
+
+	/**
+	 * Creates a new RSA encryption / decryption provider.
+	 */
+	protected RSACryptoProvider(final byte[] aad) {
+
 		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS);
+		this.aad = aad;
 	}
 }

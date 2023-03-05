@@ -169,8 +169,28 @@ public class ECDHEncrypter extends ECDHCryptoProvider implements JWEEncrypter {
 	 */
 	public ECDHEncrypter(final ECPublicKey publicKey, final SecretKey contentEncryptionKey)
 		throws JOSEException {
+
+		this(publicKey, contentEncryptionKey, null);
+	}
+
+	/**
+	 * Creates a new Elliptic Curve Diffie-Hellman encrypter with an
+	 * optionally specified content encryption key (CEK).
+	 *
+	 * @param publicKey            The public EC key. Must not be
+	 *                             {@code null}.
+	 * @param contentEncryptionKey The content encryption key (CEK) to use.
+	 *                             If specified its algorithm must be "AES"
+	 *                             and its length must match the expected
+	 *                             for the JWE encryption method ("enc").
+	 *                             If {@code null} a CEK will be generated
+	 *                             for each JWE.
+	 * @throws JOSEException       If the elliptic curve is not supported.
+	 */
+	public ECDHEncrypter(final ECPublicKey publicKey, final SecretKey contentEncryptionKey, final byte[] aad)
+		throws JOSEException {
 		
-		super(Curve.forECParameterSpec(publicKey.getParams()));
+		super(Curve.forECParameterSpec(publicKey.getParams()), aad);
 		
 		this.publicKey = publicKey;
 

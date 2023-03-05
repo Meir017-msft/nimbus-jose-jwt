@@ -135,9 +135,32 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 	 *                             the expected for the JWE encryption
 	 *                             method ("enc"). If {@code null} a CEK
 	 *                             will be generated for each JWE.
+	 * @param aad                  The Additional Authenticated Data (AAD),
+	 *                             {@code null} if not specified.
 	 */
 	public RSAEncrypter(final RSAPublicKey publicKey, final SecretKey contentEncryptionKey) {
+		this(publicKey, contentEncryptionKey, null);
+	}
+
+
+	/**
+	 * Creates a new RSA encrypter with an optionally specified content
+	 * encryption key (CEK).
+	 *
+	 * @param publicKey            The public RSA key. Must not be
+	 *                             {@code null}.
+	 * @param contentEncryptionKey The content encryption key (CEK) to use.
+	 *                             If specified its algorithm must be "AES"
+	 *                             or "ChaCha20" and its length must match
+	 *                             the expected for the JWE encryption
+	 *                             method ("enc"). If {@code null} a CEK
+	 *                             will be generated for each JWE.
+	 * @param aad                  The Additional Authenticated Data (AAD),
+	 *                             {@code null} if not specified.
+	 */
+	public RSAEncrypter(final RSAPublicKey publicKey, final SecretKey contentEncryptionKey, final byte[] aad) {
 		
+		super(aad);
 		if (publicKey == null) {
 			throw new IllegalArgumentException("The public RSA key must not be null");
 		}
@@ -203,6 +226,6 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 			throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));
 		}
 
-		return ContentCryptoProvider.encrypt(header, clearText, cek, encryptedKey, getJCAContext());
+		return ContentCryptoProvider.encrypt(header, getAad(), clearText, cek, encryptedKey, getJCAContext());
 	}
 }

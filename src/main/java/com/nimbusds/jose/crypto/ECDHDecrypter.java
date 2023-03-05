@@ -187,7 +187,57 @@ public class ECDHDecrypter extends ECDHCryptoProvider implements JWEDecrypter, C
 			     final Curve curve)
 		throws JOSEException {
 
-		super(curve);
+		this(privateKey, defCritHeaders, curve, null);
+	}
+
+
+	/**
+	 * Creates a new Elliptic Curve Diffie-Hellman decrypter. This
+	 * constructor can also accept a private EC key located in a PKCS#11
+	 * store that doesn't expose the private key parameters (such as a
+	 * smart card or HSM).
+	 *
+	 * @param privateKey     The private EC key. Must not be {@code null}.
+	 * @param defCritHeaders The names of the critical header parameters
+	 *                       that are deferred to the application for
+	 *                       processing, empty set or {@code null} if none.
+	 * @param aad            The Additional Authenticated Data (AAD),
+	 *                       {@code null} if not specified.
+	 *
+	 * @throws JOSEException If the elliptic curve is not supported.
+	 */
+	public ECDHDecrypter(final ECPrivateKey privateKey,
+			     final Set<String> defCritHeaders,
+			     final byte[] aad)
+		throws JOSEException {
+
+		this(privateKey, defCritHeaders, Curve.forECParameterSpec(privateKey.getParams()), aad);
+	}
+
+
+	/**
+	 * Creates a new Elliptic Curve Diffie-Hellman decrypter. This
+	 * constructor can also accept a private EC key located in a PKCS#11
+	 * store that doesn't expose the private key parameters (such as a
+	 * smart card or HSM).
+	 *
+	 * @param privateKey     The private EC key. Must not be {@code null}.
+	 * @param defCritHeaders The names of the critical header parameters
+	 *                       that are deferred to the application for
+	 *                       processing, empty set or {@code null} if none.
+	 * @param curve          The key curve. Must not be {@code null}.
+	 * @param aad            The Additional Authenticated Data (AAD),
+	 *                       {@code null} if not specified.
+	 *
+	 * @throws JOSEException If the elliptic curve is not supported.
+	 */
+	public ECDHDecrypter(final PrivateKey privateKey,
+			     final Set<String> defCritHeaders,
+			     final Curve curve,
+			     final byte[] aad)
+		throws JOSEException {
+
+		super(curve, aad);
 
 		critPolicy.setDeferredCriticalHeaderParams(defCritHeaders);
 
