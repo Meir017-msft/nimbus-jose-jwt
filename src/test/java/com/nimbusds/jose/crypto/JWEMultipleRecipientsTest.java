@@ -18,12 +18,6 @@
 package com.nimbusds.jose.crypto;
 
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.interfaces.ECPrivateKey;
-import java.security.interfaces.ECPublicKey;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +28,11 @@ import javax.crypto.SecretKey;
 import junit.framework.TestCase;
 
 import com.nimbusds.jose.*;
-import com.nimbusds.jose.jwk.*;
+import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONArrayUtils;
 import com.nimbusds.jose.util.JSONObjectUtils;
@@ -56,23 +54,16 @@ public class JWEMultipleRecipientsTest extends TestCase {
 
 		List<JWK> keys = new ArrayList<>();
 
-		KeyPairGenerator generator = KeyPairGenerator.getInstance("EC");
-		generator.initialize(Curve.P_256.toECParameterSpec());
-		KeyPair keyPair = generator.generateKeyPair();
-		keys.add(new ECKey.Builder(Curve.P_256, (ECPublicKey)keyPair.getPublic()).
-			privateKey((ECPrivateKey) keyPair.getPrivate()).
-			keyID("ECRecipient").
-			algorithm(JWEAlgorithm.ECDH_ES_A128KW).
-			build());
+		keys.add(new ECKeyGenerator(Curve.P_256)
+			.keyID("ECRecipient")
+			.algorithm(JWEAlgorithm.ECDH_ES_A128KW)
+			.generate());
 
-		generator = KeyPairGenerator.getInstance("RSA");
-		generator.initialize(2048);
-		keyPair = generator.generateKeyPair();
-		keys.add(new RSAKey.Builder((RSAPublicKey)keyPair.getPublic()).
-			privateKey((RSAPrivateKey) keyPair.getPrivate()).
-			keyID("RSARecipient").
-			algorithm(JWEAlgorithm.RSA_OAEP_256).
-			build());
+		keys.add(new RSAKeyGenerator(2048)
+			.keyID("RSARecipient")
+			.algorithm(JWEAlgorithm.RSA_OAEP_256)
+			.generate());
+		
 		return new JWKSet(keys);
 	}
 
@@ -106,10 +97,10 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		for (JWK key : keys.getKeys()) {
 			String kid = key.getKeyID();
 			alg = JWEAlgorithm.parse(key.getAlgorithm().toString());
-			header = new JWEHeader.Builder(alg, enc).
-						compressionAlgorithm(CompressionAlgorithm.DEF).
-						keyID(kid).
-						build();
+			header = new JWEHeader.Builder(alg, enc)
+				.compressionAlgorithm(CompressionAlgorithm.DEF)
+				.keyID(kid)
+				.build();
 			jweo = new JWEObject(header, payload);
 			if (RSAEncrypter.SUPPORTED_ALGORITHMS.contains(header.getAlgorithm())) {
 				encrypter = new RSAEncrypter(key.toRSAKey().toRSAPublicKey(), cek, aad);
