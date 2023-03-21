@@ -148,6 +148,8 @@ public class ContentCryptoProvider {
 	}
 
 
+
+
 	/**
 	 * Encrypts the specified clear text (content).
 	 *
@@ -171,13 +173,45 @@ public class ContentCryptoProvider {
 					     final JWEJCAContext jcaProvider)
 		throws JOSEException {
 
+		return encrypt(header, null, clearText, cek, encryptedKey, jcaProvider);
+	}
+
+
+	/**
+	 * Encrypts the specified clear text (content).
+	 *
+	 * @param header       The final JWE header. Must not be {@code null}.
+	 * @param aad          The Additional Authenticated Data (AAD),
+	 *                     {@code null} if not specified.
+	 * @param clearText    The clear text to encrypt and optionally
+	 *                     compress. Must not be {@code null}.
+	 * @param cek          The Content Encryption Key (CEK). Must not be
+	 *                     {@code null}.
+	 * @param encryptedKey The encrypted CEK, {@code null} if not required.
+	 * @param jcaProvider  The JWE JCA provider specification. Must not be
+	 *                     {@code null}.
+	 *
+	 * @return The JWE crypto parts.
+	 *
+	 * @throws JOSEException If encryption failed.
+	 */
+	public static JWECryptoParts encrypt(final JWEHeader header,
+					     final byte[] aad,
+					     final byte[] clearText,
+					     final SecretKey cek,
+					     final Base64URL encryptedKey,
+					     final JWEJCAContext jcaProvider)
+		throws JOSEException {
+
+		// Compose the AAD
+		if (aad == null) {
+			return encrypt(header, AAD.compute(header), clearText, cek, encryptedKey, jcaProvider);
+		}
+
 		checkCEKLength(cek, header.getEncryptionMethod());
 
 		// Apply compression if instructed
 		final byte[] plainText = DeflateHelper.applyCompression(header, clearText);
-
-		// Compose the AAD
-		final byte[] aad = AAD.compute(header);
 
 		// Encrypt the plain text according to the JWE enc
 		final byte[] iv;
@@ -269,10 +303,48 @@ public class ContentCryptoProvider {
 				     final JWEJCAContext jcaProvider)
 		throws JOSEException {
 
-		checkCEKLength(cek, header.getEncryptionMethod());
+		return decrypt(header, null, encryptedKey, iv, cipherText, authTag, cek, jcaProvider);
+	}
+
+
+	/**
+	 * Decrypts the specified cipher text.
+	 *
+	 * @param header       The JWE header. Must not be {@code null}.
+	 * @param aad          The Additional Authenticated Data (AAD),
+	 *                     {@code null} if not specified.
+	 * @param encryptedKey The encrypted key, {@code null} if not
+	 *                     specified.
+	 * @param iv           The initialisation vector (IV). Must not be
+	 *                     {@code null}.
+	 * @param cipherText   The cipher text. Must not be {@code null}.
+	 * @param authTag      The authentication tag. Must not be
+	 *                     {@code null}.
+	 * @param cek          The Content Encryption Key (CEK). Must not be
+	 *                     {@code null}.
+	 * @param jcaProvider  The JWE JCA provider specification. Must not be
+	 *                     {@code null}.
+	 *
+	 * @return The clear text.
+	 *
+	 * @throws JOSEException If decryption failed.
+	 */
+	public static byte[] decrypt(final JWEHeader header,
+				     final byte[] aad,
+				     final Base64URL encryptedKey,
+				     final Base64URL iv,
+				     final Base64URL cipherText,
+				     final Base64URL authTag,
+				     final SecretKey cek,
+				     final JWEJCAContext jcaProvider)
+		throws JOSEException {
 
 		// Compose the AAD
-		byte[] aad = AAD.compute(header);
+		if (aad == null) {
+			return decrypt(header, AAD.compute(header), encryptedKey, iv, cipherText, authTag, cek, jcaProvider);
+		}
+
+		checkCEKLength(cek, header.getEncryptionMethod());
 
 		// Decrypt the cipher text according to the JWE enc
 

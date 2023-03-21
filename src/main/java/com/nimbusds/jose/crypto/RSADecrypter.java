@@ -166,11 +166,40 @@ public class RSADecrypter extends RSACryptoProvider implements JWEDecrypter, Cri
 	 *                       that are deferred to the application for
 	 *                       processing, empty set or {@code null} if none.
 	 * @param allowWeakKey   {@code true} to allow an RSA key shorter than
-	 * 	                 2048 bits.
+	 *                       2048 bits.
 	 */
 	public RSADecrypter(final PrivateKey privateKey,
 			    final Set<String> defCritHeaders,
 			    final boolean allowWeakKey) {
+
+		this(privateKey, defCritHeaders, allowWeakKey, null);
+	}
+
+
+	/**
+	 * Creates a new RSA decrypter. This constructor can also accept a
+	 * private RSA key located in a PKCS#11 store that doesn't expose the
+	 * private key parameters (such as a smart card or HSM).
+	 *
+	 * @param privateKey     The private RSA key. Its algorithm must be
+	 *                       "RSA" and its length at least 2048 bits. Note
+	 *                       that the length of an RSA key in a PKCS#11
+	 *                       store cannot be checked. Must not be
+	 *                       {@code null}.
+	 * @param defCritHeaders The names of the critical header parameters
+	 *                       that are deferred to the application for
+	 *                       processing, empty set or {@code null} if none.
+	 * @param allowWeakKey   {@code true} to allow an RSA key shorter than
+	 *                       2048 bits.
+	 * @param aad            The Additional Authenticated Data (AAD),
+	 *                       {@code null} if not specified.
+	 */
+	public RSADecrypter(final PrivateKey privateKey,
+			    final Set<String> defCritHeaders,
+			    final boolean allowWeakKey,
+			    final byte[] aad) {
+
+		super(aad);
 
 		if (! privateKey.getAlgorithm().equalsIgnoreCase("RSA")) {
 			throw new IllegalArgumentException("The private key algorithm must be RSA");
@@ -285,7 +314,7 @@ public class RSADecrypter extends RSACryptoProvider implements JWEDecrypter, Cri
 			throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));
 		}
 
-		return ContentCryptoProvider.decrypt(header, encryptedKey, iv, cipherText, authTag, cek, getJCAContext());
+		return ContentCryptoProvider.decrypt(header, getAad(), encryptedKey, iv, cipherText, authTag, cek, getJCAContext());
 	}
 	
 	
