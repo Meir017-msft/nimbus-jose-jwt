@@ -35,7 +35,7 @@ import com.nimbusds.jose.util.IntegerOverflowException;
  * JWE content encryption / decryption provider.
  *
  * @author Vladimir Dzhuvinov
- * @version 2022-09-20
+ * @version 2023-03-21
  */
 public class ContentCryptoProvider {
 
@@ -148,8 +148,6 @@ public class ContentCryptoProvider {
 	}
 
 
-
-
 	/**
 	 * Encrypts the specified clear text (content).
 	 *
@@ -173,7 +171,7 @@ public class ContentCryptoProvider {
 					     final JWEJCAContext jcaProvider)
 		throws JOSEException {
 
-		return encrypt(header, null, clearText, cek, encryptedKey, jcaProvider);
+		return encrypt(header, clearText, null, cek, encryptedKey, jcaProvider);
 	}
 
 
@@ -181,10 +179,10 @@ public class ContentCryptoProvider {
 	 * Encrypts the specified clear text (content).
 	 *
 	 * @param header       The final JWE header. Must not be {@code null}.
-	 * @param aad          The Additional Authenticated Data (AAD),
-	 *                     {@code null} if not specified.
 	 * @param clearText    The clear text to encrypt and optionally
 	 *                     compress. Must not be {@code null}.
+	 * @param aad          The Additional Authenticated Data (AAD), if
+	 *                     {@code null} the JWE header becomes the AAD.
 	 * @param cek          The Content Encryption Key (CEK). Must not be
 	 *                     {@code null}.
 	 * @param encryptedKey The encrypted CEK, {@code null} if not required.
@@ -196,16 +194,17 @@ public class ContentCryptoProvider {
 	 * @throws JOSEException If encryption failed.
 	 */
 	public static JWECryptoParts encrypt(final JWEHeader header,
-					     final byte[] aad,
 					     final byte[] clearText,
+					     final byte[] aad,
 					     final SecretKey cek,
 					     final Base64URL encryptedKey,
 					     final JWEJCAContext jcaProvider)
 		throws JOSEException {
 
-		// Compose the AAD
+		
 		if (aad == null) {
-			return encrypt(header, AAD.compute(header), clearText, cek, encryptedKey, jcaProvider);
+			// The AAD is the JWE header
+			return encrypt(header, clearText, AAD.compute(header), cek, encryptedKey, jcaProvider);
 		}
 
 		checkCEKLength(cek, header.getEncryptionMethod());
@@ -311,8 +310,8 @@ public class ContentCryptoProvider {
 	 * Decrypts the specified cipher text.
 	 *
 	 * @param header       The JWE header. Must not be {@code null}.
-	 * @param aad          The Additional Authenticated Data (AAD),
-	 *                     {@code null} if not specified.
+	 * @param aad          The Additional Authenticated Data (AAD), if
+	 *                     {@code null} the JWE header becomes the AAD.
 	 * @param encryptedKey The encrypted key, {@code null} if not
 	 *                     specified.
 	 * @param iv           The initialisation vector (IV). Must not be
@@ -338,9 +337,9 @@ public class ContentCryptoProvider {
 				     final SecretKey cek,
 				     final JWEJCAContext jcaProvider)
 		throws JOSEException {
-
-		// Compose the AAD
+		
 		if (aad == null) {
+			// The AAD is the JWE header
 			return decrypt(header, AAD.compute(header), encryptedKey, iv, cipherText, authTag, cek, jcaProvider);
 		}
 

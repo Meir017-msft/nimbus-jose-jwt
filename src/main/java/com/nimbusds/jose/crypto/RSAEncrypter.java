@@ -226,6 +226,6 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 			throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));
 		}
 
-		return ContentCryptoProvider.encrypt(header, getAad(), clearText, cek, encryptedKey, getJCAContext());
+		return ContentCryptoProvider.encrypt(header, clearText, getAad(), cek, encryptedKey, getJCAContext());
 	}
 }
