@@ -17,16 +17,6 @@
 
 package com.nimbusds.jose.crypto;
 
-import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.impl.*;
-import com.nimbusds.jose.jwk.Curve;
-import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.util.Base64URL;
-import com.nimbusds.jose.util.JSONArrayUtils;
-import com.nimbusds.jose.util.JSONObjectUtils;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -43,12 +33,19 @@ import javax.crypto.SecretKey;
 
 import junit.framework.TestCase;
 
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.jwk.*;
+import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jose.util.JSONArrayUtils;
+import com.nimbusds.jose.util.JSONObjectUtils;
+
 
 /**
  * Tests Multiple Recipients encryption and decryption.
  *
  * @author Egor Puzanov
- * @version 2023-03-11
+ * @author Vladimir Dzhuvinov
+ * @version 2023-03-21
  */
 public class MultipleRecipientsTest extends TestCase {
 
@@ -57,7 +54,7 @@ public class MultipleRecipientsTest extends TestCase {
 	private static JWKSet generateJWKSet()
 		throws Exception {
 
-		List<JWK> keys = new ArrayList<JWK>();
+		List<JWK> keys = new ArrayList<>();
 
 		KeyPairGenerator generator = KeyPairGenerator.getInstance("EC");
 		generator.initialize(Curve.P_256.toECParameterSpec());
@@ -139,17 +136,25 @@ public class MultipleRecipientsTest extends TestCase {
 		jweJsonObject.put("recipients", recipients);
 		return jweJsonObject;
 	}
+	
+	
+	private static Object getOrDefault(final Map<String, Object> jweJsonObject, final String key, final Object defaultValue) {
+		
+		Object value = jweJsonObject.get(key);
+		
+		return value != null ? value : defaultValue;
+	}
 
 
 	private static String decrypt(final Map<String, Object> jweJsonObject, final JWK key)
 		throws Exception {
 
 		final JWEAlgorithm alg = JWEAlgorithm.parse(key.getAlgorithm().toString());
-		final String protectedHeader = jweJsonObject.getOrDefault("protected", "e30").toString();
+		final String protectedHeader = getOrDefault(jweJsonObject, "protected", "e30").toString();
 		final byte[] aad = protectedHeader.getBytes();
 		final String kid = key.getKeyID();
 		Map<String, Object> headerMap = JSONObjectUtils.parse(Base64URL.from(protectedHeader).decodeToString());
-		String encryptedKey = jweJsonObject.getOrDefault("encrypted_key", "").toString();
+		String encryptedKey = getOrDefault(jweJsonObject, "encrypted_key", "").toString();
 		List<Map<String, Object>> recipients = (List<Map<String, Object>>) jweJsonObject.get("recipients");
 		for (Map<String, Object> recipient : recipients) {
 			Map<String, Object> recipientHeader = (Map<String, Object>) recipient.get("header");
