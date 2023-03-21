@@ -1542,3 +1542,15 @@ version 9.31 (2023-02-21)
       libraries that output JSON numbers in the "sub" claim.
     * JWTClaimsSet.parse must throw ParseException on "sub" and "aud" claims of
       illegal JSON type (iss #511).
+
+version 9.32 (2023-03-21)
+    * Updates ContentCryptoProvider to support passing of an optional AAD. If
+      no AAD is specified the JWE header becomes the AAD (default behaviour).
+    * Updates the RSAEncrypter and RSADecrypter to support passing of an
+      optional AAD. If no AAD is specified the JWE header becomes the AAD
+      (default behaviour). Intended to support JWE JSON serialisation to
+      multiple recipients.
+    * Updates the ECDHEncrypter and ECDHDecrypter to support passing of an
+      optional AAD. If no AAD is specified the JWE header becomes the AAD
+      (default behaviour). Intended to support JWE JSON serialisation to
+      multiple recipients.
