@@ -67,7 +67,7 @@ import com.nimbusds.jose.util.Base64URL;
  * @author Tim McLean
  * @author Vladimir Dzhuvinov
  * @author Fernando González Callejas
- * @version 2019-01-24
+ * @version 2023-03-21
  */
 public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 
@@ -134,7 +134,8 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 	 *
 	 * @param curve The elliptic curve. Must be supported and not
 	 *              {@code null}.
-	 * @param aad   Additional Authenticated Data (AAD). {@code null} if not specfified.
+	 * @param aad   The Additional Authenticated Data (AAD), if
+	 *              {@code null} the JWE header becomes the AAD.
 	 *
 	 * @throws JOSEException If the elliptic curve is not supported.
 	 */
@@ -161,9 +162,9 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 	/**
 	 * Returns the Additional Authenticated Data (AAD).
 	 *
-	 * @return The AAD.
+	 * @return The AAD, {@code null} if not specified.
 	 */
-	protected byte[] getAad() {
+	protected byte[] getAAD() {
 
 		return aad;
 	}
@@ -209,6 +210,7 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 		return this.encryptWithZ(header, Z, clearText, null);
 	}
 
+	
 	/**
 	 * Encrypts the specified plaintext using the specified shared secret
 	 * ("Z") and, if provided, the content encryption key (CEK).
@@ -244,7 +246,7 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 			throw new JOSEException("Unexpected JWE ECDH algorithm mode: " + algMode);
 		}
 
-		return ContentCryptoProvider.encrypt(header, clearText, getAad(), cek, encryptedKey, getJCAContext());
+		return ContentCryptoProvider.encrypt(header, clearText, getAAD(), cek, encryptedKey, getJCAContext());
 	}
 
 
@@ -280,6 +282,6 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 			throw new JOSEException("Unexpected JWE ECDH algorithm mode: " + algMode);
 		}
 
-		return ContentCryptoProvider.decrypt(header, getAad(), encryptedKey, iv, cipherText, authTag, cek, getJCAContext());
+		return ContentCryptoProvider.decrypt(header, getAAD(), encryptedKey, iv, cipherText, authTag, cek, getJCAContext());
 	}
 }

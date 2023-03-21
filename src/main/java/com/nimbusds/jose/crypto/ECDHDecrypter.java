@@ -201,8 +201,8 @@ public class ECDHDecrypter extends ECDHCryptoProvider implements JWEDecrypter, C
 	 * @param defCritHeaders The names of the critical header parameters
 	 *                       that are deferred to the application for
 	 *                       processing, empty set or {@code null} if none.
-	 * @param aad            The Additional Authenticated Data (AAD),
-	 *                       {@code null} if not specified.
+	 * @param aad            The Additional Authenticated Data (AAD), if
+	 *                       {@code null} the JWE header becomes the AAD.
 	 *
 	 * @throws JOSEException If the elliptic curve is not supported.
 	 */

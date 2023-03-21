@@ -72,7 +72,7 @@ import com.nimbusds.jose.util.Base64URL;
  * @author David Ortiz
  * @author Vladimir Dzhuvinov
  * @author Dimitar A. Stoikov
- * @version 2021-09-23
+ * @version 2023-03-21
  */
 @ThreadSafe
 public class RSADecrypter extends RSACryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
@@ -191,8 +191,8 @@ public class RSADecrypter extends RSACryptoProvider implements JWEDecrypter, Cri
 	 *                       processing, empty set or {@code null} if none.
 	 * @param allowWeakKey   {@code true} to allow an RSA key shorter than
 	 *                       2048 bits.
-	 * @param aad            The Additional Authenticated Data (AAD),
-	 *                       {@code null} if not specified.
+	 * @param aad            The Additional Authenticated Data (AAD), if
+	 *                       {@code null} the JWE header becomes the AAD.
 	 */
 	public RSADecrypter(final PrivateKey privateKey,
 			    final Set<String> defCritHeaders,
@@ -314,7 +314,7 @@ public class RSADecrypter extends RSACryptoProvider implements JWEDecrypter, Cri
 			throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));
 		}
 
-		return ContentCryptoProvider.decrypt(header, getAad(), encryptedKey, iv, cipherText, authTag, cek, getJCAContext());
+		return ContentCryptoProvider.decrypt(header, getAAD(), encryptedKey, iv, cipherText, authTag, cek, getJCAContext());
 	}
 	
 	

@@ -18,19 +18,16 @@
 package com.nimbusds.jose.crypto;
 
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
+import java.security.*;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECParameterSpec;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
-
 import javax.crypto.SecretKey;
+
+import net.jcip.annotations.ThreadSafe;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWECryptoParts;
@@ -40,8 +37,6 @@ import com.nimbusds.jose.crypto.impl.ECDH;
 import com.nimbusds.jose.crypto.impl.ECDHCryptoProvider;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
-
-import net.jcip.annotations.ThreadSafe;
 
 
 /**
@@ -91,7 +86,7 @@ import net.jcip.annotations.ThreadSafe;
  * @author Tim McLean
  * @author Vladimir Dzhuvinov
  * @author Fernando González Callejas
- * @version 2019-01-24
+ * @version 2023-03-21
  */
 @ThreadSafe
 public class ECDHEncrypter extends ECDHCryptoProvider implements JWEEncrypter {
@@ -173,6 +168,7 @@ public class ECDHEncrypter extends ECDHCryptoProvider implements JWEEncrypter {
 		this(publicKey, contentEncryptionKey, null);
 	}
 
+	
 	/**
 	 * Creates a new Elliptic Curve Diffie-Hellman encrypter with an
 	 * optionally specified content encryption key (CEK).
@@ -185,7 +181,11 @@ public class ECDHEncrypter extends ECDHCryptoProvider implements JWEEncrypter {
 	 *                             for the JWE encryption method ("enc").
 	 *                             If {@code null} a CEK will be generated
 	 *                             for each JWE.
-	 * @throws JOSEException       If the elliptic curve is not supported.
+	 * @param aad                  The Additional Authenticated Data (AAD),
+	 *                             if {@code null} the JWE header becomes
+	 *                             the AAD.
+	 *
+	 * @throws JOSEException If the elliptic curve is not supported.
 	 */
 	public ECDHEncrypter(final ECPublicKey publicKey, final SecretKey contentEncryptionKey, final byte[] aad)
 		throws JOSEException {

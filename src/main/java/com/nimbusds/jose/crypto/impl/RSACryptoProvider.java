@@ -54,7 +54,7 @@ import com.nimbusds.jose.JWEAlgorithm;
  * 
  * @author David Ortiz
  * @author Vladimir Dzhuvinov
- * @version 2021-09-23
+ * @version 2023-03-21
  */
 public abstract class RSACryptoProvider extends BaseJWEProvider {
 
@@ -89,29 +89,34 @@ public abstract class RSACryptoProvider extends BaseJWEProvider {
 
 
 	/**
-	 * Returns the Additional Authenticated Data (AAD).
-	 *
-	 * @return The AAD.
-	 */
-	protected byte[] getAad() {
-
-		return aad;
-	}
-
-	/**
 	 * Creates a new RSA encryption / decryption provider.
 	 */
 	protected RSACryptoProvider() {
 
 	    this(null);
 	}
-
+	
+	
 	/**
 	 * Creates a new RSA encryption / decryption provider.
+	 *
+	 * @param aad The Additional Authenticated Data (AAD), if {@code null}
+	 *            the JWE header becomes the AAD.
 	 */
 	protected RSACryptoProvider(final byte[] aad) {
 
 		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS);
 		this.aad = aad;
+	}
+	
+	
+	/**
+	 * Returns the Additional Authenticated Data (AAD).
+	 *
+	 * @return The AAD, {@code null} if not specified.
+	 */
+	protected byte[] getAAD() {
+		
+		return aad;
 	}
 }

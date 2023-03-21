@@ -79,7 +79,7 @@ import com.nimbusds.jose.util.Base64URL;
  * @author David Ortiz
  * @author Vladimir Dzhuvinov
  * @author Jun Yu
- * @version 2021-09-26
+ * @version 2023-03-21
  */
 @ThreadSafe
 public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
@@ -135,8 +135,6 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 	 *                             the expected for the JWE encryption
 	 *                             method ("enc"). If {@code null} a CEK
 	 *                             will be generated for each JWE.
-	 * @param aad                  The Additional Authenticated Data (AAD),
-	 *                             {@code null} if not specified.
 	 */
 	public RSAEncrypter(final RSAPublicKey publicKey, final SecretKey contentEncryptionKey) {
 		this(publicKey, contentEncryptionKey, null);
@@ -156,7 +154,8 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 	 *                             method ("enc"). If {@code null} a CEK
 	 *                             will be generated for each JWE.
 	 * @param aad                  The Additional Authenticated Data (AAD),
-	 *                             {@code null} if not specified.
+	 *                             if {@code null} the JWE header becomes
+	 *                             the AAD.
 	 */
 	public RSAEncrypter(final RSAPublicKey publicKey, final SecretKey contentEncryptionKey, final byte[] aad) {
 		
@@ -226,6 +225,6 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 			throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));
 		}
 
-		return ContentCryptoProvider.encrypt(header, clearText, getAad(), cek, encryptedKey, getJCAContext());
+		return ContentCryptoProvider.encrypt(header, clearText, getAAD(), cek, encryptedKey, getJCAContext());
 	}
 }
