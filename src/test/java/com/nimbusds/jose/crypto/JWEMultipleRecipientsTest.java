@@ -47,9 +47,9 @@ import com.nimbusds.jose.util.JSONObjectUtils;
  * @author Vladimir Dzhuvinov
  * @version 2023-03-21
  */
-public class MultipleRecipientsTest extends TestCase {
+public class JWEMultipleRecipientsTest extends TestCase {
 
-	private static final Logger LOGGER = Logger.getLogger(MultipleRecipientsTest.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(JWEMultipleRecipientsTest.class.getName());
 
 	private static JWKSet generateJWKSet()
 		throws Exception {
