@@ -155,6 +155,33 @@ public class JWEObjectJSONTest extends TestCase {
 		assertEquals(rawJson.keySet(), jwe.toGeneralJSONObject().keySet());
 	}
 
+	public void testAADParsing()
+		throws Exception {
+
+		String aad = "BCNhlw39FueuKrwH";
+		Map<String, Object> rawJson = JSONObjectUtils.parse(jweGeneralJsonString);
+		rawJson.put("aad", aad);
+
+		JWEObjectJSON jwe = JWEObjectJSON.parse(rawJson);
+
+		assertEquals(rawJson.get("protected").toString() + "." + aad, new String(jwe.getAAD()));
+		assertEquals(aad, jwe.toFlattenedJSONObject().get("aad").toString());
+	}
+
+	public void testHeaderDuplicates()
+		throws Exception {
+
+		Map<String, Object> rawJson = JSONObjectUtils.parse(jweGeneralJsonString);
+
+		rawJson.put("unprotected", JSONObjectUtils.parse("{\"kid\":\"AESRecipient\",\"alg\":\"A128KW\"}"));
+
+		try {
+			JWEObjectJSON jwe = JWEObjectJSON.parse(rawJson);
+			fail();
+		} catch (Exception e) {
+			assertEquals("The parameters in the JWE protected header and the unprotected header must be disjoint", e.getMessage());
+		}
+	}
 
 	public void testRejectUnsupportedJWEAlgorithmOnEncrypt() {
 
