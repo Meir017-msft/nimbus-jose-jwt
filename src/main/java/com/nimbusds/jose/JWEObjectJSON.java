@@ -681,22 +681,6 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 			aadSB = aadSB.append(".").append(aad.toString());
 		}
 
-		if (jsonObject.containsKey("recipients")) {
-			Map<String, Object>[] recipients = JSONObjectUtils.getJSONObjectArray(jsonObject, "recipients");
-			if (recipients == null || recipients.length == 0) {
-				throw new ParseException("The \"recipients\" member must be present in general JSON Serialization", 0);
-			}
-			for (Map<String, Object> recipientJSONObject: recipients) {
-				UnprotectedHeader header = UnprotectedHeader.parse(JSONObjectUtils.getJSONObject(recipientJSONObject, "header"));
-				Base64URL encryptedKey = JSONObjectUtils.getBase64URL(recipientJSONObject, "encrypted_key");
-				recipientList.add(new Recipient(header, encryptedKey));
-			}
-		} else {
-			Base64URL encryptedKey = JSONObjectUtils.getBase64URL(jsonObject, "encrypted_key");
-			recipientList.add(new Recipient(unprotected, encryptedKey));
-			unprotected = null;
-		}
-
 		if (unprotected != null) {
 			try {
 				ensureDisjoint(jweHeaderMap, unprotected);
@@ -706,14 +690,30 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 			jweHeaderMap.putAll(unprotected.toJSONObject());
 		}
 
-		try {
-			UnprotectedHeader recipientHeader = recipientList.get(0).getHeader();
-			if (recipientHeader != null) {
+		if (jsonObject.containsKey("recipients")) {
+			Map<String, Object>[] recipients = JSONObjectUtils.getJSONObjectArray(jsonObject, "recipients");
+			if (recipients == null || recipients.length == 0) {
+				throw new ParseException("The \"recipients\" member must be present in general JSON Serialization", 0);
+			}
+			for (Map<String, Object> recipientJSONObject: recipients) {
+				UnprotectedHeader header = UnprotectedHeader.parse(JSONObjectUtils.getJSONObject(recipientJSONObject, "header"));
 				try {
-					ensureDisjoint(jweHeaderMap, recipientHeader);
+					ensureDisjoint(jweHeaderMap, header);
 				} catch (IllegalHeaderException e) {
 					throw new ParseException(e.getMessage(), 0);
 				}
+				Base64URL encryptedKey = JSONObjectUtils.getBase64URL(recipientJSONObject, "encrypted_key");
+				recipientList.add(new Recipient(header, encryptedKey));
+			}
+		} else {
+			Base64URL encryptedKey = JSONObjectUtils.getBase64URL(jsonObject, "encrypted_key");
+			recipientList.add(new Recipient(unprotected, encryptedKey));
+			unprotected = null;
+		}
+
+		try {
+			UnprotectedHeader recipientHeader = recipientList.get(0).getHeader();
+			if (recipientHeader != null) {
 				jweHeaderMap.putAll(recipientHeader.toJSONObject());
 			}
 			jweHeader = JWEHeader.parse(jweHeaderMap);
