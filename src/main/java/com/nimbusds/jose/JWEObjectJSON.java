@@ -166,7 +166,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * The initialisation vector, {@code null} if not generated or 
+	 * The initialisation vector, {@code null} if not generated or
 	 * applicable.
 	 */
 	private Base64URL iv;
@@ -229,14 +229,29 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Creates a new to-be-encrypted JSON Web Encryption (JWE) object with 
-	 * the specified header and payload. The initial state will be 
+	 * Creates a new to-be-encrypted JSON Web Encryption (JWE) object with
+	 * the specified header and payload. The initial state will be
 	 * {@link State#UNENCRYPTED unencrypted}.
 	 *
 	 * @param header  The JWE header. Must not be {@code null}.
 	 * @param payload The payload. Must not be {@code null}.
 	 */
 	public JWEObjectJSON(final JWEHeader header, final Payload payload) {
+
+	    this(header, payload, null);
+	}
+
+
+	/**
+	 * Creates a new to-be-encrypted JSON Web Encryption (JWE) object with
+	 * the specified header, payload and aad. The initial state will be
+	 * {@link State#UNENCRYPTED unencrypted}.
+	 *
+	 * @param header  The JWE header. Must not be {@code null}.
+	 * @param payload The payload. Must not be {@code null}.
+	 * @param aad     The additional authenticated data. Must not be {@code null}.
+	 */
+	public JWEObjectJSON(final JWEHeader header, final Payload payload, final byte[] aad) {
 
 		super(payload);
 
@@ -249,8 +264,13 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		}
 
 		setPayload(payload);
-		cipherText = null;
-		state = State.UNENCRYPTED;
+		if (aad != null) {
+			this.aad = aad;
+		} else {
+			this.aad = AAD.compute(header);;
+		}
+		this.cipherText = null;
+		this.state = State.UNENCRYPTED;
 	}
 
 
@@ -337,7 +357,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	/**
 	 * Returns the initialisation vector (IV) of this JWE object.
 	 *
-	 * @return The initialisation vector (IV), {@code null} if not 
+	 * @return The initialisation vector (IV), {@code null} if not
 	 *         applicable or the JWE object has not been encrypted yet.
 	 */
 	public Base64URL getIV() {
@@ -426,7 +446,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 * Ensures the current state is {@link State#ENCRYPTED encrypted} or
 	 * {@link State#DECRYPTED decrypted}.
 	 *
-	 * @throws IllegalStateException If the current state is not encrypted 
+	 * @throws IllegalStateException If the current state is not encrypted
 	 *                               or decrypted.
 	 */
 	private void ensureEncryptedOrDecryptedState() {
@@ -437,7 +457,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Ensures the specified JWE encrypter supports the algorithms of this 
+	 * Ensures the specified JWE encrypter supports the algorithms of this
 	 * JWE object.
 	 *
 	 * @throws JOSEException If the JWE algorithms are not supported.
@@ -458,15 +478,15 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Encrypts this JWE object with the specified encrypter. The JWE 
+	 * Encrypts this JWE object with the specified encrypter. The JWE
 	 * object must be in an {@link State#UNENCRYPTED unencrypted} state.
 	 *
 	 * @param encrypter The JWE encrypter. Must not be {@code null}.
 	 *
-	 * @throws IllegalStateException If the JWE object is not in an 
+	 * @throws IllegalStateException If the JWE object is not in an
 	 *                               {@link State#UNENCRYPTED unencrypted
 	 *                               state}.
-	 * @throws JOSEException         If the JWE object couldn't be 
+	 * @throws JOSEException         If the JWE object couldn't be
 	 *                               encrypted.
 	 */
 	public synchronized void encrypt(final JWEEncrypter encrypter)
@@ -512,15 +532,15 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Decrypts this JWE object with the specified decrypter. The JWE 
+	 * Decrypts this JWE object with the specified decrypter. The JWE
 	 * object must be in a {@link State#ENCRYPTED encrypted} state.
 	 *
 	 * @param decrypter The JWE decrypter. Must not be {@code null}.
 	 *
-	 * @throws IllegalStateException If the JWE object is not in an 
+	 * @throws IllegalStateException If the JWE object is not in an
 	 *                               {@link State#ENCRYPTED encrypted
 	 *                               state}.
-	 * @throws JOSEException         If the JWE object couldn't be 
+	 * @throws JOSEException         If the JWE object couldn't be
 	 *                               decrypted.
 	 */
 	public synchronized void decrypt(final JWEDecrypter decrypter)
