@@ -31,8 +31,8 @@ import com.nimbusds.jose.*;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jose.jwk.KeyType;
+import com.nimbusds.jose.jwk.gen.*;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONArrayUtils;
 import com.nimbusds.jose.util.JSONObjectUtils;
@@ -49,7 +49,7 @@ public class JWEMultipleRecipientsTest extends TestCase {
 
 	private static final Logger LOGGER = Logger.getLogger(JWEMultipleRecipientsTest.class.getName());
 
-	private static JWKSet generateJWKSet()
+	private static JWKSet generateJWKSet(final EncryptionMethod enc)
 		throws Exception {
 
 		List<JWK> keys = new ArrayList<>();
@@ -63,122 +63,49 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			.keyID("RSARecipient")
 			.algorithm(JWEAlgorithm.RSA_OAEP_256)
 			.generate());
-		
+
+		keys.add(new OctetKeyPairGenerator(Curve.X25519)
+			.keyID("X25519Recipient")
+			.algorithm(JWEAlgorithm.ECDH_ES_A128KW)
+			.generate());
+
+		keys.add(new OctetSequenceKeyGenerator(128)
+			.keyID("AESRecipient")
+			.algorithm(JWEAlgorithm.A128KW)
+			.generate());
+
+		keys.add(new OctetSequenceKeyGenerator(enc.cekBitLength())
+			.keyID("DirRecipient")
+			.algorithm(JWEAlgorithm.DIR)
+			.generate());
+
 		return new JWKSet(keys);
 	}
 
-	private static SecretKey generateCEK(final int keySize)
-		throws Exception {
-
-		KeyGenerator generator = KeyGenerator.getInstance("AES");
-		generator.init(keySize);
-		return generator.generateKey();
-	}
-
-	private static Map<String, Object> encrypt(final String plainText, final JWKSet keys)
-		throws Exception {
-
-		final EncryptionMethod enc = EncryptionMethod.A256GCM;
-		final SecretKey cek = generateCEK(enc.cekBitLength());
-
-		JWEObject jweo;
-		JWEEncrypter encrypter;
-		Map<String, Object> jweJsonObject = JSONObjectUtils.newJSONObject();
-		JWEAlgorithm alg  = JWEAlgorithm.RSA_OAEP_256;
-		Payload payload = new Payload(plainText);
-		JWEHeader header = new JWEHeader.Builder(alg, enc).
-						compressionAlgorithm(CompressionAlgorithm.DEF).
-						build();
-		Map<String, Object> aadMap = header.toJSONObject();
-		aadMap.remove("alg");
-		jweJsonObject.put("protected", Base64URL.encode(JSONObjectUtils.toJSONString(aadMap)).toString());
-		final byte[] aad = jweJsonObject.get("protected").toString().getBytes();
-		List<Object> recipients = JSONArrayUtils.newJSONArray();
-		for (JWK key : keys.getKeys()) {
-			String kid = key.getKeyID();
-			alg = JWEAlgorithm.parse(key.getAlgorithm().toString());
-			header = new JWEHeader.Builder(alg, enc)
-				.compressionAlgorithm(CompressionAlgorithm.DEF)
-				.keyID(kid)
-				.build();
-			jweo = new JWEObject(header, payload);
-			if (RSAEncrypter.SUPPORTED_ALGORITHMS.contains(header.getAlgorithm())) {
-				encrypter = new RSAEncrypter(key.toRSAKey().toRSAPublicKey(), cek);
-			} else if (ECDHEncrypter.SUPPORTED_ALGORITHMS.contains(header.getAlgorithm())) {
-				encrypter = new ECDHEncrypter(key.toECKey().toECPublicKey(), cek);
-			} else {
-				continue;
-			}
-			jweo.encrypt(encrypter);
-			Map<String, Object> recipientsHeader = jweo.getHeader().toJSONObject();
-			recipientsHeader.remove("enc");
-			recipientsHeader.remove("zip");
-			Map<String, Object> recipient = JSONObjectUtils.newJSONObject();
-			recipient.put("header", recipientsHeader);
-			recipient.put("encrypted_key", jweo.getEncryptedKey().toString());
-			recipients.add(recipient);
-			if (!jweJsonObject.containsKey("ciphertext")) {
-				payload = new Payload("");
-				jweJsonObject.put("iv", jweo.getIV().toString());
-				jweJsonObject.put("ciphertext", jweo.getCipherText().toString());
-				jweJsonObject.put("tag", jweo.getAuthTag().toString());
-			}
-		}
-		jweJsonObject.put("recipients", recipients);
-		return jweJsonObject;
-	}
-	
-	
-	private static Object getOrDefault(final Map<String, Object> jweJsonObject, final String key, final Object defaultValue) {
-		
-		Object value = jweJsonObject.get(key);
-		
-		return value != null ? value : defaultValue;
-	}
-
-
-	private static String decrypt(final Map<String, Object> jweJsonObject, final JWK key)
-		throws Exception {
-
-		final JWEAlgorithm alg = JWEAlgorithm.parse(key.getAlgorithm().toString());
-		final String protectedHeader = getOrDefault(jweJsonObject, "protected", "e30").toString();
-		final byte[] aad = protectedHeader.getBytes();
-		final String kid = key.getKeyID();
-		Map<String, Object> headerMap = JSONObjectUtils.parse(Base64URL.from(protectedHeader).decodeToString());
-		String encryptedKey = getOrDefault(jweJsonObject, "encrypted_key", "").toString();
-		List<Map<String, Object>> recipients = (List<Map<String, Object>>) jweJsonObject.get("recipients");
-		for (Map<String, Object> recipient : recipients) {
-			Map<String, Object> recipientHeader = (Map<String, Object>) recipient.get("header");
-			if (kid.equals(recipientHeader.get("kid").toString())) {
-				encryptedKey = recipient.get("encrypted_key").toString();
-				headerMap.putAll(recipientHeader);
-				break;
-			}
-		}
-		JWEObject jweo = new JWEObject( Base64URL.encode(JSONObjectUtils.toJSONString(headerMap)),
-						Base64URL.from(encryptedKey),
-						Base64URL.from((String) jweJsonObject.get("iv")),
-						Base64URL.from((String) jweJsonObject.get("ciphertext")),
-						Base64URL.from((String) jweJsonObject.get("tag")));
-		if (RSADecrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
-			jweo.decrypt(new RSADecrypter(key.toRSAKey().toRSAPrivateKey(), null, false));
-		} else if (ECDHDecrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
-			jweo.decrypt(new ECDHDecrypter(key.toECKey().toECPrivateKey(), null));
-		}
-		return jweo.getPayload().toString();
-	}
 
 	public void testMultipleRecipients()
 		throws Exception {
 
 		final String plainText = "Hello world!";
+		final EncryptionMethod enc = EncryptionMethod.A256GCM;
+		final JWKSet keys = generateJWKSet(enc);
+		final SecretKey cek = keys.getKeyByKeyId("DirRecipient").toOctetSequenceKey().toSecretKey("AES");
 
-		final JWKSet keys = generateJWKSet();
-		Map<String, Object> jweJsonObject = encrypt(plainText, keys);
+		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.DIR, enc)
+						.compressionAlgorithm(CompressionAlgorithm.DEF)
+						.build();
+		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
+		JWEEncrypter encrypter = new MultiEncrypter(keys, cek);
 
-		LOGGER.info("JWE JSON Object: " + JSONObjectUtils.toJSONString(jweJsonObject));
+		jwe.encrypt(encrypter);
+		String json = jwe.serializeGeneral();
 
-		assertEquals(plainText, decrypt(jweJsonObject, keys.getKeyByKeyId("ECRecipient")));
-		assertEquals(plainText, decrypt(jweJsonObject, keys.getKeyByKeyId("RSARecipient")));
+		LOGGER.info("JWE JSON Object: " + json);
+
+		for (JWK key : keys.getKeys()) {
+			jwe = JWEObjectJSON.parse(json);
+			jwe.decrypt(new MultiDecrypter(key));
+			assertEquals(plainText, jwe.getPayload().toString());
+		}
 	}
 }
