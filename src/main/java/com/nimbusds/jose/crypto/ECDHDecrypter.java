@@ -30,6 +30,7 @@ import com.nimbusds.jose.CriticalHeaderParamsAware;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEDecrypter;
 import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.CriticalHeaderParamsDeferral;
 import com.nimbusds.jose.crypto.impl.ECDH;
 import com.nimbusds.jose.crypto.impl.ECDHCryptoProvider;
@@ -84,7 +85,8 @@ import com.nimbusds.jose.util.Base64URL;
  * </ul>
  *
  * @author Vladimir Dzhuvinov
- * @version 2018-12-12
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 public class ECDHDecrypter extends ECDHCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
 
@@ -187,57 +189,7 @@ public class ECDHDecrypter extends ECDHCryptoProvider implements JWEDecrypter, C
 			     final Curve curve)
 		throws JOSEException {
 
-		this(privateKey, defCritHeaders, curve, null);
-	}
-
-
-	/**
-	 * Creates a new Elliptic Curve Diffie-Hellman decrypter. This
-	 * constructor can also accept a private EC key located in a PKCS#11
-	 * store that doesn't expose the private key parameters (such as a
-	 * smart card or HSM).
-	 *
-	 * @param privateKey     The private EC key. Must not be {@code null}.
-	 * @param defCritHeaders The names of the critical header parameters
-	 *                       that are deferred to the application for
-	 *                       processing, empty set or {@code null} if none.
-	 * @param aad            The Additional Authenticated Data (AAD), if
-	 *                       {@code null} the JWE header becomes the AAD.
-	 *
-	 * @throws JOSEException If the elliptic curve is not supported.
-	 */
-	public ECDHDecrypter(final ECPrivateKey privateKey,
-			     final Set<String> defCritHeaders,
-			     final byte[] aad)
-		throws JOSEException {
-
-		this(privateKey, defCritHeaders, Curve.forECParameterSpec(privateKey.getParams()), aad);
-	}
-
-
-	/**
-	 * Creates a new Elliptic Curve Diffie-Hellman decrypter. This
-	 * constructor can also accept a private EC key located in a PKCS#11
-	 * store that doesn't expose the private key parameters (such as a
-	 * smart card or HSM).
-	 *
-	 * @param privateKey     The private EC key. Must not be {@code null}.
-	 * @param defCritHeaders The names of the critical header parameters
-	 *                       that are deferred to the application for
-	 *                       processing, empty set or {@code null} if none.
-	 * @param curve          The key curve. Must not be {@code null}.
-	 * @param aad            The Additional Authenticated Data (AAD),
-	 *                       {@code null} if not specified.
-	 *
-	 * @throws JOSEException If the elliptic curve is not supported.
-	 */
-	public ECDHDecrypter(final PrivateKey privateKey,
-			     final Set<String> defCritHeaders,
-			     final Curve curve,
-			     final byte[] aad)
-		throws JOSEException {
-
-		super(curve, aad);
+		super(curve);
 
 		critPolicy.setDeferredCriticalHeaderParams(defCritHeaders);
 
@@ -280,12 +232,48 @@ public class ECDHDecrypter extends ECDHCryptoProvider implements JWEDecrypter, C
 	}
 
 
+	/**
+	 * Decrypts the specified cipher text of a {@link JWEObject JWE Object}.
+	 *
+	 * @param header       The JSON Web Encryption (JWE) header. Must
+	 *                     specify a supported JWE algorithm and method.
+	 *                     Must not be {@code null}.
+	 * @param encryptedKey The encrypted key, {@code null} if not required
+	 *                     by the JWE algorithm.
+	 * @param iv           The initialisation vector, {@code null} if not
+	 *                     required by the JWE algorithm.
+	 * @param cipherText   The cipher text to decrypt. Must not be
+	 *                     {@code null}.
+	 * @param authTag      The authentication tag, {@code null} if not
+	 *                     required.
+	 *
+	 * @return The clear text.
+	 *
+	 * @throws JOSEException If the JWE algorithm or method is not
+	 *                       supported, if a critical header parameter is
+	 *                       not supported or marked for deferral to the
+	 *                       application, or if decryption failed for some
+	 *                       other reason.
+	 */
+	@Deprecated
+	public byte[] decrypt(final JWEHeader header,
+		       final Base64URL encryptedKey,
+		       final Base64URL iv,
+		       final Base64URL cipherText,
+		       final Base64URL authTag)
+		throws JOSEException {
+
+		return decrypt(header, encryptedKey, iv, cipherText, authTag, AAD.compute(header));
+	}
+
+
 	@Override
 	public byte[] decrypt(final JWEHeader header,
 			      final Base64URL encryptedKey,
 			      final Base64URL iv,
 			      final Base64URL cipherText,
-			      final Base64URL authTag)
+			      final Base64URL authTag,
+			      final byte[] aad)
 		throws JOSEException {
 
 		critPolicy.ensureHeaderPasses(header);
@@ -317,6 +305,6 @@ public class ECDHDecrypter extends ECDHCryptoProvider implements JWEDecrypter, C
 			privateKey,
 			getJCAContext().getKeyEncryptionProvider());
 
-		return decryptWithZ(header, Z, encryptedKey, iv, cipherText, authTag);
+		return decryptWithZ(header, aad, Z, encryptedKey, iv, cipherText, authTag);
 	}
 }

@@ -43,7 +43,7 @@ import com.nimbusds.jose.util.JSONObjectUtils;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-03-21
+ * @version 2023-03-26
  */
 public class JWEMultipleRecipientsTest extends TestCase {
 
@@ -103,9 +103,9 @@ public class JWEMultipleRecipientsTest extends TestCase {
 				.build();
 			jweo = new JWEObject(header, payload);
 			if (RSAEncrypter.SUPPORTED_ALGORITHMS.contains(header.getAlgorithm())) {
-				encrypter = new RSAEncrypter(key.toRSAKey().toRSAPublicKey(), cek, aad);
+				encrypter = new RSAEncrypter(key.toRSAKey().toRSAPublicKey(), cek);
 			} else if (ECDHEncrypter.SUPPORTED_ALGORITHMS.contains(header.getAlgorithm())) {
-				encrypter = new ECDHEncrypter(key.toECKey().toECPublicKey(), cek, aad);
+				encrypter = new ECDHEncrypter(key.toECKey().toECPublicKey(), cek);
 			} else {
 				continue;
 			}
@@ -161,9 +161,9 @@ public class JWEMultipleRecipientsTest extends TestCase {
 						Base64URL.from((String) jweJsonObject.get("ciphertext")),
 						Base64URL.from((String) jweJsonObject.get("tag")));
 		if (RSADecrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
-			jweo.decrypt(new RSADecrypter(key.toRSAKey().toRSAPrivateKey(), null, false, aad));
+			jweo.decrypt(new RSADecrypter(key.toRSAKey().toRSAPrivateKey(), null, false));
 		} else if (ECDHDecrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
-			jweo.decrypt(new ECDHDecrypter(key.toECKey().toECPrivateKey(), null, aad));
+			jweo.decrypt(new ECDHDecrypter(key.toECKey().toECPrivateKey(), null));
 		}
 		return jweo.getPayload().toString();
 	}

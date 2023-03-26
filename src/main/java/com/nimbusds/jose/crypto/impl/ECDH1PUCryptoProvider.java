@@ -76,7 +76,8 @@ import com.nimbusds.jose.util.Base64URL;
  * </ul>
  *
  * @author Alexander Martynov
- * @version 2021-08-03
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 	
@@ -180,6 +181,7 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 	protected JWECryptoParts encryptWithZ(final JWEHeader header,
 					      final SecretKey Z,
 					      final byte[] clearText,
+					      final byte[] aad,
 					      final SecretKey contentEncryptionKey)
 		throws JOSEException {
 		
@@ -196,7 +198,7 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 			getConcatKDF().getJCAContext().setProvider(getJCAContext().getMACProvider()); // update before concat
 			cek = ECDH1PU.deriveSharedKey(header, Z, getConcatKDF());
 			
-			return ContentCryptoProvider.encrypt(header, clearText, cek, null, getJCAContext());
+			return ContentCryptoProvider.encrypt(header, clearText, aad, cek, null, getJCAContext());
 		}
 		
 		if (algMode.equals(ECDH.AlgorithmMode.KW)) {
@@ -215,7 +217,7 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 				cek = ContentCryptoProvider.generateCEK(enc, getJCAContext().getSecureRandom());
 			}
 			
-			JWECryptoParts encrypted = ContentCryptoProvider.encrypt(header, clearText, cek, null, getJCAContext());
+			JWECryptoParts encrypted = ContentCryptoProvider.encrypt(header, clearText, aad, cek, null, getJCAContext());
 			
 			SecretKey sharedKey = ECDH1PU.deriveSharedKey(header, Z, encrypted.getAuthenticationTag(), getConcatKDF());
 			encryptedKey = Base64URL.encode(AESKW.wrapCEK(cek, sharedKey, getJCAContext().getKeyEncryptionProvider()));
@@ -237,6 +239,7 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 	 * Decrypts the encrypted JWE parts using the specified shared secret ("Z").
 	 */
 	protected byte[] decryptWithZ(final JWEHeader header,
+				      final byte[] aad,
 				      final SecretKey Z,
 				      final Base64URL encryptedKey,
 				      final Base64URL iv,
@@ -265,6 +268,6 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 			throw new JOSEException("Unexpected JWE ECDH algorithm mode: " + algMode);
 		}
 		
-		return ContentCryptoProvider.decrypt(header, null, iv, cipherText, authTag, cek, getJCAContext());
+		return ContentCryptoProvider.decrypt(header, aad, null, iv, cipherText, authTag, cek, getJCAContext());
 	}
 }

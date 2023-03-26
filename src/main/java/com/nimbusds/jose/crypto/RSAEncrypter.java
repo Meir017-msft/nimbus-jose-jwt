@@ -79,7 +79,8 @@ import com.nimbusds.jose.util.Base64URL;
  * @author David Ortiz
  * @author Vladimir Dzhuvinov
  * @author Jun Yu
- * @version 2023-03-21
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 @ThreadSafe
 public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
@@ -137,29 +138,7 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 	 *                             will be generated for each JWE.
 	 */
 	public RSAEncrypter(final RSAPublicKey publicKey, final SecretKey contentEncryptionKey) {
-		this(publicKey, contentEncryptionKey, null);
-	}
-
-
-	/**
-	 * Creates a new RSA encrypter with an optionally specified content
-	 * encryption key (CEK).
-	 *
-	 * @param publicKey            The public RSA key. Must not be
-	 *                             {@code null}.
-	 * @param contentEncryptionKey The content encryption key (CEK) to use.
-	 *                             If specified its algorithm must be "AES"
-	 *                             or "ChaCha20" and its length must match
-	 *                             the expected for the JWE encryption
-	 *                             method ("enc"). If {@code null} a CEK
-	 *                             will be generated for each JWE.
-	 * @param aad                  The Additional Authenticated Data (AAD),
-	 *                             if {@code null} the JWE header becomes
-	 *                             the AAD.
-	 */
-	public RSAEncrypter(final RSAPublicKey publicKey, final SecretKey contentEncryptionKey, final byte[] aad) {
 		
-		super(aad);
 		if (publicKey == null) {
 			throw new IllegalArgumentException("The public RSA key must not be null");
 		}
@@ -192,8 +171,30 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 	}
 
 
-	@Override
+	/**
+	 * Encrypts the specified clear text of a {@link JWEObject JWE object}.
+	 *
+	 * @param header    The JSON Web Encryption (JWE) header. Must specify
+	 *                  a supported JWE algorithm and method. Must not be
+	 *                  {@code null}.
+	 * @param clearText The clear text to encrypt. Must not be {@code null}.
+	 *
+	 * @return The resulting JWE crypto parts.
+	 *
+	 * @throws JOSEException If the JWE algorithm or method is not
+	 *                       supported or if encryption failed for some
+	 *                       other internal reason.
+	 */
+	@Deprecated
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText)
+		throws JOSEException {
+
+		return encrypt(header, clearText, AAD.compute(header));
+	}
+
+
+	@Override
+	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
 		final JWEAlgorithm alg = header.getAlgorithm();
@@ -225,6 +226,6 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 			throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));
 		}
 
-		return ContentCryptoProvider.encrypt(header, clearText, getAAD(), cek, encryptedKey, getJCAContext());
+		return ContentCryptoProvider.encrypt(header, clearText, aad, cek, encryptedKey, getJCAContext());
 	}
 }

@@ -22,6 +22,7 @@ import java.text.ParseException;
 
 import net.jcip.annotations.ThreadSafe;
 
+import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.util.Base64URL;
 
 
@@ -33,7 +34,8 @@ import com.nimbusds.jose.util.Base64URL;
  * <p>This class is thread-safe.
  *
  * @author Vladimir Dzhuvinov
- * @version 2022-01-24
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 @ThreadSafe
 public class JWEObject extends JOSEObject {
@@ -372,7 +374,7 @@ public class JWEObject extends JOSEObject {
 		JWECryptoParts parts;
 
 		try {
-			parts = encrypter.encrypt(getHeader(), getPayload().toBytes());
+			parts = encrypter.encrypt(getHeader(), getPayload().toBytes(), AAD.compute(getHeader()));
 
 		} catch (JOSEException e) {
 
@@ -421,7 +423,8 @@ public class JWEObject extends JOSEObject {
 					       getEncryptedKey(), 
 					       getIV(),
 					       getCipherText(), 
-					       getAuthTag())));
+					       getAuthTag(),
+					       AAD.compute(getHeader()))));
 
 		} catch (JOSEException e) {
 

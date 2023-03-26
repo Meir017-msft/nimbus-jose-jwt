@@ -38,13 +38,15 @@ import com.nimbusds.jose.util.JSONObjectUtils;
  * <p>This class is thread-safe.
  *
  * @author Egor Puzanov
- * @version 2023-03-23
+ * @version 2023-03-26
  */
 @ThreadSafe
 public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	private static final long serialVersionUID = 1L;
+
+	private final String[] recipientHeaderParams = {"kid", "alg", "x5u", "x5t", "x5t#S256", "x5c"};
 
 
 	/**
@@ -267,7 +269,11 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		if (aad != null) {
 			this.aad = aad;
 		} else {
-			this.aad = AAD.compute(header);;
+			Map<String, Object> headerMap = header.toJSONObject();
+			for (String param : recipientHeaderParams) {
+				headerMap.remove(param);
+			}
+			this.aad = AAD.compute(Base64URL.encode(JSONObjectUtils.toJSONString(headerMap)));
 		}
 		this.cipherText = null;
 		this.state = State.UNENCRYPTED;
@@ -350,7 +356,18 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 *         object has not been encrypted yet.
 	 */
 	public Base64URL getEncryptedKey() {
-		return (recipients != null && recipients.size() == 1) ? recipients.get(0).getEncryptedKey() : null;
+		if (recipients == null) {
+			return null;
+		} else if (recipients.size() == 1) {
+			return recipients.get(0).getEncryptedKey();
+		}
+		List<Object> recipientsList = JSONArrayUtils.newJSONArray();
+		for (Recipient recipient : recipients) {
+			recipientsList.add(recipient.toJSONObject());
+		}
+		Map<String, Object> recipientsMap = JSONObjectUtils.newJSONObject();
+		recipientsMap.put("recipients", recipientsList);
+		return Base64URL.encode(JSONObjectUtils.toJSONString(recipientsMap));
 	}
 
 
@@ -498,15 +515,16 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 		JWECryptoParts parts;
 
+		//if (encrypter instanceof com.nimbusds.jose.crypto.MultiEncrypter) {
+		//	throw new JOSEException("Header " + JSONObjectUtils.toJSONString(getHeader().toJSONObject()) + " Payload: " + getPayload().toString() + " AAD: " + new String(getAAD()));
+		//}
+
 		try {
-			parts = encrypter.encrypt(getHeader(), getPayload().toBytes());
-
+			parts = encrypter.encrypt(getHeader(), getPayload().toBytes(), getAAD());
 		} catch (JOSEException e) {
-
 			throw e;
 		
 		} catch (Exception e) {
-
 			// Prevent throwing unchecked exceptions at this point,
 			// see issue #20
 			throw new JOSEException(e.getMessage(), e);
@@ -518,10 +536,27 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		}
 
 		Base64URL encryptedKey = parts.getEncryptedKey();
-		if (encryptedKey != null) {
+		try {
 			List<Recipient> recipientList = new LinkedList<>();
-			recipientList.add(new Recipient(null, encryptedKey));
+			Map<String, Object>[] recipientMaps = JSONObjectUtils.getJSONObjectArray((JSONObjectUtils.parse(encryptedKey.decodeToString())), "recipients");
+			for (Map<String, Object> recipientMap : recipientMaps) {
+				recipientList.add(new Recipient(UnprotectedHeader.parse(JSONObjectUtils.getJSONObject(recipientMap, "header")),
+								JSONObjectUtils.getBase64URL(recipientMap, "encrypted_key")));
+			}
 			recipients.addAll(recipientList);
+		} catch (Exception e) {
+			Map<String, Object> headerMap = header.toJSONObject();
+			Map<String, Object> recipientHeader = JSONObjectUtils.newJSONObject();
+			for (String param : recipientHeaderParams) {
+				if (headerMap.containsKey(param)) {
+					recipientHeader.put(param, headerMap.get(param));
+				}
+			}
+			try {
+				recipients.add(new Recipient(UnprotectedHeader.parse(recipientHeader), encryptedKey));
+			} catch (Exception ex) {
+				throw new JOSEException(ex.getMessage(), ex);
+			}
 		}
 		iv = parts.getInitializationVector();
 		cipherText = parts.getCipherText();
@@ -553,14 +588,11 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 					       getEncryptedKey(),
 					       getIV(),
 					       getCipherText(),
-					       getAuthTag())));
-
+					       getAuthTag(),
+					       getAAD())));
 		} catch (JOSEException e) {
-
 			throw e;
-
 		} catch (Exception e) {
-
 			// Prevent throwing unchecked exceptions at this point,
 			// see issue #20
 			throw new JOSEException(e.getMessage(), e);

@@ -39,7 +39,7 @@ import com.nimbusds.jose.util.JSONObjectUtils;
  * Tests JWE JSON object methods.
  *
  * @author Egor Puzanov
- * @version 2023-03-23
+ * @version 2023-03-26
  */
 public class JWEObjectJSONTest extends TestCase {
 
@@ -191,7 +191,7 @@ public class JWEObjectJSONTest extends TestCase {
 		try {
 			jwe.encrypt(new JWEEncrypter() {
 				@Override
-				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText) throws JOSEException {
+				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText, byte[] aad) throws JOSEException {
 					return null;
 				}
 				@Override
@@ -221,7 +221,7 @@ public class JWEObjectJSONTest extends TestCase {
 		try {
 			jwe.encrypt(new JWEEncrypter() {
 				@Override
-				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText) throws JOSEException {
+				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText, byte[] aad) throws JOSEException {
 					return null;
 				}
 				@Override
