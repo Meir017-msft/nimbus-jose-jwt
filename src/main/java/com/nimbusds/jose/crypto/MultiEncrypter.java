@@ -182,6 +182,31 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 
 
 	/**
+	 * Split the AAD string and return the first part as the header map. As
+	 * described in the step 14 of the
+	 * https://www.rfc-editor.org/rfc/rfc7516#section-5.1.
+	 *
+	 * @param aad       The additional authenticated data. Must not be
+	 *                  {@code null}.
+	 *
+	 * @return The header map.
+	 *
+	 * @throws JOSEException If the JWE algorithm or method is not
+	 *                       supported or if encryption failed for some
+	 *                       other internal reason.
+	 */
+	private static Map<String, Object> getHeaderMapFromAAD(final byte[] aad)
+		throws JOSEException {
+		try {
+			String protectedHeader = new String(aad).split("\\.")[0];
+			return JSONObjectUtils.parse(Base64URL.from(protectedHeader).decodeToString());
+		} catch (Exception e) {
+			throw new JOSEException(e.getMessage(), e);
+		}
+	}
+
+
+	/**
 	 * Encrypts the specified clear text of a {@link JWEObject JWE object}.
 	 *
 	 * @param header    The JSON Web Encryption (JWE) header. Must specify
@@ -213,12 +238,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 
 		final EncryptionMethod enc = header.getEncryptionMethod();
 		final String aadStr = new String(aad, StandardCharsets.US_ASCII);
-		final Map<String, Object> headerMap;
-		try {
-			headerMap = JSONObjectUtils.parse(Base64URL.from(new String(aad).split("\\.")[0]).decodeToString());
-		} catch (Exception e) {
-			throw new JOSEException(e.getMessage(), e);
-		}
+		final Map<String, Object> headerMap = getHeaderMapFromAAD(aad);
 
 		JWECryptoParts jweParts;
 		JWEEncrypter encrypter;

@@ -515,10 +515,6 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 		JWECryptoParts parts;
 
-		//if (encrypter instanceof com.nimbusds.jose.crypto.MultiEncrypter) {
-		//	throw new JOSEException("Header " + JSONObjectUtils.toJSONString(getHeader().toJSONObject()) + " Payload: " + getPayload().toString() + " AAD: " + new String(getAAD()));
-		//}
-
 		try {
 			parts = encrypter.encrypt(getHeader(), getPayload().toBytes(), getAAD());
 		} catch (JOSEException e) {

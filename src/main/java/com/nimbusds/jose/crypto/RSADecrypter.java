@@ -167,7 +167,7 @@ public class RSADecrypter extends RSACryptoProvider implements JWEDecrypter, Cri
 	 *                       that are deferred to the application for
 	 *                       processing, empty set or {@code null} if none.
 	 * @param allowWeakKey   {@code true} to allow an RSA key shorter than
-	 * 	                 2048 bits.
+	 *                       2048 bits.
 	 */
 	public RSADecrypter(final PrivateKey privateKey,
 			    final Set<String> defCritHeaders,
