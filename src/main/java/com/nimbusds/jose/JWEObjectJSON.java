@@ -684,6 +684,10 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	public static JWEObjectJSON parse(final Map<String, Object> jsonObject)
 		throws ParseException {
 
+		if (jsonObject == null) {
+			throw new IllegalArgumentException("The JSON object must not be null");
+		}
+
 		JWEHeader jweHeader = null;
 		Map<String, Object> jweHeaderMap = JSONObjectUtils.newJSONObject();
 		StringBuilder aadSB = new StringBuilder("");
@@ -761,6 +765,10 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 */
 	public static JWEObjectJSON parse(final String json)
 		throws ParseException {
+
+		if (json == null) {
+			throw new IllegalArgumentException("The JSON object string must not be null");
+		}
 
 		return parse(JSONObjectUtils.parse(json));
 	}

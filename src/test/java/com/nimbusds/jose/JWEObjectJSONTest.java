@@ -175,6 +175,22 @@ public class JWEObjectJSONTest extends TestCase {
 		} catch (Exception e) {
 			assertEquals("The cipher text must not be null", e.getMessage());
 		}
+
+		try {
+			Map<String, Object> json = null;
+			jwe = JWEObjectJSON.parse(json);
+			fail();
+		} catch (Exception e) {
+			assertEquals("The JSON object must not be null", e.getMessage());
+		}
+
+		try {
+			String json = null;
+			jwe = JWEObjectJSON.parse(json);
+			fail();
+		} catch (Exception e) {
+			assertEquals("The JSON object string must not be null", e.getMessage());
+		}
 	}
 
 
