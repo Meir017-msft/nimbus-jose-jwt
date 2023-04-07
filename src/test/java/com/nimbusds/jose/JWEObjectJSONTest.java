@@ -132,7 +132,7 @@ public class JWEObjectJSONTest extends TestCase {
 		assertEquals(new Base64URL("ghi"), jwe.getCipherText());
 		assertEquals(new Base64URL("jkl"), jwe.getAuthTag());
 
-		assertEquals(JWEObjectJSON.State.ENCRYPTED, jwe.getState());
+		assertEquals(JWEObject.State.ENCRYPTED, jwe.getState());
 	}
 
 	public void testFlattenedJSONSerializer()

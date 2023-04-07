@@ -25,6 +25,7 @@ import java.util.*;
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
 
+import com.nimbusds.jose.JWEObject.State;
 import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONArrayUtils;
@@ -124,32 +125,6 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Enumeration of the states of a JSON Web Encryption (JWE) secured
-	 * object.
-	 */
-	public enum State {
-		
-		
-		/**
-		 * The JWE secured object is created but not encrypted yet.
-		 */
-		UNENCRYPTED,
-		
-		
-		/**
-		 * The JWE secured object is encrypted.
-		 */
-		ENCRYPTED,
-		
-		
-		/**
-		 * The JWE secured object is decrypted.
-		 */
-		DECRYPTED
-	}
-
-
-	/**
 	 * The protected header.
 	 */
 	private JWEHeader header;
@@ -195,7 +170,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	/**
 	 * The JWE object state.
 	 */
-	private State state;
+	private JWEObject.State state;
 
 
 	/**
@@ -281,8 +256,8 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Creates a new encrypted JSON Web Encryption (JWE) object The state
-	 * will be. The state will be {@link State#ENCRYPTED encrypted}.
+	 * Creates a new encrypted JSON Web Encryption (JWE) object. The state
+	 * will be {@link State#ENCRYPTED encrypted}.
 	 *
 	 * @param header      The protected header. Must not be {@code null}.
 	 * @param cipherText  The cipher text. Must not be {@code null}.
