@@ -122,7 +122,7 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 		Set<String> acceptableCEKAlgs = Collections.unmodifiableSet(
 			new HashSet<>(Arrays.asList("AES", "ChaCha20"))
 		);
-		
+
 		if (contentEncryptionKey != null) {
 			if (contentEncryptionKey.getAlgorithm() == null || ! acceptableCEKAlgs.contains(contentEncryptionKey.getAlgorithm())) {
 				throw new IllegalArgumentException("The algorithm of the content encryption key (CEK) must be AES or ChaCha20");
@@ -263,7 +263,6 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 
 
 		final JWEHeader updatedHeader; // We need to work on the header
-		final byte[] updatedAAD; // We need to work on the header
 		final Base64URL encryptedKey; // The second JWE part
 
 		// Generate and encrypt the CEK according to the enc method
@@ -298,11 +297,7 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 		}
 
 		// for JWEObject we need update the AAD as well
-		if (Arrays.equals(AAD.compute(header), aad)) {
-			updatedAAD = AAD.compute(updatedHeader);
-		} else {
-			updatedAAD = aad;
-		}
+		final byte[] updatedAAD = Arrays.equals(AAD.compute(header), aad) ? AAD.compute(updatedHeader) : aad;
 
 		return ContentCryptoProvider.encrypt(updatedHeader, clearText, updatedAAD, cek, encryptedKey, getJCAContext());
 	}

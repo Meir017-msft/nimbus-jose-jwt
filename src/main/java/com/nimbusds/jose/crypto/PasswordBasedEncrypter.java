@@ -179,7 +179,6 @@ public class PasswordBasedEncrypter extends PasswordBasedCryptoProvider implemen
 			pbes2Salt(Base64URL.encode(salt)).
 			pbes2Count(iterationCount).
 			build();
-		final byte[] updatedAAD;
 
 		final SecretKey cek = ContentCryptoProvider.generateCEK(enc, getJCAContext().getSecureRandom());
 
@@ -187,11 +186,7 @@ public class PasswordBasedEncrypter extends PasswordBasedCryptoProvider implemen
 		final Base64URL encryptedKey = Base64URL.encode(AESKW.wrapCEK(cek, psKey, getJCAContext().getKeyEncryptionProvider()));
 
 		// for JWEObject we need update the AAD as well
-		if (Arrays.equals(AAD.compute(header), aad)) {
-			updatedAAD = AAD.compute(updatedHeader);
-		} else {
-			updatedAAD = aad;
-		}
+		final byte[] updatedAAD = Arrays.equals(AAD.compute(header), aad) ? AAD.compute(updatedHeader) : aad;
 
 		return ContentCryptoProvider.encrypt(updatedHeader, clearText, updatedAAD, cek, encryptedKey, getJCAContext());
 	}

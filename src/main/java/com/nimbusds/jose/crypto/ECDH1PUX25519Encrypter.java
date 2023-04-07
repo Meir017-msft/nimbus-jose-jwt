@@ -221,7 +221,6 @@ public class ECDH1PUX25519Encrypter extends ECDH1PUCryptoProvider implements JWE
         JWEHeader updatedHeader = new JWEHeader.Builder(header).
                 ephemeralPublicKey(ephemeralPublicKey).
                 build();
-        final byte[] updatedAAD;
 
         SecretKey Z = ECDH1PU.deriveSenderZ(
                 privateKey,
@@ -230,11 +229,7 @@ public class ECDH1PUX25519Encrypter extends ECDH1PUCryptoProvider implements JWE
         );
 
         // for JWEObject we need update the AAD as well
-        if (Arrays.equals(AAD.compute(header), aad)) {
-            updatedAAD = AAD.compute(updatedHeader);
-        } else {
-            updatedAAD = aad;
-        }
+        final byte[] updatedAAD = Arrays.equals(AAD.compute(header), aad) ? AAD.compute(updatedHeader) : aad;
 
         return encryptWithZ(updatedHeader, Z, clearText, updatedAAD, contentEncryptionKey);
     }
