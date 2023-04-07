@@ -107,6 +107,31 @@ public class JWEObjectJSONTest extends TestCase {
 		assertEquals(JSONObjectUtils.getBase64URL(rawJson, "tag"), jwe.getAuthTag());
 	}
 
+
+
+	public void testJWEObjectJSONConstructors()
+		throws Exception {
+
+		final JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5,
+			                         EncryptionMethod.A128CBC_HS256);
+		JWEObjectJSON jwe;
+
+		try {
+			jwe = new JWEObjectJSON(null, null, null, null, null, null, null);
+			fail();
+		} catch (Exception e) {
+			assertEquals("The header must not be null", e.getMessage());
+		}
+
+		try {
+			jwe = new JWEObjectJSON(header, null, null, null, null, null, null);
+			fail();
+		} catch (Exception e) {
+			assertEquals("The cipher text must not be null", e.getMessage());
+		}
+	}
+
+
 	public void testJWEObjectConstructor()
 		throws Exception {
 
