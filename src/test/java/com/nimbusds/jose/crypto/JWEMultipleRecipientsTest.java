@@ -86,6 +86,73 @@ public class JWEMultipleRecipientsTest extends TestCase {
 	}
 
 
+	public void testEncrypterParameters()
+		throws Exception {
+
+		final JWEHeader header = new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A256GCM);
+		final JWKSet keys = generateJWKSet(EncryptionMethod.A256GCM);
+
+		JWEEncrypter encrypter = new MultiEncrypter(keys);
+
+		try {
+			encrypter.encrypt(header, null, null);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Missing JWE additional authenticated data (AAD)", e.getMessage());
+		}
+	}
+
+
+	public void testDecryptParameters()
+		throws Exception {
+
+		final Base64URL value = Base64URL.encode("12345");
+		final byte[] aad = "12345".getBytes();
+		final JWEHeader header = new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A256GCM);
+		final JWK key = new OctetSequenceKeyGenerator(EncryptionMethod.A256GCM.cekBitLength())
+			.keyID("DirRecipient")
+			.algorithm(JWEAlgorithm.DIR)
+			.generate();
+
+		JWEDecrypter decrypter = new MultiDecrypter(key);
+
+		try {
+			decrypter.decrypt(header, null, null, value, value, aad);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Unexpected present JWE initialization vector (IV)", e.getMessage());
+		}
+
+		try {
+			decrypter.decrypt(header, null, value, value, null, aad);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Missing JWE authentication tag", e.getMessage());
+		}
+
+		try {
+			decrypter.decrypt(header, null, value, value, value, null);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Missing JWE additional authenticated data (AAD)", e.getMessage());
+		}
+
+		try {
+			decrypter.decrypt(new JWEHeader(JWEAlgorithm.ECDH_1PU, EncryptionMethod.A256GCM), null, value, value, value, aad);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Unsupported algorithm", e.getMessage());
+		}
+
+		try {
+			decrypter = new MultiDecrypter(null);
+			fail();
+		} catch (Exception e) {
+			assertEquals("The private key (JWK) must not be null", e.getMessage());
+		}
+	}
+
+
 	public void testMultipleRecipients()
 		throws Exception {
 
