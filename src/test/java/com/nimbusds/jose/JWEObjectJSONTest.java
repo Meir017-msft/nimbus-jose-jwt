@@ -45,6 +45,28 @@ public class JWEObjectJSONTest extends TestCase {
 
 	private static final Logger LOGGER = Logger.getLogger(JWEObjectJSONTest.class.getName());
 
+	private static final String jweMultiRecipientJsonString = String.valueOf(
+		"{" +
+			"\"ciphertext\":\"oxEERGR4AgFcRMKLgeU\"," +
+			"\"protected\":\"eyJ6aXAiOiJERUYiLCJlbmMiOiJBMjU2R0NNIn0\"," +
+			"\"recipients\":[" +
+				"{" +
+					"\"header\":{" +
+						"\"kid\":\"DirRecipient\"," +
+						"\"alg\":\"DIR\"" +
+					"}" +
+				"},{" +
+					"\"encrypted_key\":\"cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g\"," +
+					"\"header\":{" +
+						"\"kid\":\"AESRecipient\"," +
+						"\"alg\":\"A128KW\"" +
+					"}" +
+				"}" +
+			"]," +
+			"\"tag\":\"lhNLaDMKVVvjlGaeYdqbrQ\"," +
+			"\"iv\":\"BCNhlw39FueuKrwH\"" +
+		"}");
+
 	private static final String jweGeneralJsonString = String.valueOf(
 		"{" +
 			"\"ciphertext\":\"oxEERGR4AgFcRMKLgeU\"," +
@@ -108,8 +130,32 @@ public class JWEObjectJSONTest extends TestCase {
 	}
 
 
+	public void testGetEncryptedKeyMethod()
+		throws Exception {
 
-	public void testJWEObjectJSONConstructors()
+		final JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5,
+			                         EncryptionMethod.A128CBC_HS256);
+		JWEObjectJSON jwe;
+
+		jwe = new JWEObjectJSON(header, new Payload("test!"));
+		assertEquals(null, jwe.getEncryptedKey());
+
+		jwe = JWEObjectJSON.parse(jweGeneralJsonString);
+		assertEquals("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g", jwe.getEncryptedKey().toString());
+
+		jwe = JWEObjectJSON.parse(jweFlattenedJsonString);
+		assertEquals("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g", jwe.getEncryptedKey().toString());
+
+		jwe = JWEObjectJSON.parse(jweMultiRecipientJsonString);
+		assertEquals("eyJyZWNpcGllbnRzIjpbeyJoZWFkZXIiOnsiYWxnIjoiRElSIiwia2" +
+			     "lkIjoiRGlyUmVjaXBpZW50In19LHsiZW5jcnlwdGVkX2tleSI6ImNm" +
+			     "RmYySHNLSU1NbHJvRGhoYlVkc1JvcHRPbnh0dUpLV0JwLW9BcVdEc1" +
+			     "VDcXJ5R1lsNVItZyIsImhlYWRlciI6eyJhbGciOiJBMTI4S1ciLCJr" +
+			     "aWQiOiJBRVNSZWNpcGllbnQifX1dfQ", jwe.getEncryptedKey().toString());
+	}
+
+
+	public void testJWEObjectJSONConstructor()
 		throws Exception {
 
 		final JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5,

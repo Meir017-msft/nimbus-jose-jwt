@@ -331,7 +331,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 *         object has not been encrypted yet.
 	 */
 	public Base64URL getEncryptedKey() {
-		if (recipients == null) {
+		if (recipients.size() < 1) {
 			return null;
 		} else if (recipients.size() == 1) {
 			return recipients.get(0).getEncryptedKey();
