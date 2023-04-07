@@ -18,9 +18,12 @@
 package com.nimbusds.jose.crypto;
 
 
+import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -90,6 +93,8 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		final EncryptionMethod enc = EncryptionMethod.A256GCM;
 		final JWKSet keys = generateJWKSet(enc);
 		final SecretKey cek = keys.getKeyByKeyId("DirRecipient").toOctetSequenceKey().toSecretKey("AES");
+		final Set resipientHeader = new HashSet<>(Arrays.asList("alg", "kid"));
+		final Set ecResipientHeader = new HashSet<>(Arrays.asList("epk", "alg", "kid"));
 
 		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.DIR, enc)
 						.compressionAlgorithm(CompressionAlgorithm.DEF)
@@ -100,7 +105,34 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		jwe.encrypt(encrypter);
 		String json = jwe.serializeGeneral();
 
-		LOGGER.info("JWE JSON Object: " + json);
+		LOGGER.fine("JWE JSON Object: " + json);
+
+		Map<String, Object> jsonJWEObject = JSONObjectUtils.parse(json);
+		Map<String, Object>[] recipients = JSONObjectUtils.getJSONObjectArray(jsonJWEObject, "recipients");
+		assertEquals(keys.size(), recipients.length);
+		LOGGER.info("Number of recipients: " + recipients.length);
+
+		assertEquals(new HashSet<>(Arrays.asList("zip", "enc")), JSONObjectUtils.parse(JSONObjectUtils.getBase64URL(jsonJWEObject, "protected").decodeToString()).keySet());
+
+		assertEquals("ECRecipient", ((Map<String, String>) recipients[0].get("header")).get("kid"));
+		assertEquals(ecResipientHeader, ((Map<String, Object>) recipients[0].get("header")).keySet());
+		assertEquals(true, recipients[0].containsKey("encrypted_key"));
+
+		assertEquals("RSARecipient", ((Map<String, String>) recipients[1].get("header")).get("kid"));
+		assertEquals(resipientHeader, ((Map<String, Object>) recipients[1].get("header")).keySet());
+		assertEquals(true, recipients[1].containsKey("encrypted_key"));
+
+		assertEquals("X25519Recipient", ((Map<String, String>) recipients[2].get("header")).get("kid"));
+		assertEquals(ecResipientHeader, ((Map<String, Object>) recipients[2].get("header")).keySet());
+		assertEquals(true, recipients[2].containsKey("encrypted_key"));
+
+		assertEquals("AESRecipient", ((Map<String, String>) recipients[3].get("header")).get("kid"));
+		assertEquals(resipientHeader, ((Map<String, Object>) recipients[3].get("header")).keySet());
+		assertEquals(true, recipients[3].containsKey("encrypted_key"));
+
+		assertEquals("DirRecipient", ((Map<String, String>) recipients[4].get("header")).get("kid"));
+		assertEquals(resipientHeader, ((Map<String, Object>) recipients[4].get("header")).keySet());
+		assertEquals(false, recipients[4].containsKey("encrypted_key"));
 
 		for (JWK key : keys.getKeys()) {
 			jwe = JWEObjectJSON.parse(json);
