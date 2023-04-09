@@ -121,12 +121,6 @@ public class ECDHEncrypter extends ECDHCryptoProvider implements JWEEncrypter {
 	private final ECPublicKey publicKey;
 
 	/**
-	 * The externally supplied AES content encryption key (CEK) to use,
-	 * {@code null} to generate a CEK for each JWE.
-	 */
-	private final SecretKey contentEncryptionKey;
-
-	/**
 	 * Creates a new Elliptic Curve Diffie-Hellman encrypter.
 	 *
 	 * @param publicKey The public EC key. Must not be {@code null}.
@@ -150,10 +144,7 @@ public class ECDHEncrypter extends ECDHCryptoProvider implements JWEEncrypter {
 	public ECDHEncrypter(final ECKey ecJWK) throws
 		JOSEException {
 
-		super(ecJWK.getCurve());
-
-		publicKey = ecJWK.toECPublicKey();
-		contentEncryptionKey = null;
+		this(ecJWK.toECPublicKey(), null);
 	}
 	
 	/**
@@ -173,19 +164,9 @@ public class ECDHEncrypter extends ECDHCryptoProvider implements JWEEncrypter {
 	public ECDHEncrypter(final ECPublicKey publicKey, final SecretKey contentEncryptionKey)
 		throws JOSEException {
 		
-		super(Curve.forECParameterSpec(publicKey.getParams()));
+		super(Curve.forECParameterSpec(publicKey.getParams()), contentEncryptionKey);
 		
 		this.publicKey = publicKey;
-
-		if (contentEncryptionKey != null) {
-			if (contentEncryptionKey.getAlgorithm() == null || !contentEncryptionKey.getAlgorithm().equals("AES")) {
-				throw new IllegalArgumentException("The algorithm of the content encryption key (CEK) must be AES");
-			} else {
-				this.contentEncryptionKey = contentEncryptionKey;
-			}
-		} else {
-			this.contentEncryptionKey = null;
-		}
 	}
 
 
@@ -252,7 +233,7 @@ public class ECDHEncrypter extends ECDHCryptoProvider implements JWEEncrypter {
 		// for JWEObject we need update the AAD as well
 		final byte[] updatedAAD = Arrays.equals(AAD.compute(header), aad) ? AAD.compute(updatedHeader) : aad;
 
-		return encryptWithZ(updatedHeader, Z, clearText, updatedAAD, contentEncryptionKey);
+		return encryptWithZ(updatedHeader, Z, clearText, updatedAAD);
 	}
 
 

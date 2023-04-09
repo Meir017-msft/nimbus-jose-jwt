@@ -140,7 +140,35 @@ public class ECDHCryptoTest extends TestCase {
 
 		assertEquals("Hello world!", jweObject.getPayload().toString());
 	}
-	
+
+
+	/**
+	 * Test ECDH Encrypter with provided CEK encryption with DIRECT algorithm mode.
+	 */
+	public void testECDH_ES_WithCekSpecified() throws Exception {
+		ECKey ecJWK = generateECJWK(Curve.P_256);
+		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.ECDH_ES, EncryptionMethod.A128GCM).
+				agreementPartyUInfo(Base64URL.encode("Alice")).
+				agreementPartyVInfo(Base64URL.encode("Bob")).
+				build();
+
+		JWEObject jweObject = new JWEObject(header, new Payload("Hello world!"));
+
+		KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
+		keyGenerator.init(EncryptionMethod.A128GCM.cekBitLength());
+		SecretKey cek = keyGenerator.generateKey();
+		
+		ECDHEncrypter encrypter = new ECDHEncrypter(ecJWK.toECPublicKey(), cek);
+		encrypter.getJCAContext().setContentEncryptionProvider(BouncyCastleProviderSingleton.getInstance());
+		try {
+			jweObject.encrypt(encrypter);
+			fail();
+		} catch (Exception e) {
+			assertEquals("The provided CEK not supported", e.getMessage());
+		}
+	}
+
+
 	/**
 	 * Test ECDH Encrypter with provided CEK encryption and decryption
 	 * cycle.

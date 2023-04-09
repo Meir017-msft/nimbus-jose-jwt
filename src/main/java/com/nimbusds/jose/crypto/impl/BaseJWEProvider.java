@@ -18,23 +18,37 @@
 package com.nimbusds.jose.crypto.impl;
 
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
+import javax.crypto.SecretKey;
 
 import com.nimbusds.jose.EncryptionMethod;
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEAlgorithm;
 import com.nimbusds.jose.JWEProvider;
 import com.nimbusds.jose.jca.JWEJCAContext;
 
 
 /**
- * The base abstract class for JSON Web Encryption (JWE) encrypters and 
+ * The base abstract class for JSON Web Encryption (JWE) encrypters and
  * decrypters.
  *
  * @author Vladimir Dzhuvinov
  * @version 2015-11-16
  */
+
+
 abstract class BaseJWEProvider implements JWEProvider {
+
+
+	/**
+	 * The acceptable CEK algorithms.
+	 */
+	private static final Set<String> ACCEPTABLE_CEK_ALGS = Collections.unmodifiableSet(
+		new HashSet<>(Arrays.asList("AES", "ChaCha20"))
+	);
 
 
 	/**
@@ -56,6 +70,13 @@ abstract class BaseJWEProvider implements JWEProvider {
 
 
 	/**
+	 * The externally supplied AES content encryption key (CEK) to use,
+	 * {@code null} to generate a CEK for each JWE.
+	 */
+	private final SecretKey cek;
+
+
+	/**
 	 * Creates a new base JWE provider.
 	 *
 	 * @param algs The supported algorithms by the JWE provider instance.
@@ -65,6 +86,27 @@ abstract class BaseJWEProvider implements JWEProvider {
 	 */
 	public BaseJWEProvider(final Set<JWEAlgorithm> algs,
 		               final Set<EncryptionMethod> encs) {
+
+		this(algs, encs, null);
+	}
+
+
+	/**
+	 * Creates a new base JWE provider.
+	 *
+	 * @param algs The supported algorithms by the JWE provider instance.
+	 *             Must not be {@code null}.
+	 * @param encs The supported encryption methods by the JWE provider
+	 *             instance. Must not be {@code null}.
+	 * @param cek  The content encryption key (CEK) to use. If specified
+	 *             its algorithm must be "AES" or "ChaCha20" and its length
+	 *             must match the expected for the JWE encryption method
+	 *             ("enc"). If {@code null} a CEK will be generated for
+	 *             each JWE.
+	 */
+	public BaseJWEProvider(final Set<JWEAlgorithm> algs,
+		               final Set<EncryptionMethod> encs,
+		               final SecretKey cek) {
 
 		if (algs == null) {
 			throw new IllegalArgumentException("The supported JWE algorithm set must not be null");
@@ -78,6 +120,12 @@ abstract class BaseJWEProvider implements JWEProvider {
 		}
 
 		this.encs = encs;
+
+		if (cek != null && algs.size() > 1 && (cek.getAlgorithm() == null || ! ACCEPTABLE_CEK_ALGS.contains(cek.getAlgorithm()))) {
+			throw new IllegalArgumentException("The algorithm of the content encryption key (CEK) must be AES or ChaCha20");
+		}
+
+		this.cek = cek;
 	}
 
 
@@ -99,6 +147,16 @@ abstract class BaseJWEProvider implements JWEProvider {
 	public JWEJCAContext getJCAContext() {
 
 		return jcaContext;
+	}
+
+	protected boolean isCEKProvided() {
+		return cek != null;
+	}
+
+	protected SecretKey getCEK(EncryptionMethod enc)
+		throws JOSEException {
+
+		return isCEKProvided() ? cek : ContentCryptoProvider.generateCEK(enc, jcaContext.getSecureRandom());
 	}
 }
 

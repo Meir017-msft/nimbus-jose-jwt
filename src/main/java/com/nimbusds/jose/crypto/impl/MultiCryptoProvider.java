@@ -170,11 +170,16 @@ public abstract class MultiCryptoProvider extends BaseJWEProvider {
 	/**
 	 * Creates a new Multireciprient encryption / decryption provider.
 	 *
+	 * @param cek The Content Encryption Key (CEK). Must be 128 bits (16
+	 *            bytes), 192 bits (24 bytes), 256 bits (32 bytes), 384
+	 *            bits (48 bytes) or 512 bits (64 bytes) long. Must not be
+	 *            {@code null}.
+	 *
 	 * @throws KeyLengthException If the CEK length is not compatible.
 	 */
-	protected MultiCryptoProvider()
+	protected MultiCryptoProvider(final SecretKey cek)
 		throws KeyLengthException {
 
-		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS);
+		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS, cek);
 	}
 }

@@ -21,6 +21,7 @@ package com.nimbusds.jose.crypto.impl;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import javax.crypto.SecretKey;
 
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JWEAlgorithm;
@@ -85,9 +86,14 @@ public abstract class RSACryptoProvider extends BaseJWEProvider {
 
 	/**
 	 * Creates a new RSA encryption / decryption provider.
+	 *
+	 * @param cek The Content Encryption Key (CEK). Must be 128 bits (16
+	 *            bytes), 192 bits (24 bytes), 256 bits (32 bytes), 384
+	 *            bits (48 bytes) or 512 bits (64 bytes) long. Must not be
+	 *            {@code null}.
 	 */
-	protected RSACryptoProvider() {
+	protected RSACryptoProvider(final SecretKey cek) {
 
-		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS);
+		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS, cek);
 	}
 }

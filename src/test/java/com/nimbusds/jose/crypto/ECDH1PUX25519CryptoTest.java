@@ -27,6 +27,8 @@ import junit.framework.TestCase;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
 import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
+import com.nimbusds.jose.crypto.impl.ECDH;
+import com.nimbusds.jose.crypto.impl.ECDH1PU;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.OctetKeyPair;
 import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
@@ -214,6 +216,7 @@ public class ECDH1PUX25519CryptoTest extends TestCase {
 
             OctetKeyPair aliceKey = generateOKP(cycle.curve);
             OctetKeyPair bobKey = generateOKP(cycle.curve);
+            ECDH.AlgorithmMode algMode = ECDH1PU.resolveAlgorithmMode(cycle.algorithm);
 
             JWEHeader header = new JWEHeader.Builder(cycle.algorithm, cycle.encryptionMethod).
                     agreementPartyUInfo(Base64URL.encode("Alice")).
@@ -224,7 +227,15 @@ public class ECDH1PUX25519CryptoTest extends TestCase {
 
             ECDH1PUX25519Encrypter encrypter = new ECDH1PUX25519Encrypter(aliceKey, bobKey.toPublicJWK(), cek);
             encrypter.getJCAContext().setContentEncryptionProvider(BouncyCastleProviderSingleton.getInstance());
-            jweObject.encrypt(encrypter);
+
+            try {
+                jweObject.encrypt(encrypter);
+                if (ECDH.AlgorithmMode.DIRECT.equals(algMode))
+                    fail();
+            } catch (Exception e) {
+                assertEquals("The provided CEK not supported", e.getMessage());
+                continue;
+            }
 
             OctetKeyPair epk = (OctetKeyPair) jweObject.getHeader().getEphemeralPublicKey();
             assertEquals(cycle.curve, epk.getCurve());

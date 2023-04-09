@@ -83,13 +83,6 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 
 
 	/**
-	 * The externally supplied AES content encryption key (CEK) to use,
-	 * {@code null} to generate a CEK for each JWE.
-	 */
-	private final SecretKey contentEncryptionKey;
-
-
-	/**
 	 * Algorithm family constants.
 	 */
 	private enum AlgFamily {
@@ -117,21 +110,7 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 	public AESEncrypter(final SecretKey kek, final SecretKey contentEncryptionKey)
 		throws KeyLengthException {
 
-		super(kek);
-
-		Set<String> acceptableCEKAlgs = Collections.unmodifiableSet(
-			new HashSet<>(Arrays.asList("AES", "ChaCha20"))
-		);
-
-		if (contentEncryptionKey != null) {
-			if (contentEncryptionKey.getAlgorithm() == null || ! acceptableCEKAlgs.contains(contentEncryptionKey.getAlgorithm())) {
-				throw new IllegalArgumentException("The algorithm of the content encryption key (CEK) must be AES or ChaCha20");
-			} else {
-				this.contentEncryptionKey = contentEncryptionKey;
-			}
-		} else {
-			this.contentEncryptionKey = null;
-		}
+		super(kek, contentEncryptionKey);
 	}
 
 
@@ -210,6 +189,7 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 		throws JOSEException {
 
 		final JWEAlgorithm alg = header.getAlgorithm();
+		final EncryptionMethod enc = header.getEncryptionMethod();
 
 		// Check the AES key size and determine the algorithm family
 		final AlgFamily algFamily;
@@ -264,16 +244,7 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 
 		final JWEHeader updatedHeader; // We need to work on the header
 		final Base64URL encryptedKey; // The second JWE part
-
-		// Generate and encrypt the CEK according to the enc method
-		final SecretKey cek;
-		if (contentEncryptionKey != null) {
-			// Use externally supplied CEK
-			cek = contentEncryptionKey;
-		} else {
-			// Generate and encrypt the CEK according to the enc method
-			cek = ContentCryptoProvider.generateCEK(header.getEncryptionMethod(), getJCAContext().getSecureRandom());
-		}
+		final SecretKey cek = getCEK(enc); // Generate and encrypt the CEK according to the enc method
 
 		if(AlgFamily.AESKW.equals(algFamily)) {
 

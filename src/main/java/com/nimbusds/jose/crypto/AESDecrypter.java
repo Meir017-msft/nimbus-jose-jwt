@@ -148,7 +148,7 @@ public class AESDecrypter extends AESCryptoProvider implements JWEDecrypter, Cri
 	public AESDecrypter(final SecretKey kek, final Set<String> defCritHeaders)
 		throws KeyLengthException {
 
-		super(kek);
+		super(kek, null);
 
 		critPolicy.setDeferredCriticalHeaderParams(defCritHeaders);
 	}

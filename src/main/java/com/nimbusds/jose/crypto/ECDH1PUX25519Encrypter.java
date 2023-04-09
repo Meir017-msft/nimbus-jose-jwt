@@ -110,12 +110,6 @@ public class ECDH1PUX25519Encrypter extends ECDH1PUCryptoProvider implements JWE
     private final OctetKeyPair privateKey;
 
     /**
-     * The externally supplied AES content encryption key (CEK) to use,
-     * {@code null} to generate a CEK for each JWE.
-     */
-    private final SecretKey contentEncryptionKey;
-
-    /**
      * Creates a new Curve25519 Elliptic Curve Diffie-Hellman encrypter.
      *
      * @param privateKey The private key. Must not be {@code null}.
@@ -149,15 +143,10 @@ public class ECDH1PUX25519Encrypter extends ECDH1PUCryptoProvider implements JWE
                                   )
             throws JOSEException {
 
-        super(publicKey.getCurve());
+        super(publicKey.getCurve(), contentEncryptionKey);
 
         this.publicKey = publicKey;
         this.privateKey = privateKey;
-
-        if (contentEncryptionKey != null && (contentEncryptionKey.getAlgorithm() == null || !contentEncryptionKey.getAlgorithm().equals("AES")))
-            throw new IllegalArgumentException("The algorithm of the content encryption key (CEK) must be AES");
-
-        this.contentEncryptionKey = contentEncryptionKey;
     }
 
     @Override
@@ -231,6 +220,6 @@ public class ECDH1PUX25519Encrypter extends ECDH1PUCryptoProvider implements JWE
         // for JWEObject we need update the AAD as well
         final byte[] updatedAAD = Arrays.equals(AAD.compute(header), aad) ? AAD.compute(updatedHeader) : aad;
 
-        return encryptWithZ(updatedHeader, Z, clearText, updatedAAD, contentEncryptionKey);
+        return encryptWithZ(updatedHeader, Z, clearText, updatedAAD);
     }
 }

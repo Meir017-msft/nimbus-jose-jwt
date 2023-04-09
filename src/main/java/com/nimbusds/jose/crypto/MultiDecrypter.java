@@ -136,6 +136,8 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 	public MultiDecrypter(final JWK jwk, final Set<String> defCritHeaders)
 		throws KeyLengthException {
 
+		super(null);
+
 		if (jwk == null) {
 			throw new IllegalArgumentException("The private key (JWK) must not be null");
 		}

@@ -21,6 +21,8 @@ package com.nimbusds.jose.crypto;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
 import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
+import com.nimbusds.jose.crypto.impl.ECDH;
+import com.nimbusds.jose.crypto.impl.ECDH1PU;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.util.Base64URL;
@@ -243,6 +245,7 @@ public class ECDH1PUCryptoTest extends TestCase {
         }
     }
 
+
     public void testCycle_WithCekSpecified() throws Exception {
         Payload payload = new Payload("Hello world!");
 
@@ -254,6 +257,7 @@ public class ECDH1PUCryptoTest extends TestCase {
 
             ECKey aliceKey = generateECJWK(cycle.curve);
             ECKey bobKey = generateECJWK(cycle.curve);
+            ECDH.AlgorithmMode algMode = ECDH1PU.resolveAlgorithmMode(cycle.algorithm);
 
             JWEHeader header = new JWEHeader.Builder(cycle.algorithm, cycle.encryptionMethod).
                     agreementPartyUInfo(Base64URL.encode("Alice")).
@@ -264,7 +268,15 @@ public class ECDH1PUCryptoTest extends TestCase {
 
             ECDH1PUEncrypter encrypter = new ECDH1PUEncrypter(aliceKey.toECPrivateKey(), bobKey.toECPublicKey(), cek);
             encrypter.getJCAContext().setContentEncryptionProvider(BouncyCastleProviderSingleton.getInstance());
-            jweObject.encrypt(encrypter);
+
+            try {
+                jweObject.encrypt(encrypter);
+                if (ECDH.AlgorithmMode.DIRECT.equals(algMode))
+                    fail();
+            } catch (Exception e) {
+                assertEquals("The provided CEK not supported", e.getMessage());
+                continue;
+            }
 
             ECKey epk = (ECKey) jweObject.getHeader().getEphemeralPublicKey();
             assertEquals(cycle.curve, epk.getCurve());

@@ -92,13 +92,6 @@ public class X25519Encrypter extends ECDHCryptoProvider implements JWEEncrypter 
 
 
 	/**
-	 * The externally supplied AES content encryption key (CEK) to use,
-	 * {@code null} to generate a CEK for each JWE.
-	 */
-	private final SecretKey contentEncryptionKey;
-
-
-	/**
 	 * Creates a new Curve25519 Elliptic Curve Diffie-Hellman encrypter.
 	 *
 	 * @param publicKey The public key. Must not be {@code null}.
@@ -128,7 +121,7 @@ public class X25519Encrypter extends ECDHCryptoProvider implements JWEEncrypter 
 	public X25519Encrypter(final OctetKeyPair publicKey, final SecretKey contentEncryptionKey)
 		throws JOSEException {
 
-		super(publicKey.getCurve());
+		super(publicKey.getCurve(), contentEncryptionKey);
 
 		if (! Curve.X25519.equals(publicKey.getCurve())) {
 			throw new JOSEException("X25519Encrypter only supports OctetKeyPairs with crv=X25519");
@@ -139,20 +132,6 @@ public class X25519Encrypter extends ECDHCryptoProvider implements JWEEncrypter 
 		}
 
 		this.publicKey = publicKey;
-
-		Set<String> acceptableCEKAlgs = Collections.unmodifiableSet(
-			new HashSet<>(Arrays.asList("AES", "ChaCha20"))
-		);
-		
-		if (contentEncryptionKey != null) {
-			if (contentEncryptionKey.getAlgorithm() == null || ! acceptableCEKAlgs.contains(contentEncryptionKey.getAlgorithm())) {
-				throw new IllegalArgumentException("The algorithm of the content encryption key (CEK) must be AES or ChaCha20");
-			} else {
-				this.contentEncryptionKey = contentEncryptionKey;
-			}
-		} else {
-			this.contentEncryptionKey = null;
-		}
 	}
 
 
@@ -228,6 +207,6 @@ public class X25519Encrypter extends ECDHCryptoProvider implements JWEEncrypter 
 		// for JWEObject we need update the AAD as well
 		final byte[] updatedAAD = Arrays.equals(AAD.compute(header), aad) ? AAD.compute(updatedHeader) : aad;
 
-		return encryptWithZ(updatedHeader, Z, clearText, updatedAAD, contentEncryptionKey);
+		return encryptWithZ(updatedHeader, Z, clearText, updatedAAD);
 	}
 }

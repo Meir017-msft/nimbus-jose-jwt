@@ -113,13 +113,18 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 	 *
 	 * @param curve The elliptic curve. Must be supported and not
 	 *              {@code null}.
+	 * @param cek   The content encryption key (CEK) to use. If specified
+	 *              its algorithm must be "AES" or "ChaCha20" and its length
+	 *              must match the expected for the JWE encryption method
+	 *              ("enc"). If {@code null} a CEK will be generated for
+	 *              each JWE.
 	 *
 	 * @throws JOSEException If the elliptic curve is not supported.
 	 */
-	protected ECDHCryptoProvider(final Curve curve)
+	protected ECDHCryptoProvider(final Curve curve, final SecretKey cek)
 		throws JOSEException {
 
-		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS);
+		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS, cek);
 
 		Curve definedCurve = curve != null ? curve : new Curve("unknown");
 
@@ -170,20 +175,6 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 	 */
 	protected JWECryptoParts encryptWithZ(final JWEHeader header, final SecretKey Z, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
-		
-		return this.encryptWithZ(header, Z, clearText, aad, null);
-	}
-
-	/**
-	 * Encrypts the specified plaintext using the specified shared secret
-	 * ("Z") and, if provided, the content encryption key (CEK).
-	 */
-	protected JWECryptoParts encryptWithZ(final JWEHeader header,
-					      final SecretKey Z,
-					      final byte[] clearText,
-					      final byte[] aad,
-					      final SecretKey contentEncryptionKey)
-		throws JOSEException {
 
 		final JWEAlgorithm alg = header.getAlgorithm();
 		final ECDH.AlgorithmMode algMode = ECDH.resolveAlgorithmMode(alg);
@@ -197,14 +188,13 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 		final Base64URL encryptedKey; // The CEK encrypted (second JWE part)
 
 		if (algMode.equals(ECDH.AlgorithmMode.DIRECT)) {
+			if (isCEKProvided()) {
+				throw new JOSEException("The provided CEK not supported");
+			}
 			cek = sharedKey;
 			encryptedKey = null;
 		} else if (algMode.equals(ECDH.AlgorithmMode.KW)) {
-			if(contentEncryptionKey != null) { // Use externally supplied CEK
-				cek = contentEncryptionKey;
-			} else { // Generate the CEK according to the enc method
-				cek = ContentCryptoProvider.generateCEK(enc, getJCAContext().getSecureRandom());
-			}
+			cek = getCEK(enc);
 			encryptedKey = Base64URL.encode(AESKW.wrapCEK(cek, sharedKey, getJCAContext().getKeyEncryptionProvider()));
 		} else {
 			throw new JOSEException("Unexpected JWE ECDH algorithm mode: " + algMode);

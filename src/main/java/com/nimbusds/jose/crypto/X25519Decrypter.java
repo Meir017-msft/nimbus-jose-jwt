@@ -119,7 +119,7 @@ public class X25519Decrypter extends ECDHCryptoProvider implements JWEDecrypter,
 	public X25519Decrypter(final OctetKeyPair privateKey, final Set<String> defCritHeaders)
 		throws JOSEException {
 
-		super(privateKey.getCurve());
+		super(privateKey.getCurve(), null);
 
 		if (! Curve.X25519.equals(privateKey.getCurve())) {
 			throw new JOSEException("X25519Decrypter only supports OctetKeyPairs with crv=X25519");

@@ -185,7 +185,7 @@ public class ECDH1PUDecrypter extends ECDH1PUCryptoProvider implements JWEDecryp
                             final Curve curve)
         throws JOSEException {
 
-        super(curve);
+        super(curve, null);
 
         critPolicy.setDeferredCriticalHeaderParams(defCritHeaders);
 

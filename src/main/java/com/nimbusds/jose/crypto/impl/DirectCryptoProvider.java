@@ -109,12 +109,6 @@ public abstract class DirectCryptoProvider extends BaseJWEProvider {
 
 
 	/**
-	 * The Content Encryption Key (CEK).
-	 */
-	private final SecretKey cek;
-
-
-	/**
 	 * Creates a new direct encryption / decryption provider.
 	 *
 	 * @param cek The Content Encryption Key (CEK). Must be 128 bits (16
@@ -127,9 +121,7 @@ public abstract class DirectCryptoProvider extends BaseJWEProvider {
 	protected DirectCryptoProvider(final SecretKey cek)
 		throws KeyLengthException {
 
-		super(SUPPORTED_ALGORITHMS, getCompatibleEncryptionMethods(ByteUtils.bitLength(cek.getEncoded())));
-
-		this.cek = cek;
+		super(SUPPORTED_ALGORITHMS, getCompatibleEncryptionMethods(ByteUtils.bitLength(cek.getEncoded())), cek);
 	}
 
 
@@ -139,7 +131,10 @@ public abstract class DirectCryptoProvider extends BaseJWEProvider {
 	 * @return The key.
 	 */
 	public SecretKey getKey() {
-
-		return cek;
+		try {
+			return getCEK(EncryptionMethod.A128GCM);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 }

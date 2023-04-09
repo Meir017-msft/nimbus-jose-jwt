@@ -173,6 +173,8 @@ public class RSADecrypter extends RSACryptoProvider implements JWEDecrypter, Cri
 			    final Set<String> defCritHeaders,
 			    final boolean allowWeakKey) {
 
+		super(null);
+
 		if (! privateKey.getAlgorithm().equalsIgnoreCase("RSA")) {
 			throw new IllegalArgumentException("The private key algorithm must be RSA");
 		}

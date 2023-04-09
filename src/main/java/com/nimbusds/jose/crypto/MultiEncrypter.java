@@ -103,12 +103,6 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 	 */
 	private final JWKSet keys;
 
-	
-	/**
-	 * The externally supplied AES content encryption key (CEK) to use,
-	 * {@code null} to generate a CEK for each JWE.
-	 */
-	private final SecretKey contentEncryptionKey;
 
 	/**
 	 * The parameters are common for JWK and JWEHeader.
@@ -150,24 +144,12 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 	public MultiEncrypter(final JWKSet keys, final SecretKey contentEncryptionKey)
 		throws KeyLengthException {
 		
+		super(contentEncryptionKey);
+
 		if (keys == null) {
 			throw new IllegalArgumentException("The public key set (JWKSet) must not be null");
 		}
 		this.keys = keys;
-
-		Set<String> acceptableCEKAlgs = Collections.unmodifiableSet(
-			new HashSet<>(Arrays.asList("AES", "ChaCha20"))
-		);
-		
-		if (contentEncryptionKey != null) {
-			if (contentEncryptionKey.getAlgorithm() == null || ! acceptableCEKAlgs.contains(contentEncryptionKey.getAlgorithm())) {
-				throw new IllegalArgumentException("The algorithm of the content encryption key (CEK) must be AES or ChaCha20");
-			} else {
-				this.contentEncryptionKey = contentEncryptionKey;
-			}
-		} else {
-			this.contentEncryptionKey = null;
-		}
 	}
 
 
@@ -239,6 +221,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 		final EncryptionMethod enc = header.getEncryptionMethod();
 		final String aadStr = new String(aad, StandardCharsets.US_ASCII);
 		final Map<String, Object> headerMap = getHeaderMapFromAAD(aad);
+		final SecretKey cek = getCEK(enc);
 
 		JWECryptoParts jweParts;
 		JWEEncrypter encrypter;
@@ -247,19 +230,9 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 		Base64URL cipherText = null;
 		Base64URL iv = null;
 		Base64URL tag = null;
-		SecretKey cek = null;
 		JWEAlgorithm alg  = header.getAlgorithm();
 		Payload payload = new Payload(clearText);
 		List<Object> recipients = JSONArrayUtils.newJSONArray();
-
-		// Generate and encrypt the CEK according to the enc method
-		if (contentEncryptionKey != null) {
-			// Use externally supplied CEK
-			cek = contentEncryptionKey;
-		} else {
-			// Generate and encrypt the CEK according to the enc method
-			cek = ContentCryptoProvider.generateCEK(enc, getJCAContext().getSecureRandom());
-		}
 
 		for (JWK key : keys.getKeys()) {
 			KeyType kty = key.getKeyType();

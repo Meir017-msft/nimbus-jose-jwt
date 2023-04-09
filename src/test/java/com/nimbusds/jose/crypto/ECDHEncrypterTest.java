@@ -54,7 +54,7 @@ public class ECDHEncrypterTest extends TestCase {
 			new ECDHEncrypter((ECPublicKey) ecKeyPair.getPublic(), cek);
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertEquals("The algorithm of the content encryption key (CEK) must be AES", e.getMessage());
+			assertEquals("The algorithm of the content encryption key (CEK) must be AES or ChaCha20", e.getMessage());
 		}
 	}
 

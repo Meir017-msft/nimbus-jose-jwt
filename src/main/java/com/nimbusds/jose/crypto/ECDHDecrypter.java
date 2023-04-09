@@ -143,7 +143,7 @@ public class ECDHDecrypter extends ECDHCryptoProvider implements JWEDecrypter, C
 	public ECDHDecrypter(final ECKey ecJWK)
 		throws JOSEException {
 
-		super(ecJWK.getCurve());
+		super(ecJWK.getCurve(), null);
 
 		if (! ecJWK.isPrivate()) {
 			throw new JOSEException("The EC JWK doesn't contain a private part");
@@ -189,7 +189,7 @@ public class ECDHDecrypter extends ECDHCryptoProvider implements JWEDecrypter, C
 			     final Curve curve)
 		throws JOSEException {
 
-		super(curve);
+		super(curve, null);
 
 		critPolicy.setDeferredCriticalHeaderParams(defCritHeaders);
 

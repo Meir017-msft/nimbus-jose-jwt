@@ -91,12 +91,6 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 	 */
 	private final RSAPublicKey publicKey;
 
-	
-	/**
-	 * The externally supplied AES content encryption key (CEK) to use,
-	 * {@code null} to generate a CEK for each JWE.
-	 */
-	private final SecretKey contentEncryptionKey;
 
 	
 	/**
@@ -138,25 +132,13 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 	 *                             will be generated for each JWE.
 	 */
 	public RSAEncrypter(final RSAPublicKey publicKey, final SecretKey contentEncryptionKey) {
-		
+
+		super(contentEncryptionKey);
+
 		if (publicKey == null) {
 			throw new IllegalArgumentException("The public RSA key must not be null");
 		}
 		this.publicKey = publicKey;
-
-		Set<String> acceptableCEKAlgs = Collections.unmodifiableSet(
-			new HashSet<>(Arrays.asList("AES", "ChaCha20"))
-		);
-		
-		if (contentEncryptionKey != null) {
-			if (contentEncryptionKey.getAlgorithm() == null || ! acceptableCEKAlgs.contains(contentEncryptionKey.getAlgorithm())) {
-				throw new IllegalArgumentException("The algorithm of the content encryption key (CEK) must be AES or ChaCha20");
-			} else {
-				this.contentEncryptionKey = contentEncryptionKey;
-			}
-		} else {
-			this.contentEncryptionKey = null;
-		}
 	}
 	
 	
@@ -199,16 +181,7 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 
 		final JWEAlgorithm alg = header.getAlgorithm();
 		final EncryptionMethod enc = header.getEncryptionMethod();
-
-		// Generate and encrypt the CEK according to the enc method
-		final SecretKey cek;
-		if (contentEncryptionKey != null) {
-			// Use externally supplied CEK
-			cek = contentEncryptionKey;
-		} else {
-			// Generate and encrypt the CEK according to the enc method
-			cek = ContentCryptoProvider.generateCEK(enc, getJCAContext().getSecureRandom());
-		}
+		final SecretKey cek = getCEK(enc); // Generate and encrypt the CEK according to the enc method
 
 		final Base64URL encryptedKey; // The second JWE part
 

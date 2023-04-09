@@ -143,7 +143,7 @@ public class ECDH1PUX25519Decrypter extends ECDH1PUCryptoProvider implements JWE
                                   final Set<String> defCritHeaders)
             throws JOSEException {
 
-        super(privateKey.getCurve());
+        super(privateKey.getCurve(), null);
 
         this.privateKey = privateKey;
         this.publicKey = publicKey;
