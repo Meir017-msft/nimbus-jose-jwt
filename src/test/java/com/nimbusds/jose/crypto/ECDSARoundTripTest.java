@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashSet;
 
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
+import com.nimbusds.jose.crypto.opts.UserAuthenticationRequired;
 import com.nimbusds.jwt.JWTClaimNames;
 import junit.framework.TestCase;
 
@@ -293,6 +294,51 @@ public class ECDSARoundTripTest extends TestCase {
 		assertEquals(privateKey, signer.getPrivateKey());
 
 		jwsObject.sign(signer);
+
+		assertEquals(JWSObject.State.SIGNED, jwsObject.getState());
+
+		// Initialise verifier
+		ECDSAVerifier verifier = new ECDSAVerifier(publicKey);
+		assertEquals(publicKey, verifier.getPublicKey());
+
+		boolean verified = jwsObject.verify(verifier);
+
+		assertTrue("EC256 signature verified", verified);
+	}
+
+	public void testECKeyUserVerificationOption()
+			throws Exception {
+
+		// Create the public and private keys
+		KeyPair keyPair = createECKeyPair(EC256SPEC);
+		ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
+		ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
+
+		// Creates initial unsigned JWS object
+		JWSObject jwsObject = createInitialJWSObject(JWSAlgorithm.ES256);
+
+		// Initialise signer
+		ECDSASigner signer = new ECDSASigner(
+				privateKey,
+				new HashSet<JWSSignerOption>(){{
+					this.add(UserAuthenticationRequired.getInstance());
+				}} );
+		assertEquals(privateKey, signer.getPrivateKey());
+
+		boolean signingInterrupted;
+		try {
+			jwsObject.sign(signer);
+			signingInterrupted = false;
+		} catch (ActionRequiredForJWSCompletionException e) {
+			signingInterrupted = true;
+
+			assertNotNull(e.getCompletableJWSObjectSigning());
+			assertNotNull(e.getCompletableJWSObjectSigning().getInitializedSignature());
+
+			e.getCompletableJWSObjectSigning().complete();
+		}
+
+		assertTrue(signingInterrupted);
 
 		assertEquals(JWSObject.State.SIGNED, jwsObject.getState());
 

@@ -18,6 +18,7 @@
 package com.nimbusds.jose;
 
 
+import java.security.Signature;
 import java.text.ParseException;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -320,6 +321,12 @@ public class JWSObject extends JOSEObject {
 				e.getMessage(),
 				e.getTriggeringOption(),
 				new CompletableJWSObjectSigning() {
+
+					@Override
+					public Signature getInitializedSignature() {
+						return e.getCompletableJWSObjectSigning().getInitializedSignature();
+					}
+
 					@Override
 					public Base64URL complete() throws JOSEException {
 						signature = e.getCompletableJWSObjectSigning().complete();

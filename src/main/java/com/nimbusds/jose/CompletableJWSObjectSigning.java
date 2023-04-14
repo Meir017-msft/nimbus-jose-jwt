@@ -20,13 +20,20 @@ package com.nimbusds.jose;
 
 import com.nimbusds.jose.util.Base64URL;
 
+import java.security.Signature;
+
 
 /**
  * Completable JSON Web Signature (JWS) object signing. Implementations must be
  * thread-safe.
  */
 public interface CompletableJWSObjectSigning {
-	
+	/**
+	 * Returns the initialized signature object.
+	 * Used when the user verification must be bound to a specific instance of a Signature.
+	 * @return The initialized Signature object.
+	 */
+	Signature getInitializedSignature();
 	
 	/**
 	 * Completes the JWS object signing.

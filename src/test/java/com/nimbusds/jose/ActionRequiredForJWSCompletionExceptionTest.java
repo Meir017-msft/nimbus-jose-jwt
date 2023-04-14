@@ -18,6 +18,7 @@
 package com.nimbusds.jose;
 
 
+import java.security.Signature;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import junit.framework.TestCase;
@@ -39,6 +40,11 @@ public class ActionRequiredForJWSCompletionExceptionTest extends TestCase {
 			msg,
 			UserAuthenticationRequired.getInstance(),
 			new CompletableJWSObjectSigning() {
+				@Override
+				public Signature getInitializedSignature() {
+					return null;
+				}
+
 				@Override
 				public Base64URL complete() throws JOSEException {
 					completeCalled.set(true);
@@ -63,6 +69,11 @@ public class ActionRequiredForJWSCompletionExceptionTest extends TestCase {
 				null,
 				null,
 				new CompletableJWSObjectSigning() {
+					@Override
+					public Signature getInitializedSignature() {
+						return null;
+					}
+
 					@Override
 					public Base64URL complete() throws JOSEException {
 						return null;
