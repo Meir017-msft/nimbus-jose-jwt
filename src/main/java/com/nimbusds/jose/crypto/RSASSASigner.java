@@ -243,6 +243,12 @@ public class RSASSASigner extends RSASSAProvider implements JWSSigner {
 				"Authenticate user to complete signing",
 				UserAuthenticationRequired.getInstance(),
 				new CompletableJWSObjectSigning() {
+
+					@Override
+					public Signature getInitializedSignature() {
+						return signer;
+					}
+
 					@Override
 					public Base64URL complete() throws JOSEException {
 						return sign(signingInput, signer);
