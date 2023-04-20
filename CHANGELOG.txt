@@ -1543,7 +1543,13 @@ version 9.31 (2023-02-21)
     * JWTClaimsSet.parse must throw ParseException on "sub" and "aud" claims of
       illegal JSON type (iss #511).
 
-version 9.32 (2023-03-21)
+version 9.32 (2023-04-20)
+    * Updates the ECDSASigner for the ESxxx JWS algorithms to support the
+      UserAuthenticationRequired option, originally introduced in the
+      RSASSASigner for the RSxxx and PSxxx JWS algorithms.
+    * Adds a getInitializedSignature method to the CompletableJWSObjectSigning
+      interface. Enables the binding of a user verification to a specific
+      instance of a java.security.Signature.
     * Updates ContentCryptoProvider to support passing of an optional AAD. If
       no AAD is specified the JWE header becomes the AAD (default behaviour).
     * Updates the RSAEncrypter and RSADecrypter to support passing of an

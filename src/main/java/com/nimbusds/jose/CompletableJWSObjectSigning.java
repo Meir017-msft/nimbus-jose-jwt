@@ -18,9 +18,9 @@
 package com.nimbusds.jose;
 
 
-import com.nimbusds.jose.util.Base64URL;
-
 import java.security.Signature;
+
+import com.nimbusds.jose.util.Base64URL;
 
 
 /**
@@ -28,12 +28,17 @@ import java.security.Signature;
  * thread-safe.
  */
 public interface CompletableJWSObjectSigning {
+	
+	
 	/**
-	 * Returns the initialized signature object.
-	 * Used when the user verification must be bound to a specific instance of a Signature.
-	 * @return The initialized Signature object.
+	 * Returns the initialised signature object. Enables the binding of a
+	 * user verification to a specific instance of a
+	 * {@linkplain java.security.Signature}.
+	 *
+	 * @return The initialised {@linkplain java.security.Signature} object.
 	 */
 	Signature getInitializedSignature();
+	
 	
 	/**
 	 * Completes the JWS object signing.

@@ -26,20 +26,14 @@ import java.security.interfaces.ECPrivateKey;
 import java.util.Collections;
 import java.util.Set;
 
-import com.nimbusds.jose.ActionRequiredForJWSCompletionException;
-import com.nimbusds.jose.CompletableJWSObjectSigning;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.JWSSignerOption;
-import com.nimbusds.jose.crypto.opts.OptionUtils;
-import com.nimbusds.jose.crypto.opts.UserAuthenticationRequired;
 import net.jcip.annotations.ThreadSafe;
 
+import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
 import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.crypto.impl.ECDSAProvider;
+import com.nimbusds.jose.crypto.opts.OptionUtils;
+import com.nimbusds.jose.crypto.opts.UserAuthenticationRequired;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.util.Base64URL;
@@ -65,9 +59,19 @@ import com.nimbusds.jose.util.Base64URL;
  *     <li>{@link com.nimbusds.jose.JWSAlgorithm#ES512}
  * </ul>
  *
+ * <p>Supports the following {@link JWSSignerOption options}:
+ *
+ * <ul>
+ *     <li>{@link UserAuthenticationRequired} -- to prompt the user to
+ *         authenticate in order to complete the signing operation. Android
+ *         applications can use this option to trigger a biometric prompt that
+ *         is required to unlock a private key created with
+ *         {@code setUserAuthenticationRequired(true)}.
+ * </ul>
+ *
  * @author Axel Nennker
  * @author Vladimir Dzhuvinov
- * @version 2016-11-30
+ * @version 2023-04-20
  */
 @ThreadSafe
 public class ECDSASigner extends ECDSAProvider implements JWSSigner {
