@@ -891,6 +891,7 @@ public class RSASSATest {
 	}
 	
 	
+	@Test
 	public void testWithDetachedSignatureAndCriticalParams()
 		throws Exception {
 		
@@ -927,6 +928,7 @@ public class RSASSATest {
 	}
 	
 	
+	@Test
 	public void testWithRequireUserAuthenticationOption()
 		throws Exception {
 		
@@ -938,52 +940,55 @@ public class RSASSATest {
 		Set<JWSSignerOption> opts = new HashSet<>();
 		opts.add(UserAuthenticationRequired.getInstance());
 		
-		JWSSigner signer = new RSASSASigner(rsaJWK.toPrivateKey(), opts);
-		
-		Payload payload = new Payload("Hello, world!");
-		
-		JWSObject jwsObject = new JWSObject(new JWSHeader(JWSAlgorithm.RS256), payload);
-		
-		ActionRequiredForJWSCompletionException actionRequired = null;
-		
-		try {
-			jwsObject.sign(signer);
-		} catch (ActionRequiredForJWSCompletionException arException) {
-			// Copy the exception for processing
-			actionRequired = arException;
-		} catch (JOSEException e) {
-			throw new RuntimeException("Signing failed: " + e.getMessage(), e);
+		for (boolean asJWK: Arrays.asList(true, false)) {
+			
+			JWSSigner signer = asJWK ? new RSASSASigner(rsaJWK, opts) : new RSASSASigner(rsaJWK.toPrivateKey(), opts);
+			
+			Payload payload = new Payload("Hello, world!");
+			
+			JWSObject jwsObject = new JWSObject(new JWSHeader(JWSAlgorithm.RS256), payload);
+			
+			ActionRequiredForJWSCompletionException actionRequired = null;
+			
+			try {
+				jwsObject.sign(signer);
+			} catch (ActionRequiredForJWSCompletionException arException) {
+				// Copy the exception for processing
+				actionRequired = arException;
+			} catch (JOSEException e) {
+				throw new RuntimeException("Signing failed: " + e.getMessage(), e);
+			}
+			
+			assertEquals(JWSObject.State.UNSIGNED, jwsObject.getState());
+			
+			assertNotNull(actionRequired);
+			
+			if (actionRequired != null) {
+				
+				assertEquals("Authenticate user to complete signing", actionRequired.getMessage());
+				assertEquals(UserAuthenticationRequired.getInstance(), actionRequired.getTriggeringOption());
+				assertEquals("UserAuthenticationRequired", actionRequired.getTriggeringOption().toString());
+				assertNotNull(actionRequired.getCompletableJWSObjectSigning());
+				assertNotNull(actionRequired.getCompletableJWSObjectSigning().getInitializedSignature());
+				
+				// Perform user authentication to unlock the private key,
+				// e.g. with biometric prompt
+				// ...
+				
+				// Complete the signing after the key is unlocked
+				actionRequired.getCompletableJWSObjectSigning().complete();
+			}
+			
+			assertEquals(JWSObject.State.SIGNED, jwsObject.getState());
+			
+			String jwsString = jwsObject.serialize();
+			
+			JWSVerifier jwsVerifier = new RSASSAVerifier(rsaJWK.toRSAPublicKey());
+			
+			JWSObject parsedJWSObject = JWSObject.parse(jwsString);
+			
+			assertTrue(parsedJWSObject.verify(jwsVerifier));
 		}
-		
-		assertEquals(JWSObject.State.UNSIGNED, jwsObject.getState());
-		
-		assertNotNull(actionRequired);
-		
-		if (actionRequired != null) {
-			
-			assertEquals("Authenticate user to complete signing", actionRequired.getMessage());
-			assertEquals(UserAuthenticationRequired.getInstance(), actionRequired.getTriggeringOption());
-			assertEquals("UserAuthenticationRequired", actionRequired.getTriggeringOption().toString());
-			assertNotNull(actionRequired.getCompletableJWSObjectSigning());
-			assertNotNull(actionRequired.getCompletableJWSObjectSigning().getInitializedSignature());
-			
-			// Perform user authentication to unlock the private key,
-			// e.g. with biometric prompt
-			// ...
-			
-			// Complete the signing after the key is unlocked
-			actionRequired.getCompletableJWSObjectSigning().complete();
-		}
-		
-		assertEquals(JWSObject.State.SIGNED, jwsObject.getState());
-		
-		String jwsString = jwsObject.serialize();
-		
-		JWSVerifier jwsVerifier = new RSASSAVerifier(rsaJWK.toRSAPublicKey());
-		
-		JWSObject parsedJWSObject = JWSObject.parse(jwsString);
-		
-		assertTrue(parsedJWSObject.verify(jwsVerifier));
 	}
 	
 	

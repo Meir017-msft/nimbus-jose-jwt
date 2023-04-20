@@ -191,7 +191,7 @@ public class RSASSASigner extends RSASSAProvider implements JWSSigner {
 	public RSASSASigner(final RSAKey rsaJWK)
 		throws JOSEException {
 
-		this(RSAKeyUtils.toRSAPrivateKey(rsaJWK));
+		this(rsaJWK, null);
 	}
 
 
@@ -214,6 +214,26 @@ public class RSASSASigner extends RSASSAProvider implements JWSSigner {
 		throws JOSEException {
 
 		this(RSAKeyUtils.toRSAPrivateKey(rsaJWK), allowWeakKey);
+	}
+	
+	
+	/**
+	 * Creates a new RSA Signature-Scheme-with-Appendix (RSASSA) signer.
+	 *
+	 * @param rsaJWK The RSA JSON Web Key (JWK). Must contain or reference
+	 *               a private part. Its length must be at least 2048 bits.
+	 *               Note that the length of an RSA key in a PKCS#11 store
+	 *               cannot be checked. Must not be {@code null}.
+	 * @param opts   The signing options, empty or {@code null} if
+	 *               none.
+	 *
+	 * @throws JOSEException If the RSA JWK doesn't contain a private part
+	 *                       or its extraction failed.
+	 */
+	public RSASSASigner(final RSAKey rsaJWK, final Set<JWSSignerOption> opts)
+		throws JOSEException {
+		
+		this(RSAKeyUtils.toRSAPrivateKey(rsaJWK), opts);
 	}
 
 

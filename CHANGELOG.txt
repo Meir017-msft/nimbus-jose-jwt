@@ -1550,6 +1550,7 @@ version 9.32 (2023-04-20)
     * Adds a getInitializedSignature method to the CompletableJWSObjectSigning
       interface. Enables the binding of a user verification to a specific
       instance of a java.security.Signature.
+    * Adds a new RSASSASigner(RSAKey, Set<JWSSignerOption>) constructor.
     * Updates ContentCryptoProvider to support passing of an optional AAD. If
       no AAD is specified the JWE header becomes the AAD (default behaviour).
     * Updates the RSAEncrypter and RSADecrypter to support passing of an
