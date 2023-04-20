@@ -28,6 +28,8 @@ import java.security.spec.*;
 import java.util.Collections;
 import java.util.HashSet;
 
+import static org.junit.Assert.assertEquals;
+
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
 import com.nimbusds.jose.crypto.opts.UserAuthenticationRequired;
 import com.nimbusds.jwt.JWTClaimNames;
@@ -47,7 +49,7 @@ import com.nimbusds.jwt.SignedJWT;
  * verification.
  *
  * @author Vladimir Dzhuvinov
- * @version 2023-01-29
+ * @version 2023-04-20
  */
 public class ECDSARoundTripTest extends TestCase {
 
@@ -331,10 +333,18 @@ public class ECDSARoundTripTest extends TestCase {
 			signingInterrupted = false;
 		} catch (ActionRequiredForJWSCompletionException e) {
 			signingInterrupted = true;
-
+			
+			assertEquals("Authenticate user to complete signing", e.getMessage());
+			assertEquals(UserAuthenticationRequired.getInstance(), e.getTriggeringOption());
+			assertEquals("UserAuthenticationRequired", e.getTriggeringOption().toString());
 			assertNotNull(e.getCompletableJWSObjectSigning());
 			assertNotNull(e.getCompletableJWSObjectSigning().getInitializedSignature());
-
+			
+			// Perform user authentication to unlock the private key,
+			// e.g. with biometric prompt
+			// ...
+			
+			// Complete the signing after the key is unlocked
 			e.getCompletableJWSObjectSigning().complete();
 		}
 

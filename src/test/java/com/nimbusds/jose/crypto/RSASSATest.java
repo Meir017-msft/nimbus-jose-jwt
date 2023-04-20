@@ -50,7 +50,7 @@ import com.nimbusds.jwt.util.DateUtils;
  * from the JWS spec.
  *
  * @author Vladimir Dzhuvinov
- * @version 2022-01-31
+ * @version 2023-04-20
  */
 public class RSASSATest {
 
@@ -964,6 +964,8 @@ public class RSASSATest {
 			assertEquals("Authenticate user to complete signing", actionRequired.getMessage());
 			assertEquals(UserAuthenticationRequired.getInstance(), actionRequired.getTriggeringOption());
 			assertEquals("UserAuthenticationRequired", actionRequired.getTriggeringOption().toString());
+			assertNotNull(actionRequired.getCompletableJWSObjectSigning());
+			assertNotNull(actionRequired.getCompletableJWSObjectSigning().getInitializedSignature());
 			
 			// Perform user authentication to unlock the private key,
 			// e.g. with biometric prompt
