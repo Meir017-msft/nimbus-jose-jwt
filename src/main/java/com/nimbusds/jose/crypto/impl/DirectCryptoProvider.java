@@ -122,6 +122,10 @@ public abstract class DirectCryptoProvider extends BaseJWEProvider {
 		throws KeyLengthException {
 
 		super(SUPPORTED_ALGORITHMS, getCompatibleEncryptionMethods(ByteUtils.bitLength(cek.getEncoded())), cek);
+
+		if (cek == null) {
+			throw new KeyLengthException("The provided CEK is not supported");
+		}
 	}
 
 
@@ -132,7 +136,7 @@ public abstract class DirectCryptoProvider extends BaseJWEProvider {
 	 */
 	public SecretKey getKey() {
 		try {
-			return getCEK(EncryptionMethod.A128GCM);
+			return getCEK(null);
 		} catch (Exception e) {
 			return null;
 		}

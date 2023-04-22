@@ -156,7 +156,7 @@ abstract class BaseJWEProvider implements JWEProvider {
 	protected SecretKey getCEK(EncryptionMethod enc)
 		throws JOSEException {
 
-		return isCEKProvided() ? cek : ContentCryptoProvider.generateCEK(enc, jcaContext.getSecureRandom());
+		return (isCEKProvided() || enc == null) ? cek : ContentCryptoProvider.generateCEK(enc, jcaContext.getSecureRandom());
 	}
 }
 
