@@ -210,6 +210,8 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 		JWEHeader recipientHeader = header;
 		Base64URL recipientEncryptedKey = encryptedKey;
 		try {
+			// The encryptedKey value contains the Base64URL encoded JSON string
+			// {"recipients":[{recipient1},{recipient2}]} if multiple recipients are used.
 			for (Object recipientMap : JSONObjectUtils.getJSONArray((JSONObjectUtils.parse(encryptedKey.decodeToString())), "recipients")) {
 				Map<String, Object> recipientHeaderMap = header.toJSONObject();
 				recipientHeaderMap.putAll(JSONObjectUtils.getJSONObject((Map<String, Object>) recipientMap, "header"));
@@ -221,6 +223,7 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 				}
 			}
 		} catch (Exception e) {
+			// If encryptedKey can not be parsed as a JSON Object, it means the encryptedKey contains the RAW encrypted key value.
 		}
 
 		final JWEAlgorithm alg = recipientHeader.getAlgorithm();
