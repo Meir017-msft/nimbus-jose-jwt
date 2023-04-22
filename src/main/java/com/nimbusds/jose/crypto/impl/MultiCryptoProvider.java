@@ -120,7 +120,6 @@ public abstract class MultiCryptoProvider extends BaseJWEProvider {
 		algs.add(JWEAlgorithm.A192GCMKW);
 		algs.add(JWEAlgorithm.A256GCMKW);
 		algs.add(JWEAlgorithm.DIR);
-		algs.add(JWEAlgorithm.ECDH_ES);
 		algs.add(JWEAlgorithm.ECDH_ES_A128KW);
 		algs.add(JWEAlgorithm.ECDH_ES_A192KW);
 		algs.add(JWEAlgorithm.ECDH_ES_A256KW);

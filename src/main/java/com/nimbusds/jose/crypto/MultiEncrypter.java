@@ -57,7 +57,6 @@ import com.nimbusds.jose.util.JSONObjectUtils;
  *     <li>{@link com.nimbusds.jose.JWEAlgorithm#A192GCMKW}
  *     <li>{@link com.nimbusds.jose.JWEAlgorithm#A256GCMKW}
  *     <li>{@link com.nimbusds.jose.JWEAlgorithm#DIR}
- *     <li>{@link com.nimbusds.jose.JWEAlgorithm#ECDH_ES}
  *     <li>{@link com.nimbusds.jose.JWEAlgorithm#ECDH_ES_A128KW}
  *     <li>{@link com.nimbusds.jose.JWEAlgorithm#ECDH_ES_A192KW}
  *     <li>{@link com.nimbusds.jose.JWEAlgorithm#ECDH_ES_A256KW}
