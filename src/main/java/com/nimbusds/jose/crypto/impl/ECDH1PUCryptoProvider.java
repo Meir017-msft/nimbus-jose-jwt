@@ -198,7 +198,7 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 		
 		if (algMode.equals(ECDH.AlgorithmMode.DIRECT)) {
 			if (isCEKProvided()) {
-				throw new JOSEException("The provided CEK not supported");
+				throw new JOSEException("The provided CEK is not supported");
 			}
 			// Derive shared key via concat KDF
 			getConcatKDF().getJCAContext().setProvider(getJCAContext().getMACProvider()); // update before concat

@@ -164,7 +164,7 @@ public class ECDHCryptoTest extends TestCase {
 			jweObject.encrypt(encrypter);
 			fail();
 		} catch (Exception e) {
-			assertEquals("The provided CEK not supported", e.getMessage());
+			assertEquals("The provided CEK is not supported", e.getMessage());
 		}
 	}
 

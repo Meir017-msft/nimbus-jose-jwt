@@ -233,7 +233,7 @@ public class ECDH1PUX25519CryptoTest extends TestCase {
                 if (ECDH.AlgorithmMode.DIRECT.equals(algMode))
                     fail();
             } catch (Exception e) {
-                assertEquals("The provided CEK not supported", e.getMessage());
+                assertEquals("The provided CEK is not supported", e.getMessage());
                 continue;
             }
 
