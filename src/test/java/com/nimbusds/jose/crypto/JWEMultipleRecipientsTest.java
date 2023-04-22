@@ -207,6 +207,13 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		}
 
 		try {
+			encrypter = new MultiEncrypter(null, null);
+			fail();
+		} catch (Exception e) {
+			assertEquals("The public key set (JWKSet) must not be null", e.getMessage());
+		}
+
+		try {
 			SecretKey cek = new OctetSequenceKeyGenerator(enc.cekBitLength()).generate().toOctetSequenceKey().toSecretKey("AES");
 			encrypter = new MultiEncrypter(keys, cek);
 			fail();
