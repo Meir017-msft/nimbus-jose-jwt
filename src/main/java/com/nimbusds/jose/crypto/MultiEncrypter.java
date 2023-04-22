@@ -121,7 +121,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 	public MultiEncrypter(final JWKSet keys)
 		throws KeyLengthException {
 
-		this(keys, null);
+		this(keys, findDirectCek(keys));
 	}
 
 
@@ -148,6 +148,14 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 		if (keys == null) {
 			throw new IllegalArgumentException("The public key set (JWKSet) must not be null");
 		}
+		for (JWK jwk : keys.getKeys()) {
+			if ("dir".equals(String.valueOf(jwk.getAlgorithm()))
+					&& KeyType.OCT.equals(jwk.getKeyType())
+					&& !jwk.toOctetSequenceKey().toSecretKey("AES").equals(contentEncryptionKey)) {
+				throw new IllegalArgumentException("Bad CEK");
+			}
+		}
+
 		this.keys = keys;
 	}
 
@@ -159,6 +167,25 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 	 */
 	public String[] getRecipientHeaderParams() {
 		return recipientHeaderParams;
+	}
+
+
+	/**
+	 * Returns the SecrectKey of the recipients with JWEAlgorithm.DIR if present.
+	 *
+	 * @param keys                 The public keys. Must not be
+	 *                             {@code null}.
+	 * @return The SecretKey.
+	 */
+	private static SecretKey findDirectCek(final JWKSet keys) {
+		if (keys != null) {
+			for (JWK jwk : keys.getKeys()) {
+				if ("dir".equals(String.valueOf(jwk.getAlgorithm())) && KeyType.OCT.equals(jwk.getKeyType())) {
+					return jwk.toOctetSequenceKey().toSecretKey("AES");
+				}
+			}
+		}
+		return null;
 	}
 
 

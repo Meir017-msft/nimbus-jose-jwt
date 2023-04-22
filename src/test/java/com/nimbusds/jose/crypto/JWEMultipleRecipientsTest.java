@@ -159,7 +159,6 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		final String plainText = "Hello world!";
 		final EncryptionMethod enc = EncryptionMethod.A256GCM;
 		final JWKSet keys = generateJWKSet(enc);
-		final SecretKey cek = keys.getKeyByKeyId("DirRecipient").toOctetSequenceKey().toSecretKey("AES");
 		final Set resipientHeader = new HashSet<>(Arrays.asList("alg", "kid"));
 		final Set ecResipientHeader = new HashSet<>(Arrays.asList("epk", "alg", "kid"));
 
@@ -167,7 +166,7 @@ public class JWEMultipleRecipientsTest extends TestCase {
 						.compressionAlgorithm(CompressionAlgorithm.DEF)
 						.build();
 		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
-		JWEEncrypter encrypter = new MultiEncrypter(keys, cek);
+		JWEEncrypter encrypter = new MultiEncrypter(keys);
 
 		jwe.encrypt(encrypter);
 		String json = jwe.serializeGeneral();
@@ -205,6 +204,14 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			jwe = JWEObjectJSON.parse(json);
 			jwe.decrypt(new MultiDecrypter(key));
 			assertEquals(plainText, jwe.getPayload().toString());
+		}
+
+		try {
+			SecretKey cek = new OctetSequenceKeyGenerator(enc.cekBitLength()).generate().toOctetSequenceKey().toSecretKey("AES");
+			encrypter = new MultiEncrypter(keys, cek);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Bad CEK", e.getMessage());
 		}
 	}
 }
