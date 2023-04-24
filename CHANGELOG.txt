@@ -1561,3 +1561,4 @@ version 9.32 (2023-04-20)
       optional AAD. If no AAD is specified the JWE header becomes the AAD
       (default behaviour). Intended to support JWE JSON serialisation to
       multiple recipients.
+    * Updates GSon to 2.10.1.
