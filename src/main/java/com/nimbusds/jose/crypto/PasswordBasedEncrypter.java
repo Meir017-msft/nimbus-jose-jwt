@@ -17,7 +17,7 @@
 
 package com.nimbusds.jose.crypto;
 
-
+import java.util.Arrays;
 import javax.crypto.SecretKey;
 
 import com.nimbusds.jose.*;
@@ -60,7 +60,8 @@ import net.jcip.annotations.ThreadSafe;
  * </ul>
  *
  * @author Vladimir Dzhuvinov
- * @version 2021-07-03
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 @ThreadSafe
 public class PasswordBasedEncrypter extends PasswordBasedCryptoProvider implements JWEEncrypter {
@@ -138,8 +139,30 @@ public class PasswordBasedEncrypter extends PasswordBasedCryptoProvider implemen
 	}
 
 
-	@Override
+	/**
+	 * Encrypts the specified clear text of a {@link JWEObject JWE object}.
+	 *
+	 * @param header    The JSON Web Encryption (JWE) header. Must specify
+	 *                  a supported JWE algorithm and method. Must not be
+	 *                  {@code null}.
+	 * @param clearText The clear text to encrypt. Must not be {@code null}.
+	 *
+	 * @return The resulting JWE crypto parts.
+	 *
+	 * @throws JOSEException If the JWE algorithm or method is not
+	 *                       supported or if encryption failed for some
+	 *                       other internal reason.
+	 */
+	@Deprecated
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText)
+		throws JOSEException {
+
+		return encrypt(header, clearText, AAD.compute(header));
+	}
+
+
+	@Override
+	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
 		final JWEAlgorithm alg = header.getAlgorithm();
@@ -162,7 +185,10 @@ public class PasswordBasedEncrypter extends PasswordBasedCryptoProvider implemen
 		// The second JWE part
 		final Base64URL encryptedKey = Base64URL.encode(AESKW.wrapCEK(cek, psKey, getJCAContext().getKeyEncryptionProvider()));
 
-		return  ContentCryptoProvider.encrypt(updatedHeader, clearText, cek, encryptedKey, getJCAContext());
+		// for JWEObject we need update the AAD as well
+		final byte[] updatedAAD = Arrays.equals(AAD.compute(header), aad) ? AAD.compute(updatedHeader) : aad;
+
+		return ContentCryptoProvider.encrypt(updatedHeader, clearText, updatedAAD, cek, encryptedKey, getJCAContext());
 	}
 
 

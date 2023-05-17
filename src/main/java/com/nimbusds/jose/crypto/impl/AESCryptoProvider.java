@@ -143,13 +143,18 @@ public abstract class AESCryptoProvider extends BaseJWEProvider {
 	 *  @param kek The Key Encryption Key. Must be 128 bits (16 bytes), 192
 	 *             bits (24 bytes) or 256 bits (32 bytes). Must not be
 	 *             {@code null}.
+	 * @param cek  The content encryption key (CEK) to use. If specified
+	 *             its algorithm must be "AES" or "ChaCha20" and its length
+	 *             must match the expected for the JWE encryption method
+	 *             ("enc"). If {@code null} a CEK will be generated for
+	 *             each JWE.
 	 *
 	 * @throws KeyLengthException If the KEK length is invalid.
 	 */
-	protected AESCryptoProvider(final SecretKey kek)
+	protected AESCryptoProvider(final SecretKey kek, final SecretKey cek)
 		throws KeyLengthException {
 
-		super(getCompatibleJWEAlgorithms(ByteUtils.bitLength(kek.getEncoded())), ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS);
+		super(getCompatibleJWEAlgorithms(ByteUtils.bitLength(kek.getEncoded())), ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS, cek);
 
 		this.kek = kek;
 	}

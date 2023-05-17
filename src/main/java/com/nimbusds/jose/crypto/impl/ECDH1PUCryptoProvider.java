@@ -76,7 +76,8 @@ import com.nimbusds.jose.util.Base64URL;
  * </ul>
  *
  * @author Alexander Martynov
- * @version 2021-08-03
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 	
@@ -121,12 +122,18 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 	 *
 	 * @param curve The elliptic curve. Must be supported and not
 	 *              {@code null}.
+	 * @param cek   The content encryption key (CEK) to use. If specified
+	 *              its algorithm must be "AES" or "ChaCha20" and its length
+	 *              must match the expected for the JWE encryption method
+	 *              ("enc"). If {@code null} a CEK will be generated for
+	 *              each JWE.
+	 *
 	 * @throws JOSEException If the elliptic curve is not supported.
 	 */
-	protected ECDH1PUCryptoProvider(final Curve curve)
+	protected ECDH1PUCryptoProvider(final Curve curve, final SecretKey cek)
 		throws JOSEException {
 		
-		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS);
+		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS, cek);
 		
 		Curve definedCurve = curve != null ? curve : new Curve("unknown");
 		
@@ -174,13 +181,12 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 	
 	/**
 	 * Encrypts the specified plaintext using the specified shared secret
-	 * ("Z"), with an optionally externally supplied content encryption key
-	 * (CEK) for {@link ECDH.AlgorithmMode#KW}.
+	 * ("Z").
 	 */
 	protected JWECryptoParts encryptWithZ(final JWEHeader header,
 					      final SecretKey Z,
 					      final byte[] clearText,
-					      final SecretKey contentEncryptionKey)
+					      final byte[] aad)
 		throws JOSEException {
 		
 		final JWEAlgorithm alg = header.getAlgorithm();
@@ -191,12 +197,14 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 		final Base64URL encryptedKey; // The CEK encrypted (second JWE part)
 		
 		if (algMode.equals(ECDH.AlgorithmMode.DIRECT)) {
-			
+			if (isCEKProvided()) {
+				throw new JOSEException("The provided CEK is not supported");
+			}
 			// Derive shared key via concat KDF
 			getConcatKDF().getJCAContext().setProvider(getJCAContext().getMACProvider()); // update before concat
 			cek = ECDH1PU.deriveSharedKey(header, Z, getConcatKDF());
 			
-			return ContentCryptoProvider.encrypt(header, clearText, cek, null, getJCAContext());
+			return ContentCryptoProvider.encrypt(header, clearText, aad, cek, null, getJCAContext());
 		}
 		
 		if (algMode.equals(ECDH.AlgorithmMode.KW)) {
@@ -209,13 +217,9 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 					EncryptionMethod.Family.AES_CBC_HMAC_SHA));
 			}
 			
-			if (contentEncryptionKey != null) { // Use externally supplied CEK
-				cek = contentEncryptionKey;
-			} else { // Generate the CEK according to the enc method
-				cek = ContentCryptoProvider.generateCEK(enc, getJCAContext().getSecureRandom());
-			}
+			cek = getCEK(enc);
 			
-			JWECryptoParts encrypted = ContentCryptoProvider.encrypt(header, clearText, cek, null, getJCAContext());
+			JWECryptoParts encrypted = ContentCryptoProvider.encrypt(header, clearText, aad, cek, null, getJCAContext());
 			
 			SecretKey sharedKey = ECDH1PU.deriveSharedKey(header, Z, encrypted.getAuthenticationTag(), getConcatKDF());
 			encryptedKey = Base64URL.encode(AESKW.wrapCEK(cek, sharedKey, getJCAContext().getKeyEncryptionProvider()));
@@ -237,6 +241,7 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 	 * Decrypts the encrypted JWE parts using the specified shared secret ("Z").
 	 */
 	protected byte[] decryptWithZ(final JWEHeader header,
+				      final byte[] aad,
 				      final SecretKey Z,
 				      final Base64URL encryptedKey,
 				      final Base64URL iv,
@@ -265,6 +270,6 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 			throw new JOSEException("Unexpected JWE ECDH algorithm mode: " + algMode);
 		}
 		
-		return ContentCryptoProvider.decrypt(header, null, iv, cipherText, authTag, cek, getJCAContext());
+		return ContentCryptoProvider.decrypt(header, aad, null, iv, cipherText, authTag, cek, getJCAContext());
 	}
 }

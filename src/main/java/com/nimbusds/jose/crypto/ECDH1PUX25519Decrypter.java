@@ -89,7 +89,8 @@ import java.util.Set;
  * </ul>
  *
  * @author Alexander Martynov
- * @version 2021-08-03
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 @ThreadSafe
 public class ECDH1PUX25519Decrypter extends ECDH1PUCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
@@ -142,7 +143,7 @@ public class ECDH1PUX25519Decrypter extends ECDH1PUCryptoProvider implements JWE
                                   final Set<String> defCritHeaders)
             throws JOSEException {
 
-        super(privateKey.getCurve());
+        super(privateKey.getCurve(), null);
 
         this.privateKey = privateKey;
         this.publicKey = publicKey;
@@ -192,12 +193,48 @@ public class ECDH1PUX25519Decrypter extends ECDH1PUCryptoProvider implements JWE
     }
 
 
+    /**
+     * Decrypts the specified cipher text of a {@link JWEObject JWE Object}.
+     *
+     * @param header       The JSON Web Encryption (JWE) header. Must
+     *                     specify a supported JWE algorithm and method.
+     *                     Must not be {@code null}.
+     * @param encryptedKey The encrypted key, {@code null} if not required
+     *                     by the JWE algorithm.
+     * @param iv           The initialisation vector, {@code null} if not
+     *                     required by the JWE algorithm.
+     * @param cipherText   The cipher text to decrypt. Must not be
+     *                     {@code null}.
+     * @param authTag      The authentication tag, {@code null} if not
+     *                     required.
+     *
+     * @return The clear text.
+     *
+     * @throws JOSEException If the JWE algorithm or method is not
+     *                       supported, if a critical header parameter is
+     *                       not supported or marked for deferral to the
+     *                       application, or if decryption failed for some
+     *                       other reason.
+     */
+    @Deprecated
+    public byte[] decrypt(final JWEHeader header,
+               final Base64URL encryptedKey,
+               final Base64URL iv,
+               final Base64URL cipherText,
+               final Base64URL authTag)
+        throws JOSEException {
+
+        return decrypt(header, encryptedKey, iv, cipherText, authTag, AAD.compute(header));
+    }
+
+
     @Override
     public byte[] decrypt(final JWEHeader header,
                           final Base64URL encryptedKey,
                           final Base64URL iv,
                           final Base64URL cipherText,
-                          final Base64URL authTag)
+                          final Base64URL authTag,
+                          final byte[] aad)
             throws JOSEException {
 
         // Check for unrecognizable "crit" properties
@@ -216,6 +253,6 @@ public class ECDH1PUX25519Decrypter extends ECDH1PUCryptoProvider implements JWE
                 ephemeralPublicKey
         );
 
-        return decryptWithZ(header, Z, encryptedKey, iv, cipherText, authTag);
+        return decryptWithZ(header, aad, Z, encryptedKey, iv, cipherText, authTag);
     }
 }

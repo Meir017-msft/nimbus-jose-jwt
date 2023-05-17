@@ -96,7 +96,7 @@ public abstract class PasswordBasedCryptoProvider extends BaseJWEProvider {
 	 */
 	protected PasswordBasedCryptoProvider(final byte[] password) {
 
-		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS);
+		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS, null);
 
 		if (password == null || password.length == 0) {
 			throw new IllegalArgumentException("The password must not be null or empty");

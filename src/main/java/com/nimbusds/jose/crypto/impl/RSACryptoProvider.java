@@ -21,6 +21,7 @@ package com.nimbusds.jose.crypto.impl;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import javax.crypto.SecretKey;
 
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JWEAlgorithm;
@@ -54,7 +55,8 @@ import com.nimbusds.jose.JWEAlgorithm;
  * 
  * @author David Ortiz
  * @author Vladimir Dzhuvinov
- * @version 2023-03-21
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 public abstract class RSACryptoProvider extends BaseJWEProvider {
 
@@ -63,12 +65,6 @@ public abstract class RSACryptoProvider extends BaseJWEProvider {
 	 * The supported JWE algorithms by the RSA crypto provider class.
 	 */
 	public static final Set<JWEAlgorithm> SUPPORTED_ALGORITHMS;
-
-
-	/**
-	 * The Additional Authenticated Data (AAD).
-	 */
-	private final byte[] aad;
 
 
 	/**
@@ -90,33 +86,14 @@ public abstract class RSACryptoProvider extends BaseJWEProvider {
 
 	/**
 	 * Creates a new RSA encryption / decryption provider.
-	 */
-	protected RSACryptoProvider() {
-
-	    this(null);
-	}
-	
-	
-	/**
-	 * Creates a new RSA encryption / decryption provider.
 	 *
-	 * @param aad The Additional Authenticated Data (AAD), if {@code null}
-	 *            the JWE header becomes the AAD.
+	 * @param cek The Content Encryption Key (CEK). Must be 128 bits (16
+	 *            bytes), 192 bits (24 bytes), 256 bits (32 bytes), 384
+	 *            bits (48 bytes) or 512 bits (64 bytes) long. Must not be
+	 *            {@code null}.
 	 */
-	protected RSACryptoProvider(final byte[] aad) {
+	protected RSACryptoProvider(final SecretKey cek) {
 
-		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS);
-		this.aad = aad;
-	}
-	
-	
-	/**
-	 * Returns the Additional Authenticated Data (AAD).
-	 *
-	 * @return The AAD, {@code null} if not specified.
-	 */
-	protected byte[] getAAD() {
-		
-		return aad;
+		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS, cek);
 	}
 }

@@ -36,7 +36,8 @@ import com.nimbusds.jose.util.Base64URL;
  * Tests JWE object methods.
  *
  * @author Vladimir Dzhuvinov
- * @version 2021-06-05
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 public class JWEObjectTest extends TestCase {
 
@@ -77,7 +78,7 @@ public class JWEObjectTest extends TestCase {
 		try {
 			jwe.encrypt(new JWEEncrypter() {
 				@Override
-				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText) throws JOSEException {
+				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText, byte[] aad) throws JOSEException {
 					return null;
 				}
 				@Override
@@ -107,7 +108,7 @@ public class JWEObjectTest extends TestCase {
 		try {
 			jwe.encrypt(new JWEEncrypter() {
 				@Override
-				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText) throws JOSEException {
+				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText, byte[] aad) throws JOSEException {
 					return null;
 				}
 				@Override

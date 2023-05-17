@@ -25,7 +25,8 @@ import com.nimbusds.jose.util.Base64URL;
  * JSON Web Encryption (JWE) decrypter.
  *
  * @author Vladimir Dzhuvinov
- * @version 2015-04-21
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 public interface JWEDecrypter extends JWEProvider {
 
@@ -44,6 +45,8 @@ public interface JWEDecrypter extends JWEProvider {
 	 *                     {@code null}.
 	 * @param authTag      The authentication tag, {@code null} if not
 	 *                     required.
+	 * @param aad          The additional authenticated data. Must not be
+	 *                     {@code null}.
 	 *
 	 * @return The clear text.
 	 *
@@ -57,6 +60,7 @@ public interface JWEDecrypter extends JWEProvider {
 		       final Base64URL encryptedKey,
 		       final Base64URL iv,
 		       final Base64URL cipherText,
-		       final Base64URL authTag)
+		       final Base64URL authTag,
+		       final byte[] aad)
 		throws JOSEException;
 }

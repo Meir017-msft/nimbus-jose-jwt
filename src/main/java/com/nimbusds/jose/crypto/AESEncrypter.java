@@ -17,7 +17,10 @@
 
 package com.nimbusds.jose.crypto;
 
-
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -72,7 +75,8 @@ import net.jcip.annotations.ThreadSafe;
  * @author Melisa Halsband
  * @author Vladimir Dzhuvinov
  * @author Dimitar A. Stoikov
- * @version 2017-06-01
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 @ThreadSafe
 public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
@@ -90,6 +94,29 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 	/**
 	 * Creates a new AES encrypter.
 	 *
+	 * @param kek                  The Key Encryption Key. Must be 128 bits
+	 *                             (16 bytes), 192 bits (24 bytes) or
+	 *                             256 bits (32 bytes). Must not be
+	 *                             {@code null}.
+	 * @param contentEncryptionKey The content encryption key (CEK) to use.
+	 *                             If specified its algorithm must be "AES"
+	 *                             or "ChaCha20" and its length must match
+	 *                             the expected for the JWE encryption
+	 *                             method ("enc"). If {@code null} a CEK
+	 *                             will be generated for each JWE.
+	 *
+	 * @throws KeyLengthException If the KEK length is invalid.
+	 */
+	public AESEncrypter(final SecretKey kek, final SecretKey contentEncryptionKey)
+		throws KeyLengthException {
+
+		super(kek, contentEncryptionKey);
+	}
+
+
+	/**
+	 * Creates a new AES encrypter.
+	 *
 	 * @param kek The Key Encryption Key. Must be 128 bits (16 bytes), 192
 	 *            bits (24 bytes) or 256 bits (32 bytes). Must not be
 	 *            {@code null}.
@@ -99,7 +126,7 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 	public AESEncrypter(final SecretKey kek)
 		throws KeyLengthException {
 
-		super(kek);
+		this(kek, null);
 	}
 
 	/**
@@ -135,11 +162,34 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 	}
 
 
-	@Override
+	/**
+	 * Encrypts the specified clear text of a {@link JWEObject JWE object}.
+	 *
+	 * @param header    The JSON Web Encryption (JWE) header. Must specify
+	 *                  a supported JWE algorithm and method. Must not be
+	 *                  {@code null}.
+	 * @param clearText The clear text to encrypt. Must not be {@code null}.
+	 *
+	 * @return The resulting JWE crypto parts.
+	 *
+	 * @throws JOSEException If the JWE algorithm or method is not
+	 *                       supported or if encryption failed for some
+	 *                       other internal reason.
+	 */
+	@Deprecated
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText)
 		throws JOSEException {
 
+		return encrypt(header, clearText, AAD.compute(header));
+	}
+
+
+	@Override
+	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
+		throws JOSEException {
+
 		final JWEAlgorithm alg = header.getAlgorithm();
+		final EncryptionMethod enc = header.getEncryptionMethod();
 
 		// Check the AES key size and determine the algorithm family
 		final AlgFamily algFamily;
@@ -194,10 +244,7 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 
 		final JWEHeader updatedHeader; // We need to work on the header
 		final Base64URL encryptedKey; // The second JWE part
-
-		// Generate and encrypt the CEK according to the enc method
-		final EncryptionMethod enc = header.getEncryptionMethod();
-		final SecretKey cek = ContentCryptoProvider.generateCEK(enc, getJCAContext().getSecureRandom());
+		final SecretKey cek = getCEK(enc); // Generate and encrypt the CEK according to the enc method
 
 		if(AlgFamily.AESKW.equals(algFamily)) {
 
@@ -220,6 +267,9 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 			throw new JOSEException("Unexpected JWE algorithm: " + alg);
 		}
 
-		return ContentCryptoProvider.encrypt(updatedHeader, clearText, cek, encryptedKey, getJCAContext());
+		// for JWEObject we need update the AAD as well
+		final byte[] updatedAAD = Arrays.equals(AAD.compute(header), aad) ? AAD.compute(updatedHeader) : aad;
+
+		return ContentCryptoProvider.encrypt(updatedHeader, clearText, updatedAAD, cek, encryptedKey, getJCAContext());
 	}
 }
