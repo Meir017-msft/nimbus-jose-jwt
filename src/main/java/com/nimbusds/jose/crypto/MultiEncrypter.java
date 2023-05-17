@@ -17,13 +17,6 @@
 
 package com.nimbusds.jose.crypto;
 
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import javax.crypto.SecretKey;
-
-import net.jcip.annotations.ThreadSafe;
-
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.MultiCryptoProvider;
@@ -33,10 +26,15 @@ import com.nimbusds.jose.jwk.KeyType;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONArrayUtils;
 import com.nimbusds.jose.util.JSONObjectUtils;
+import net.jcip.annotations.ThreadSafe;
+
+import javax.crypto.SecretKey;
+import java.util.List;
+import java.util.Map;
 
 
 /**
- * Multirecipient encrypter of {@link com.nimbusds.jose.JWEObjectJSON JWE
+ * Multi-recipient encrypter of {@link com.nimbusds.jose.JWEObjectJSON JWE
  * objects}.
  *
  * <p>This class is thread-safe.
@@ -85,10 +83,24 @@ import com.nimbusds.jose.util.JSONObjectUtils;
  * </ul>
  *
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @author Vladimir Dzhuvinov
+ * @version 2023-05-17
  */
 @ThreadSafe
 public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter {
+
+
+	/**
+	 * Common JWK and JWEHeader parameters.
+	 */
+	private static final String[] RECIPIENT_HEADER_PARAMS = {
+		HeaderParameterNames.KEY_ID,
+		HeaderParameterNames.ALGORITHM,
+		HeaderParameterNames.X_509_CERT_URL,
+		HeaderParameterNames.X_509_CERT_SHA_1_THUMBPRINT,
+		HeaderParameterNames.X_509_CERT_SHA_256_THUMBPRINT,
+		HeaderParameterNames.X_509_CERT_CHAIN
+	};
 
 
 	/**
@@ -98,13 +110,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 
 
 	/**
-	 * The parameters are common for JWK and JWEHeader.
-	 */
-	private final String[] recipientHeaderParams = {"kid", "alg", "x5u", "x5t", "x5t#S256", "x5c"};
-
-
-	/**
-	 * Creates a new multirecipient encrypter.
+	 * Creates a new multi-recipient encrypter.
 	 *
 	 * @param keys                 The public keys. Must not be
 	 *                             {@code null}.
@@ -120,7 +126,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 
 
 	/**
-	 * Creates a new multirecipient encrypter.
+	 * Creates a new multi-recipient encrypter.
 	 *
 	 * @param keys                 The public keys. Must not be
 	 *                             {@code null}.
@@ -143,7 +149,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 			throw new IllegalArgumentException("The public key set (JWKSet) must not be null");
 		}
 		for (JWK jwk : keys.getKeys()) {
-			if ("dir".equals(String.valueOf(jwk.getAlgorithm()))
+			if (JWEAlgorithm.DIR.equals(jwk.getAlgorithm())
 					&& KeyType.OCT.equals(jwk.getKeyType())
 					&& !jwk.toOctetSequenceKey().toSecretKey("AES").equals(contentEncryptionKey)) {
 				throw new IllegalArgumentException("Bad CEK");
@@ -155,26 +161,17 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 
 
 	/**
-	 * Returns the list of parameters which are common for JWK and JWEHeader.
+	 * Returns the {@link SecretKey} of the recipients with
+	 * {@link JWEAlgorithm#DIR} if present.
 	 *
-	 * @return The recipient header parameters.
-	 */
-	public String[] getRecipientHeaderParams() {
-		return recipientHeaderParams;
-	}
-
-
-	/**
-	 * Returns the SecrectKey of the recipients with JWEAlgorithm.DIR if present.
+	 * @param keys The public keys. Must not be {@code null}.
 	 *
-	 * @param keys                 The public keys. Must not be
-	 *                             {@code null}.
 	 * @return The SecretKey.
 	 */
 	private static SecretKey findDirectCek(final JWKSet keys) {
 		if (keys != null) {
 			for (JWK jwk : keys.getKeys()) {
-				if ("dir".equals(String.valueOf(jwk.getAlgorithm())) && KeyType.OCT.equals(jwk.getKeyType())) {
+				if (JWEAlgorithm.DIR.equals(jwk.getAlgorithm()) && KeyType.OCT.equals(jwk.getKeyType())) {
 					return jwk.toOctetSequenceKey().toSecretKey("AES");
 				}
 			}
@@ -184,12 +181,12 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 
 
 	/**
-	 * Split the AAD string and return the first part as the header map. As
-	 * described in the step 14 of the
+	 * Splits the AAD string and returns the first part as the header map,
+	 * as described in the step 14 of
 	 * https://www.rfc-editor.org/rfc/rfc7516#section-5.1.
 	 *
-	 * @param aad       The additional authenticated data. Must not be
-	 *                  {@code null}.
+	 * @param aad The additional authenticated data. Must not be
+	 *            {@code null}.
 	 *
 	 * @return The header map.
 	 *
@@ -239,7 +236,6 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 		}
 
 		final EncryptionMethod enc = header.getEncryptionMethod();
-		final String aadStr = new String(aad, StandardCharsets.US_ASCII);
 		final Map<String, Object> headerMap = getHeaderMapFromAAD(aad);
 		final SecretKey cek = getCEK(enc);
 
@@ -250,7 +246,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 		Base64URL cipherText = null;
 		Base64URL iv = null;
 		Base64URL tag = null;
-		JWEAlgorithm alg  = header.getAlgorithm();
+		JWEAlgorithm alg;
 		Payload payload = new Payload(clearText);
 		List<Object> recipients = JSONArrayUtils.newJSONArray();
 
@@ -260,16 +256,18 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 			// build JWEHeader from protected header and recipients public key parameters
 			Map<String, Object> keyMap = key.toJSONObject();
 			Map<String, Object> recipientHeaderMap = JSONObjectUtils.newJSONObject();
-			for (String param : recipientHeaderParams) {
+			for (String param : RECIPIENT_HEADER_PARAMS) {
 				if (keyMap.containsKey(param)) {
 					recipientHeaderMap.put(param, keyMap.get(param));
 				}
 			}
-			if (recipientHeaderMap.get("kid") == null) {
-				recipientHeaderMap.put("kid", key.computeThumbprint().toString());
+			if (recipientHeaderMap.get(HeaderParameterNames.KEY_ID) == null) {
+				// TODO is this appropriate?
+				recipientHeaderMap.put(HeaderParameterNames.KEY_ID, key.computeThumbprint().toString());
 			}
-			if (recipientHeaderMap.get("alg") == null) {
-				recipientHeaderMap.put("alg", header.getAlgorithm().toString());
+			if (recipientHeaderMap.get(HeaderParameterNames.ALGORITHM) == null) {
+				// TODO is this appropriate?
+				recipientHeaderMap.put(HeaderParameterNames.ALGORITHM, header.getAlgorithm().toString());
 			}
 			recipientHeaderMap.putAll(headerMap);
 
@@ -304,7 +302,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 			Map<String, Object> recipient = JSONObjectUtils.newJSONObject();
 			recipient.put("header", recipientHeaderMap);
 
-			// do not put symetric keys into JWE JEON object
+			// do not put symmetric keys into JWE JSON object
 			if (!JWEAlgorithm.DIR.equals(alg)) {
 				recipient.put("encrypted_key", jweParts.getEncryptedKey().toString());
 			}
@@ -319,7 +317,8 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 				tag = jweParts.getAuthenticationTag();
 			}
 		}
-		if (!headerMap.containsKey("alg")) {
+		if (!headerMap.containsKey(HeaderParameterNames.ALGORITHM)) {
+			// TODO is this appropriate?
 			Map<String, Object> jweJsonObject = JSONObjectUtils.newJSONObject();
 			jweJsonObject.put("recipients", recipients);
 			encryptedKey = Base64URL.encode(JSONObjectUtils.toJSONString(jweJsonObject));
