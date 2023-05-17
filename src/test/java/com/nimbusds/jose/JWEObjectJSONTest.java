@@ -18,34 +18,29 @@
 package com.nimbusds.jose;
 
 
-import java.text.ParseException;
+import com.nimbusds.jose.jca.JWEJCAContext;
+import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jose.util.JSONObjectUtils;
+import junit.framework.TestCase;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
-
-import junit.framework.TestCase;
-
-import com.nimbusds.jose.crypto.DirectDecrypter;
-import com.nimbusds.jose.crypto.DirectEncrypter;
-import com.nimbusds.jose.jca.JWEJCAContext;
-import com.nimbusds.jose.jwk.OctetSequenceKey;
-import com.nimbusds.jose.jwk.gen.OctetSequenceKeyGenerator;
-import com.nimbusds.jose.util.Base64URL;
-import com.nimbusds.jose.util.JSONObjectUtils;
 
 
 /**
  * Tests JWE JSON object methods.
  *
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @author Vladimir Dzhuvinov
+ * @version 2023-05-17
  */
 public class JWEObjectJSONTest extends TestCase {
 
 	private static final Logger LOGGER = Logger.getLogger(JWEObjectJSONTest.class.getName());
 
-	private static final String jweMultiRecipientJsonString = String.valueOf(
+	private static final String jweMultiRecipientJsonString =
 		"{" +
 			"\"ciphertext\":\"oxEERGR4AgFcRMKLgeU\"," +
 			"\"protected\":\"eyJ6aXAiOiJERUYiLCJlbmMiOiJBMjU2R0NNIn0\"," +
@@ -65,9 +60,9 @@ public class JWEObjectJSONTest extends TestCase {
 			"]," +
 			"\"tag\":\"lhNLaDMKVVvjlGaeYdqbrQ\"," +
 			"\"iv\":\"BCNhlw39FueuKrwH\"" +
-		"}");
+		"}";
 
-	private static final String jweGeneralJsonString = String.valueOf(
+	private static final String jweGeneralJsonString =
 		"{" +
 			"\"ciphertext\":\"oxEERGR4AgFcRMKLgeU\"," +
 			"\"protected\":\"eyJ6aXAiOiJERUYiLCJlbmMiOiJBMjU2R0NNIn0\"," +
@@ -82,9 +77,9 @@ public class JWEObjectJSONTest extends TestCase {
 			"]," +
 			"\"tag\":\"lhNLaDMKVVvjlGaeYdqbrQ\"," +
 			"\"iv\":\"BCNhlw39FueuKrwH\"" +
-		"}");
+		"}";
 
-	private static final String jweFlattenedJsonString = String.valueOf(
+	private static final String jweFlattenedJsonString =
 		"{" +
 			"\"ciphertext\":\"oxEERGR4AgFcRMKLgeU\"," +
 			"\"protected\":\"eyJ6aXAiOiJERUYiLCJlbmMiOiJBMjU2R0NNIn0\"," +
@@ -95,12 +90,13 @@ public class JWEObjectJSONTest extends TestCase {
 			"}," +
 			"\"tag\":\"lhNLaDMKVVvjlGaeYdqbrQ\"," +
 			"\"iv\":\"BCNhlw39FueuKrwH\"" +
-		"}");
+		"}";
 
 	public void testGeneralJSONParser()
 		throws Exception {
 
 		JWEObjectJSON jwe = JWEObjectJSON.parse(jweGeneralJsonString);
+		assertNull(jwe.getPayload());
 
 		Map<String, Object> rawJson = JSONObjectUtils.parse(jweGeneralJsonString);
 
@@ -117,6 +113,7 @@ public class JWEObjectJSONTest extends TestCase {
 		throws Exception {
 
 		JWEObjectJSON jwe = JWEObjectJSON.parse(jweFlattenedJsonString);
+		assertNull(jwe.getPayload());
 
 		Map<String, Object> rawJson = JSONObjectUtils.parse(jweFlattenedJsonString);
 
@@ -212,8 +209,9 @@ public class JWEObjectJSONTest extends TestCase {
 
 		JWEObjectJSON jwe = new JWEObjectJSON(jweo);
 
-		assertEquals(EncryptionMethod.A128CBC_HS256, jwe.getHeader().getEncryptionMethod());
 		assertEquals(JWEAlgorithm.RSA1_5, jwe.getHeader().getAlgorithm());
+		assertEquals(EncryptionMethod.A128CBC_HS256, jwe.getHeader().getEncryptionMethod());
+		assertNull(jwe.getPayload());
 		assertEquals(new Base64URL("abc"), jwe.getEncryptedKey());
 		assertEquals(new Base64URL("def"), jwe.getIV());
 		assertEquals(new Base64URL("ghi"), jwe.getCipherText());
@@ -226,6 +224,7 @@ public class JWEObjectJSONTest extends TestCase {
 		throws Exception {
 
 		JWEObjectJSON jwe = JWEObjectJSON.parse(jweGeneralJsonString);
+		assertNull(jwe.getPayload());
 
 		Map<String, Object> rawJson = JSONObjectUtils.parse(jweFlattenedJsonString);
 
@@ -236,6 +235,7 @@ public class JWEObjectJSONTest extends TestCase {
 		throws Exception {
 
 		JWEObjectJSON jwe = JWEObjectJSON.parse(jweFlattenedJsonString);
+		assertNull(jwe.getPayload());
 
 		Map<String, Object> rawJson = JSONObjectUtils.parse(jweGeneralJsonString);
 

@@ -39,7 +39,8 @@ import com.nimbusds.jose.util.JSONObjectUtils;
  * <p>This class is thread-safe.
  *
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @author Vladimir Dzhuvinov
+ * @version 2023-05-17
  */
 @ThreadSafe
 public class JWEObjectJSON extends JOSEObjectJSON {
@@ -274,15 +275,15 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 * @throws ParseException If parsing of the serialised parts failed.
 	 */
 	public JWEObjectJSON(final JWEHeader header,
-		            final Base64URL cipherText,
-		            final Base64URL iv,
-		            final Base64URL authTag,
-		            final List<Recipient> recipients,
-		            final UnprotectedHeader unprotected,
-		            final byte[] aad)
+		             final Base64URL cipherText,
+		             final Base64URL iv,
+		             final Base64URL authTag,
+		             final List<Recipient> recipients,
+		             final UnprotectedHeader unprotected,
+		             final byte[] aad)
 		throws ParseException {
 
-		super(new Payload(""));
+		super(null); // Payload not decrypted yet, must be null
 
 		if (header == null) {
 			throw new IllegalArgumentException("The header must not be null");
