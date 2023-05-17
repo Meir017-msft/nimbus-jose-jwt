@@ -18,10 +18,7 @@
 package com.nimbusds.jose.crypto;
 
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWECryptoParts;
-import com.nimbusds.jose.JWEEncrypter;
-import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.ECDH1PU;
 import com.nimbusds.jose.crypto.impl.ECDH1PUCryptoProvider;
@@ -94,7 +91,7 @@ import java.util.Set;
  *
  * @author Alexander Martynov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-05-17
  */
 @ThreadSafe
 public class ECDH1PUEncrypter extends ECDH1PUCryptoProvider implements JWEEncrypter {
