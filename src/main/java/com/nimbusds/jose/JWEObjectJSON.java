@@ -18,18 +18,20 @@
 package com.nimbusds.jose;
 
 
-import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
-import java.util.*;
-
-import net.jcip.annotations.Immutable;
-import net.jcip.annotations.ThreadSafe;
-
 import com.nimbusds.jose.JWEObject.State;
 import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONArrayUtils;
 import com.nimbusds.jose.util.JSONObjectUtils;
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
+
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -165,7 +167,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	/**
 	 * The additional authenticated data, {@code null} if not computed or applicable.
 	 */
-	private byte[] aad;
+	private final byte[] aad;
 
 
 	/**
@@ -175,17 +177,12 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Creates a new JWE JSON object from the specified JWEObject.
+	 * Creates a new JWE JSON object from the specified JWEObject. The
+	 * initial state is copied from the JWEObject.
 	 *
-	 * @param jweObject  The JWEObject.
-	 *                   Must not be {@code null}.
-	 *
-	 * @return The JWE secured object.
-	 *
-	 * @throws ParseException If parsing of the serialised parts failed.
+	 * @param jweObject  The JWEObject. Must not be {@code null}.
 	 */
-	public JWEObjectJSON(final JWEObject jweObject)
-		throws ParseException {
+	public JWEObjectJSON(final JWEObject jweObject) {
 
 		super(jweObject.getPayload());
 
@@ -272,7 +269,6 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 * @param aad         The additional authenticated data. Must not be
 	 *                    {@code null}.
 	 *
-	 * @throws ParseException If parsing of the serialised parts failed.
 	 */
 	public JWEObjectJSON(final JWEHeader header,
 		             final Base64URL cipherText,
@@ -280,8 +276,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		             final Base64URL authTag,
 		             final List<Recipient> recipients,
 		             final UnprotectedHeader unprotected,
-		             final byte[] aad)
-		throws ParseException {
+		             final byte[] aad) {
 
 		super(null); // Payload not decrypted yet, must be null
 
@@ -689,9 +684,9 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 			throw new IllegalArgumentException("The JSON object must not be null");
 		}
 
-		JWEHeader jweHeader = null;
+		JWEHeader jweHeader;
 		Map<String, Object> jweHeaderMap = JSONObjectUtils.newJSONObject();
-		StringBuilder aadSB = new StringBuilder("");
+		StringBuilder aadSB = new StringBuilder();
 		List<Recipient> recipientList = new LinkedList<>();
 		UnprotectedHeader unprotected = UnprotectedHeader.parse(JSONObjectUtils.getJSONObject(jsonObject, "unprotected"));
 
@@ -703,10 +698,10 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 		if (protectedHeader != null) {
 			jweHeaderMap.putAll(JSONObjectUtils.parse(protectedHeader.decodeToString()));
-			aadSB.append(protectedHeader.toString());
+			aadSB.append(protectedHeader);
 		}
 		if (aad != null && !aad.toString().isEmpty()) {
-			aadSB = aadSB.append(".").append(aad.toString());
+			aadSB.append(".").append(aad);
 		}
 
 		if (unprotected != null) {

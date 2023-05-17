@@ -23,9 +23,8 @@ import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import junit.framework.TestCase;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.text.ParseException;
+import java.util.*;
 import java.util.logging.Logger;
 
 
@@ -48,7 +47,7 @@ public class JWEObjectJSONTest extends TestCase {
 				"{" +
 					"\"header\":{" +
 						"\"kid\":\"DirRecipient\"," +
-						"\"alg\":\"DIR\"" +
+						"\"alg\":\"dir\"" +
 					"}" +
 				"},{" +
 					"\"encrypted_key\":\"cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g\"," +
@@ -92,46 +91,83 @@ public class JWEObjectJSONTest extends TestCase {
 			"\"iv\":\"BCNhlw39FueuKrwH\"" +
 		"}";
 
-	public void testGeneralJSONParser()
+	public void testGeneralJSONParser_twoRecipients()
 		throws Exception {
 
-		JWEObjectJSON jwe = JWEObjectJSON.parse(jweGeneralJsonString);
+		JWEObjectJSON jwe = JWEObjectJSON.parse(jweMultiRecipientJsonString);
+
 		assertNull(jwe.getPayload());
 
-		Map<String, Object> rawJson = JSONObjectUtils.parse(jweGeneralJsonString);
-
+		assertEquals(JWEAlgorithm.DIR, jwe.getHeader().getAlgorithm());
 		assertEquals(EncryptionMethod.A256GCM, jwe.getHeader().getEncryptionMethod());
-		assertEquals(JWEAlgorithm.A128KW, jwe.getHeader().getAlgorithm());
-		assertEquals(JSONObjectUtils.getBase64URL(rawJson, "protected").toString(), new String(jwe.getAAD()));
-		assertEquals(new Base64URL("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g"), jwe.getEncryptedKey());
-		assertEquals(JSONObjectUtils.getBase64URL(rawJson, "iv"), jwe.getIV());
-		assertEquals(JSONObjectUtils.getBase64URL(rawJson, "ciphertext"), jwe.getCipherText());
-		assertEquals(JSONObjectUtils.getBase64URL(rawJson, "tag"), jwe.getAuthTag());
+		assertEquals(CompressionAlgorithm.DEF, jwe.getHeader().getCompressionAlgorithm());
+		assertEquals("DirRecipient", jwe.getHeader().getKeyID());
+		assertEquals(4, jwe.getHeader().toJSONObject().size());
+
+		assertNull(jwe.getUnprotected());
+
+		assertEquals(new Base64URL("BCNhlw39FueuKrwH"), jwe.getIV());
+
+		assertEquals("eyJ6aXAiOiJERUYiLCJlbmMiOiJBMjU2R0NNIn0", new String(jwe.getAAD()));
+
+		assertEquals(new Base64URL("oxEERGR4AgFcRMKLgeU"), jwe.getCipherText());
+
+		assertEquals(new Base64URL("lhNLaDMKVVvjlGaeYdqbrQ"), jwe.getAuthTag());
+
+		List<JWEObjectJSON.Recipient> recipients = jwe.getRecipients();
+
+		assertEquals(JWEAlgorithm.DIR.getName(), recipients.get(0).getHeader().getParam("alg"));
+		assertEquals("DirRecipient", recipients.get(0).getHeader().getKeyID());
+		assertEquals(2, recipients.get(0).getHeader().toJSONObject().size());
+		assertNull(recipients.get(0).getEncryptedKey());
+
+		assertEquals(JWEAlgorithm.A128KW.getName(), recipients.get(1).getHeader().getParam("alg"));
+		assertEquals("AESRecipient", recipients.get(1).getHeader().getKeyID());
+		assertEquals(2, recipients.get(1).getHeader().toJSONObject().size());
+		assertEquals(new Base64URL("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g"), recipients.get(1).getEncryptedKey());
+
+		assertEquals(2, recipients.size());
 	}
 
-	public void testFlattenedJSONParser()
+	public void testGeneralJSONParser_singleRecipient_flattened()
 		throws Exception {
 
-		JWEObjectJSON jwe = JWEObjectJSON.parse(jweFlattenedJsonString);
-		assertNull(jwe.getPayload());
+		for (String jweString: Arrays.asList(jweGeneralJsonString, jweFlattenedJsonString)) {
 
-		Map<String, Object> rawJson = JSONObjectUtils.parse(jweFlattenedJsonString);
+			JWEObjectJSON jwe = JWEObjectJSON.parse(jweString);
 
-		assertEquals(EncryptionMethod.A256GCM, jwe.getHeader().getEncryptionMethod());
-		assertEquals(JWEAlgorithm.A128KW, jwe.getHeader().getAlgorithm());
-		assertEquals(JSONObjectUtils.getBase64URL(rawJson, "protected").toString(), new String(jwe.getAAD()));
-		assertEquals(new Base64URL("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g"), jwe.getEncryptedKey());
-		assertEquals(JSONObjectUtils.getBase64URL(rawJson, "iv"), jwe.getIV());
-		assertEquals(JSONObjectUtils.getBase64URL(rawJson, "ciphertext"), jwe.getCipherText());
-		assertEquals(JSONObjectUtils.getBase64URL(rawJson, "tag"), jwe.getAuthTag());
+			assertNull(jwe.getPayload());
+
+			assertEquals(JWEAlgorithm.A128KW, jwe.getHeader().getAlgorithm());
+			assertEquals(EncryptionMethod.A256GCM, jwe.getHeader().getEncryptionMethod());
+			assertEquals(CompressionAlgorithm.DEF, jwe.getHeader().getCompressionAlgorithm());
+			assertEquals("AESRecipient", jwe.getHeader().getKeyID());
+			assertEquals(4, jwe.getHeader().toJSONObject().size());
+
+			assertNull(jwe.getUnprotected());
+
+			assertEquals(new Base64URL("BCNhlw39FueuKrwH"), jwe.getIV());
+
+			assertEquals("eyJ6aXAiOiJERUYiLCJlbmMiOiJBMjU2R0NNIn0", new String(jwe.getAAD()));
+
+			assertEquals(new Base64URL("oxEERGR4AgFcRMKLgeU"), jwe.getCipherText());
+
+			assertEquals(new Base64URL("lhNLaDMKVVvjlGaeYdqbrQ"), jwe.getAuthTag());
+
+			List<JWEObjectJSON.Recipient> recipients = jwe.getRecipients();
+			assertEquals(JWEAlgorithm.A128KW.getName(), recipients.get(0).getHeader().getParam("alg"));
+			assertEquals("AESRecipient", recipients.get(0).getHeader().getKeyID());
+			assertEquals(2, recipients.get(0).getHeader().toJSONObject().size());
+			assertEquals(new Base64URL("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g"), recipients.get(0).getEncryptedKey());
+			assertEquals(1, recipients.size());
+		}
 	}
 
 
 	public void testGetEncryptedKeyMethod()
 		throws Exception {
 
-		final JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5,
-			                         EncryptionMethod.A128CBC_HS256);
+		final JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A128CBC_HS256);
 		JWEObjectJSON jwe;
 
 		jwe = new JWEObjectJSON(header, new Payload("test!"));
@@ -144,48 +180,50 @@ public class JWEObjectJSONTest extends TestCase {
 		assertEquals("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g", jwe.getEncryptedKey().toString());
 
 		jwe = JWEObjectJSON.parse(jweMultiRecipientJsonString);
-		assertEquals("eyJyZWNpcGllbnRzIjpbeyJoZWFkZXIiOnsiYWxnIjoiRElSIiwia2" +
-			     "lkIjoiRGlyUmVjaXBpZW50In19LHsiZW5jcnlwdGVkX2tleSI6ImNm" +
-			     "RmYySHNLSU1NbHJvRGhoYlVkc1JvcHRPbnh0dUpLV0JwLW9BcVdEc1" +
-			     "VDcXJ5R1lsNVItZyIsImhlYWRlciI6eyJhbGciOiJBMTI4S1ciLCJr" +
-			     "aWQiOiJBRVNSZWNpcGllbnQifX1dfQ", jwe.getEncryptedKey().toString());
+
+		assertEquals("eyJyZWNpcGllbnRzIjpbeyJoZWFkZXIiOnsiYWxnIjoiZGlyIiwia2l" +
+			     "kIjoiRGlyUmVjaXBpZW50In19LHsiZW5jcnlwdGVkX2tleSI6ImNmRm" +
+			     "YySHNLSU1NbHJvRGhoYlVkc1JvcHRPbnh0dUpLV0JwLW9BcVdEc1VDc" +
+			     "XJ5R1lsNVItZyIsImhlYWRlciI6eyJhbGciOiJBMTI4S1ciLCJraWQi" +
+			     "OiJBRVNSZWNpcGllbnQifX1dfQ", jwe.getEncryptedKey().toString());
 	}
 
 
-	public void testJWEObjectJSONConstructor()
-		throws Exception {
+	public void testPartsConstructorIllegalArgumentExceptions() {
 
-		final JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5,
-			                         EncryptionMethod.A128CBC_HS256);
-		JWEObjectJSON jwe;
+		final JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A128CBC_HS256);
 
 		try {
-			jwe = new JWEObjectJSON(null, null, null, null, null, null, null);
+			new JWEObjectJSON(null, null, null, null, null, null, null);
 			fail();
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
 			assertEquals("The header must not be null", e.getMessage());
 		}
 
 		try {
-			jwe = new JWEObjectJSON(header, null, null, null, null, null, null);
+			new JWEObjectJSON(header, null, null, null, null, null, null);
 			fail();
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
 			assertEquals("The cipher text must not be null", e.getMessage());
 		}
+	}
+
+
+	public void testParseIllegalArgumentExceptions() throws ParseException {
 
 		try {
 			Map<String, Object> json = null;
-			jwe = JWEObjectJSON.parse(json);
+			JWEObjectJSON.parse(json);
 			fail();
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
 			assertEquals("The JSON object must not be null", e.getMessage());
 		}
 
 		try {
 			String json = null;
-			jwe = JWEObjectJSON.parse(json);
+			JWEObjectJSON.parse(json);
 			fail();
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
 			assertEquals("The JSON object string must not be null", e.getMessage());
 		}
 	}
@@ -194,8 +232,7 @@ public class JWEObjectJSONTest extends TestCase {
 	public void testJWEObjectConstructor()
 		throws Exception {
 
-		JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5,
-			                         EncryptionMethod.A128CBC_HS256);
+		JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A128CBC_HS256);
 
 		Base64URL firstPart = header.toBase64URL();
 		Base64URL secondPart = new Base64URL("abc");
@@ -203,9 +240,12 @@ public class JWEObjectJSONTest extends TestCase {
 		Base64URL fourthPart = new Base64URL("ghi");
 		Base64URL fifthPart = new Base64URL("jkl");
 
-		JWEObject jweo = new JWEObject(firstPart, secondPart,
-				thirdPart, fourthPart,
-				fifthPart);
+		JWEObject jweo = new JWEObject(
+			firstPart,
+			secondPart,
+			thirdPart,
+			fourthPart,
+			fifthPart);
 
 		JWEObjectJSON jwe = new JWEObjectJSON(jweo);
 
@@ -263,9 +303,9 @@ public class JWEObjectJSONTest extends TestCase {
 		rawJson.put("unprotected", JSONObjectUtils.parse("{\"kid\":\"AESRecipient\",\"alg\":\"A128KW\"}"));
 
 		try {
-			JWEObjectJSON jwe = JWEObjectJSON.parse(rawJson);
+			JWEObjectJSON.parse(rawJson);
 			fail();
-		} catch (Exception e) {
+		} catch (ParseException e) {
 			assertEquals("The parameters in the JWE protected header and the unprotected header must be disjoint", e.getMessage());
 		}
 	}
@@ -278,7 +318,7 @@ public class JWEObjectJSONTest extends TestCase {
 		try {
 			jwe.encrypt(new JWEEncrypter() {
 				@Override
-				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText, byte[] aad) throws JOSEException {
+				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText, byte[] aad) {
 					return null;
 				}
 				@Override
@@ -308,7 +348,7 @@ public class JWEObjectJSONTest extends TestCase {
 		try {
 			jwe.encrypt(new JWEEncrypter() {
 				@Override
-				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText, byte[] aad) throws JOSEException {
+				public JWECryptoParts encrypt(JWEHeader header, byte[] clearText, byte[] aad) {
 					return null;
 				}
 				@Override
