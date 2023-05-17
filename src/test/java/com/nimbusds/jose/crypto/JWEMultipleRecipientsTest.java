@@ -40,7 +40,7 @@ import java.util.logging.Logger;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-03-26
+ * @version 2023-05-17
  */
 public class JWEMultipleRecipientsTest extends TestCase {
 

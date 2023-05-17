@@ -25,15 +25,10 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.crypto.SecretKey;
 
+import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.*;
 import net.jcip.annotations.ThreadSafe;
 
-import com.nimbusds.jose.EncryptionMethod;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEAlgorithm;
-import com.nimbusds.jose.JWECryptoParts;
-import com.nimbusds.jose.JWEEncrypter;
-import com.nimbusds.jose.JWEHeader;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.Base64URL;
 
@@ -80,7 +75,7 @@ import com.nimbusds.jose.util.Base64URL;
  * @author Vladimir Dzhuvinov
  * @author Jun Yu
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-05-17
  */
 @ThreadSafe
 public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {

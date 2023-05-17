@@ -43,7 +43,8 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 
 
 /**
- * Multirecipient encrypter of {@link com.nimbusds.jose.JWEObjectJOSE JWE objects}.
+ * Multirecipient encrypter of {@link com.nimbusds.jose.JWEObjectJSON JWE
+ * objects}.
  *
  * <p>This class is thread-safe.
  *

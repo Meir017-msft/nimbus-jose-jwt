@@ -26,10 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import javax.crypto.SecretKey;
 
-import com.nimbusds.jose.CriticalHeaderParamsAware;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEDecrypter;
-import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.CriticalHeaderParamsDeferral;
 import com.nimbusds.jose.crypto.impl.ECDH;
@@ -86,7 +83,7 @@ import com.nimbusds.jose.util.Base64URL;
  *
  * @author Vladimir Dzhuvinov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-05-17
  */
 public class ECDHDecrypter extends ECDHCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
 
@@ -233,7 +230,8 @@ public class ECDHDecrypter extends ECDHCryptoProvider implements JWEDecrypter, C
 
 
 	/**
-	 * Decrypts the specified cipher text of a {@link JWEObject JWE Object}.
+	 * Decrypts the specified cipher text of a {@link JWEObject JWE
+	 * Object}.
 	 *
 	 * @param header       The JSON Web Encryption (JWE) header. Must
 	 *                     specify a supported JWE algorithm and method.

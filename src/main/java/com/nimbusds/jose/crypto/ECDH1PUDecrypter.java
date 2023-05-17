@@ -18,10 +18,7 @@
 package com.nimbusds.jose.crypto;
 
 
-import com.nimbusds.jose.CriticalHeaderParamsAware;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEDecrypter;
-import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.*;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
@@ -93,7 +90,7 @@ import java.util.Set;
  *
  * @author Alexander Martynov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-05-17
  */
 @ThreadSafe
 public class ECDH1PUDecrypter extends ECDH1PUCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {

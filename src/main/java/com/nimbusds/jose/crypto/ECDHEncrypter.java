@@ -33,10 +33,7 @@ import java.util.Set;
 
 import javax.crypto.SecretKey;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWECryptoParts;
-import com.nimbusds.jose.JWEEncrypter;
-import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.ECDH;
 import com.nimbusds.jose.crypto.impl.ECDHCryptoProvider;
@@ -94,7 +91,7 @@ import net.jcip.annotations.ThreadSafe;
  * @author Vladimir Dzhuvinov
  * @author Fernando González Callejas
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-05-17
  */
 @ThreadSafe
 public class ECDHEncrypter extends ECDHCryptoProvider implements JWEEncrypter {
