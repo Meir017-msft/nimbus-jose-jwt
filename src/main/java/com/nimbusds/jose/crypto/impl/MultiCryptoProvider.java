@@ -33,8 +33,9 @@ import com.nimbusds.jose.jwk.Curve;
 
 
 /**
- * The base abstract class for Multirecipient encrypters and decrypters of
- * {@link com.nimbusds.jose.JWEObjectJSON JWE objects} with a shared symmetric key.
+ * The base abstract class for multi-recipient encrypters and decrypters of
+ * {@link com.nimbusds.jose.JWEObjectJSON JWE objects} with a shared symmetric
+ * key.
  *
  * <p>Supports the following key management algorithms:
  *
@@ -166,7 +167,7 @@ public abstract class MultiCryptoProvider extends BaseJWEProvider {
 
 
 	/**
-	 * Creates a new Multireciprient encryption / decryption provider.
+	 * Creates a new multi-recipient encryption / decryption provider.
 	 *
 	 * @param cek The Content Encryption Key (CEK). Must be 128 bits (16
 	 *            bytes), 192 bits (24 bytes), 256 bits (32 bytes), 384

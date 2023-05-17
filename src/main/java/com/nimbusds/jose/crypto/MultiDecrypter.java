@@ -33,7 +33,7 @@ import net.jcip.annotations.ThreadSafe;
 
 
 /**
- * Multirecipient decrypter of {@link com.nimbusds.jose.JWEObjectJSON JWE objects}.
+ * Multi-recipient decrypter of {@link com.nimbusds.jose.JWEObjectJSON JWE objects}.
  *
  * <p>This class is thread-safe.
  *
@@ -100,7 +100,7 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 
 
 	/**
-	 * Creates a new multirecipient decrypter.
+	 * Creates a new multi-recipient decrypter.
 	 *
 	 * @param jwk                 The JSON Web Key (JWK). Must contain a
 	 *                            private part. Must not be {@code null}.
@@ -116,7 +116,7 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 
 
 	/**
-	 * Creates a new multirecipient decrypter.
+	 * Creates a new multi-recipient decrypter.
 	 *
 	 * @param jwk                 The JSON Web Key (JWK). Must contain a
 	 *                            private part. Must not be {@code null}.
