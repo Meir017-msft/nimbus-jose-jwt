@@ -24,6 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
 import net.jcip.annotations.ThreadSafe;
 
 import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
 import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
 import com.nimbusds.jose.crypto.impl.DirectCryptoProvider;
@@ -62,7 +63,8 @@ import com.nimbusds.jose.util.Base64URL;
  * </ul>
  *
  * @author Vladimir Dzhuvinov
- * @version 2022-09-20
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 @ThreadSafe
 public class DirectEncrypter extends DirectCryptoProvider implements JWEEncrypter {
@@ -122,8 +124,30 @@ public class DirectEncrypter extends DirectCryptoProvider implements JWEEncrypte
 	}
 
 
-	@Override
+	/**
+	 * Encrypts the specified clear text of a {@link JWEObject JWE object}.
+	 *
+	 * @param header    The JSON Web Encryption (JWE) header. Must specify
+	 *                  a supported JWE algorithm and method. Must not be
+	 *                  {@code null}.
+	 * @param clearText The clear text to encrypt. Must not be {@code null}.
+	 *
+	 * @return The resulting JWE crypto parts.
+	 *
+	 * @throws JOSEException If the JWE algorithm or method is not
+	 *                       supported or if encryption failed for some
+	 *                       other internal reason.
+	 */
+	@Deprecated
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText)
+		throws JOSEException {
+
+		return encrypt(header, clearText, AAD.compute(header));
+	}
+
+
+	@Override
+	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
 		JWEAlgorithm alg = header.getAlgorithm();
@@ -134,6 +158,6 @@ public class DirectEncrypter extends DirectCryptoProvider implements JWEEncrypte
 
 		final Base64URL encryptedKey = null; // The second JWE part
 
-		return ContentCryptoProvider.encrypt(header, clearText, getKey(), encryptedKey, getJCAContext());
+		return ContentCryptoProvider.encrypt(header, clearText, aad, getKey(), encryptedKey, getJCAContext());
 	}
 }

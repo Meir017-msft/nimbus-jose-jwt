@@ -22,6 +22,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWECryptoParts;
 import com.nimbusds.jose.JWEEncrypter;
 import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.ECDH1PU;
 import com.nimbusds.jose.crypto.impl.ECDH1PUCryptoProvider;
 import com.nimbusds.jose.jwk.Curve;
@@ -33,6 +34,7 @@ import java.security.*;
 import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.security.spec.ECParameterSpec;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -91,7 +93,8 @@ import java.util.Set;
  * </ul>
  *
  * @author Alexander Martynov
- * @version 2021-08-03
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 @ThreadSafe
 public class ECDH1PUEncrypter extends ECDH1PUCryptoProvider implements JWEEncrypter {
@@ -121,12 +124,6 @@ public class ECDH1PUEncrypter extends ECDH1PUCryptoProvider implements JWEEncryp
      * The private EC key;
      */
     private final ECPrivateKey privateKey;
-
-    /**
-     * The externally supplied AES content encryption key (CEK) to use,
-     * {@code null} to generate a CEK for each JWE.
-     */
-    private final SecretKey contentEncryptionKey;
 
     /**
      * Creates a new Elliptic Curve Diffie-Hellman encrypter.
@@ -164,15 +161,10 @@ public class ECDH1PUEncrypter extends ECDH1PUCryptoProvider implements JWEEncryp
                             final SecretKey contentEncryptionKey)
             throws JOSEException {
 
-        super(Curve.forECParameterSpec(publicKey.getParams()));
+        super(Curve.forECParameterSpec(publicKey.getParams()), contentEncryptionKey);
 
         this.privateKey = privateKey;
         this.publicKey = publicKey;
-
-        if (contentEncryptionKey != null && (contentEncryptionKey.getAlgorithm() == null || !contentEncryptionKey.getAlgorithm().equals("AES")))
-            throw new IllegalArgumentException("The algorithm of the content encryption key (CEK) must be AES");
-
-        this.contentEncryptionKey = contentEncryptionKey;
     }
 
 
@@ -205,8 +197,30 @@ public class ECDH1PUEncrypter extends ECDH1PUCryptoProvider implements JWEEncryp
     }
 
 
-    @Override
+    /**
+     * Encrypts the specified clear text of a {@link JWEObject JWE object}.
+     *
+     * @param header    The JSON Web Encryption (JWE) header. Must specify
+     *                  a supported JWE algorithm and method. Must not be
+     *                  {@code null}.
+     * @param clearText The clear text to encrypt. Must not be {@code null}.
+     *
+     * @return The resulting JWE crypto parts.
+     *
+     * @throws JOSEException If the JWE algorithm or method is not
+     *                       supported or if encryption failed for some
+     *                       other internal reason.
+     */
+    @Deprecated
     public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText)
+        throws JOSEException {
+
+        return encrypt(header, clearText, AAD.compute(header));
+    }
+
+
+    @Override
+    public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
         throws JOSEException {
 
         // Generate ephemeral EC key pair on the same curve as the consumer's public key
@@ -226,7 +240,10 @@ public class ECDH1PUEncrypter extends ECDH1PUCryptoProvider implements JWEEncryp
                 getJCAContext().getKeyEncryptionProvider()
         );
 
-        return encryptWithZ(updatedHeader, Z, clearText, contentEncryptionKey);
+        // for JWEObject we need update the AAD as well
+        final byte[] updatedAAD = Arrays.equals(AAD.compute(header), aad) ? AAD.compute(updatedHeader) : aad;
+
+        return encryptWithZ(updatedHeader, Z, clearText, updatedAAD);
     }
 
 

@@ -67,7 +67,8 @@ import com.nimbusds.jose.util.Base64URL;
  * @author Tim McLean
  * @author Vladimir Dzhuvinov
  * @author Fernando González Callejas
- * @version 2023-03-21
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 
@@ -95,12 +96,6 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 
 
 	/**
-	 * The Additional Authenticated Data (AAD).
-	 */
-	private final byte[] aad;
-
-
-	/**
 	 * The elliptic curve.
 	 */
 	private final Curve curve;
@@ -118,31 +113,18 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 	 *
 	 * @param curve The elliptic curve. Must be supported and not
 	 *              {@code null}.
+	 * @param cek   The content encryption key (CEK) to use. If specified
+	 *              its algorithm must be "AES" or "ChaCha20" and its length
+	 *              must match the expected for the JWE encryption method
+	 *              ("enc"). If {@code null} a CEK will be generated for
+	 *              each JWE.
 	 *
 	 * @throws JOSEException If the elliptic curve is not supported.
 	 */
-	protected ECDHCryptoProvider(final Curve curve)
+	protected ECDHCryptoProvider(final Curve curve, final SecretKey cek)
 		throws JOSEException {
 
-		this(curve, null);
-	}
-
-
-	/**
-	 * Creates a new Elliptic Curve Diffie-Hellman encryption /decryption
-	 * provider.
-	 *
-	 * @param curve The elliptic curve. Must be supported and not
-	 *              {@code null}.
-	 * @param aad   The Additional Authenticated Data (AAD), if
-	 *              {@code null} the JWE header becomes the AAD.
-	 *
-	 * @throws JOSEException If the elliptic curve is not supported.
-	 */
-	protected ECDHCryptoProvider(final Curve curve, final byte[] aad)
-		throws JOSEException {
-
-		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS);
+		super(SUPPORTED_ALGORITHMS, ContentCryptoProvider.SUPPORTED_ENCRYPTION_METHODS, cek);
 
 		Curve definedCurve = curve != null ? curve : new Curve("unknown");
 
@@ -154,19 +136,6 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 		this.curve = curve;
 
 		concatKDF = new ConcatKDF("SHA-256");
-
-		this.aad = aad;
-	}
-
-
-	/**
-	 * Returns the Additional Authenticated Data (AAD).
-	 *
-	 * @return The AAD, {@code null} if not specified.
-	 */
-	protected byte[] getAAD() {
-
-		return aad;
 	}
 
 
@@ -204,21 +173,7 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 	 * Encrypts the specified plaintext using the specified shared secret
 	 * ("Z").
 	 */
-	protected JWECryptoParts encryptWithZ(final JWEHeader header, final SecretKey Z, final byte[] clearText)
-		throws JOSEException {
-		
-		return this.encryptWithZ(header, Z, clearText, null);
-	}
-
-	
-	/**
-	 * Encrypts the specified plaintext using the specified shared secret
-	 * ("Z") and, if provided, the content encryption key (CEK).
-	 */
-	protected JWECryptoParts encryptWithZ(final JWEHeader header,
-					      final SecretKey Z,
-					      final byte[] clearText,
-					      final SecretKey contentEncryptionKey)
+	protected JWECryptoParts encryptWithZ(final JWEHeader header, final SecretKey Z, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
 		final JWEAlgorithm alg = header.getAlgorithm();
@@ -233,20 +188,19 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 		final Base64URL encryptedKey; // The CEK encrypted (second JWE part)
 
 		if (algMode.equals(ECDH.AlgorithmMode.DIRECT)) {
+			if (isCEKProvided()) {
+				throw new JOSEException("The provided CEK is not supported");
+			}
 			cek = sharedKey;
 			encryptedKey = null;
 		} else if (algMode.equals(ECDH.AlgorithmMode.KW)) {
-			if(contentEncryptionKey != null) { // Use externally supplied CEK
-				cek = contentEncryptionKey;
-			} else { // Generate the CEK according to the enc method
-				cek = ContentCryptoProvider.generateCEK(enc, getJCAContext().getSecureRandom());
-			}
+			cek = getCEK(enc);
 			encryptedKey = Base64URL.encode(AESKW.wrapCEK(cek, sharedKey, getJCAContext().getKeyEncryptionProvider()));
 		} else {
 			throw new JOSEException("Unexpected JWE ECDH algorithm mode: " + algMode);
 		}
 
-		return ContentCryptoProvider.encrypt(header, clearText, getAAD(), cek, encryptedKey, getJCAContext());
+		return ContentCryptoProvider.encrypt(header, clearText, aad, cek, encryptedKey, getJCAContext());
 	}
 
 
@@ -255,6 +209,7 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 	 * ("Z").
 	 */
 	protected byte[] decryptWithZ(final JWEHeader header,
+				      final byte[] aad,
 				      final SecretKey Z,
 				      final Base64URL encryptedKey,
 				      final Base64URL iv,
@@ -282,6 +237,6 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 			throw new JOSEException("Unexpected JWE ECDH algorithm mode: " + algMode);
 		}
 
-		return ContentCryptoProvider.decrypt(header, getAAD(), encryptedKey, iv, cipherText, authTag, cek, getJCAContext());
+		return ContentCryptoProvider.decrypt(header, aad, encryptedKey, iv, cipherText, authTag, cek, getJCAContext());
 	}
 }

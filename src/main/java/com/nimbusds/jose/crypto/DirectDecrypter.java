@@ -23,6 +23,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
 import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
 import com.nimbusds.jose.crypto.impl.CriticalHeaderParamsDeferral;
@@ -68,7 +69,8 @@ import net.jcip.annotations.ThreadSafe;
  * skipped.
  * 
  * @author Vladimir Dzhuvinov
- * @version 2018-07-16
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 @ThreadSafe
 public class DirectDecrypter extends DirectCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
@@ -237,12 +239,48 @@ public class DirectDecrypter extends DirectCryptoProvider implements JWEDecrypte
 	}
 
 
+	/**
+	 * Decrypts the specified cipher text of a {@link JWEObject JWE Object}.
+	 *
+	 * @param header       The JSON Web Encryption (JWE) header. Must
+	 *                     specify a supported JWE algorithm and method.
+	 *                     Must not be {@code null}.
+	 * @param encryptedKey The encrypted key, {@code null} if not required
+	 *                     by the JWE algorithm.
+	 * @param iv           The initialisation vector, {@code null} if not
+	 *                     required by the JWE algorithm.
+	 * @param cipherText   The cipher text to decrypt. Must not be
+	 *                     {@code null}.
+	 * @param authTag      The authentication tag, {@code null} if not
+	 *                     required.
+	 *
+	 * @return The clear text.
+	 *
+	 * @throws JOSEException If the JWE algorithm or method is not
+	 *                       supported, if a critical header parameter is
+	 *                       not supported or marked for deferral to the
+	 *                       application, or if decryption failed for some
+	 *                       other reason.
+	 */
+	@Deprecated
+	public byte[] decrypt(final JWEHeader header,
+		       final Base64URL encryptedKey,
+		       final Base64URL iv,
+		       final Base64URL cipherText,
+		       final Base64URL authTag)
+		throws JOSEException {
+
+		return decrypt(header, encryptedKey, iv, cipherText, authTag, AAD.compute(header));
+	}
+
+
 	@Override
 	public byte[] decrypt(final JWEHeader header,
 		              final Base64URL encryptedKey,
 		              final Base64URL iv,
 		              final Base64URL cipherText,
-		              final Base64URL authTag) 
+		              final Base64URL authTag,
+		              final byte[] aad)
 		throws JOSEException {
 
 		// Validate required JWE parts
@@ -269,6 +307,6 @@ public class DirectDecrypter extends DirectCryptoProvider implements JWEDecrypte
 
 		critPolicy.ensureHeaderPasses(header);
 
-		return ContentCryptoProvider.decrypt(header, null, iv, cipherText, authTag, getKey(), getJCAContext());
+		return ContentCryptoProvider.decrypt(header, aad, null, iv, cipherText, authTag, getKey(), getJCAContext());
 	}
 }

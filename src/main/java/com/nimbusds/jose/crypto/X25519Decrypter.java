@@ -23,6 +23,7 @@ import java.util.Set;
 import javax.crypto.SecretKey;
 
 import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.CriticalHeaderParamsDeferral;
 import com.nimbusds.jose.crypto.impl.ECDH;
 import com.nimbusds.jose.crypto.impl.ECDHCryptoProvider;
@@ -73,7 +74,8 @@ import com.nimbusds.jose.util.Base64URL;
  * </ul>
  *
  * @author Tim McLean
- * @version 2018-07-12
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 public class X25519Decrypter extends ECDHCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
 
@@ -117,7 +119,7 @@ public class X25519Decrypter extends ECDHCryptoProvider implements JWEDecrypter,
 	public X25519Decrypter(final OctetKeyPair privateKey, final Set<String> defCritHeaders)
 		throws JOSEException {
 
-		super(privateKey.getCurve());
+		super(privateKey.getCurve(), null);
 
 		if (! Curve.X25519.equals(privateKey.getCurve())) {
 			throw new JOSEException("X25519Decrypter only supports OctetKeyPairs with crv=X25519");
@@ -165,12 +167,48 @@ public class X25519Decrypter extends ECDHCryptoProvider implements JWEDecrypter,
 	}
 
 
+	/**
+	 * Decrypts the specified cipher text of a {@link JWEObject JWE Object}.
+	 *
+	 * @param header       The JSON Web Encryption (JWE) header. Must
+	 *                     specify a supported JWE algorithm and method.
+	 *                     Must not be {@code null}.
+	 * @param encryptedKey The encrypted key, {@code null} if not required
+	 *                     by the JWE algorithm.
+	 * @param iv           The initialisation vector, {@code null} if not
+	 *                     required by the JWE algorithm.
+	 * @param cipherText   The cipher text to decrypt. Must not be
+	 *                     {@code null}.
+	 * @param authTag      The authentication tag, {@code null} if not
+	 *                     required.
+	 *
+	 * @return The clear text.
+	 *
+	 * @throws JOSEException If the JWE algorithm or method is not
+	 *                       supported, if a critical header parameter is
+	 *                       not supported or marked for deferral to the
+	 *                       application, or if decryption failed for some
+	 *                       other reason.
+	 */
+	@Deprecated
+	public byte[] decrypt(final JWEHeader header,
+		       final Base64URL encryptedKey,
+		       final Base64URL iv,
+		       final Base64URL cipherText,
+		       final Base64URL authTag)
+		throws JOSEException {
+
+		return decrypt(header, encryptedKey, iv, cipherText, authTag, AAD.compute(header));
+	}
+
+
 	@Override
 	public byte[] decrypt(final JWEHeader header,
 			      final Base64URL encryptedKey,
 			      final Base64URL iv,
 			      final Base64URL cipherText,
-			      final Base64URL authTag)
+			      final Base64URL authTag,
+			      final byte[] aad)
 		throws JOSEException {
 
 		// Check for unrecognizable "crit" properties
@@ -192,6 +230,6 @@ public class X25519Decrypter extends ECDHCryptoProvider implements JWEDecrypter,
 		// See https://cr.yp.to/ecdh.html#validate
 		SecretKey Z = ECDH.deriveSharedSecret(ephemeralPublicKey, privateKey);
 
-		return decryptWithZ(header, Z, encryptedKey, iv, cipherText, authTag);
+		return decryptWithZ(header, aad, Z, encryptedKey, iv, cipherText, authTag);
 	}
 }

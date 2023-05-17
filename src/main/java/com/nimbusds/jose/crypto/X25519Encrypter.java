@@ -19,12 +19,15 @@ package com.nimbusds.jose.crypto;
 
 
 import java.security.*;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import javax.crypto.SecretKey;
 
 import com.google.crypto.tink.subtle.X25519;
 import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.ECDH;
 import com.nimbusds.jose.crypto.impl.ECDHCryptoProvider;
 import com.nimbusds.jose.jwk.Curve;
@@ -75,7 +78,8 @@ import net.jcip.annotations.ThreadSafe;
  * </ul>
  *
  * @author Tim McLean
- * @version 2018-07-12
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 @ThreadSafe
 public class X25519Encrypter extends ECDHCryptoProvider implements JWEEncrypter {
@@ -97,7 +101,27 @@ public class X25519Encrypter extends ECDHCryptoProvider implements JWEEncrypter 
 	public X25519Encrypter(final OctetKeyPair publicKey)
 		throws JOSEException {
 
-		super(publicKey.getCurve());
+		this(publicKey, null);
+	}
+
+
+	/**
+	 * Creates a new Curve25519 Elliptic Curve Diffie-Hellman encrypter.
+	 *
+	 * @param publicKey            The public key. Must not be {@code null}.
+	 * @param contentEncryptionKey The content encryption key (CEK) to use.
+	 *                             If specified its algorithm must be "AES"
+	 *                             or "ChaCha20" and its length must match
+	 *                             the expected for the JWE encryption
+	 *                             method ("enc"). If {@code null} a CEK
+	 *                             will be generated for each JWE.
+	 *
+	 * @throws JOSEException If the key subtype is not supported.
+	 */
+	public X25519Encrypter(final OctetKeyPair publicKey, final SecretKey contentEncryptionKey)
+		throws JOSEException {
+
+		super(publicKey.getCurve(), contentEncryptionKey);
 
 		if (! Curve.X25519.equals(publicKey.getCurve())) {
 			throw new JOSEException("X25519Encrypter only supports OctetKeyPairs with crv=X25519");
@@ -129,8 +153,30 @@ public class X25519Encrypter extends ECDHCryptoProvider implements JWEEncrypter 
 	}
 
 
-	@Override
+	/**
+	 * Encrypts the specified clear text of a {@link JWEObject JWE object}.
+	 *
+	 * @param header    The JSON Web Encryption (JWE) header. Must specify
+	 *                  a supported JWE algorithm and method. Must not be
+	 *                  {@code null}.
+	 * @param clearText The clear text to encrypt. Must not be {@code null}.
+	 *
+	 * @return The resulting JWE crypto parts.
+	 *
+	 * @throws JOSEException If the JWE algorithm or method is not
+	 *                       supported or if encryption failed for some
+	 *                       other internal reason.
+	 */
+	@Deprecated
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText)
+		throws JOSEException {
+
+		return encrypt(header, clearText, AAD.compute(header));
+	}
+
+
+	@Override
+	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
 		// Generate ephemeral X25519 key pair
@@ -158,6 +204,9 @@ public class X25519Encrypter extends ECDHCryptoProvider implements JWEEncrypter 
 		// Derive 'Z'
 		SecretKey Z = ECDH.deriveSharedSecret(publicKey, ephemeralPrivateKey);
 
-		return encryptWithZ(updatedHeader, Z, clearText);
+		// for JWEObject we need update the AAD as well
+		final byte[] updatedAAD = Arrays.equals(AAD.compute(header), aad) ? AAD.compute(updatedHeader) : aad;
+
+		return encryptWithZ(updatedHeader, Z, clearText, updatedAAD);
 	}
 }

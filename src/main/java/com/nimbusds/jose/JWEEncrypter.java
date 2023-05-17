@@ -22,7 +22,8 @@ package com.nimbusds.jose;
  * JSON Web Encryption (JWE) encrypter.
  *
  * @author Vladimir Dzhuvinov
- * @version 2015-05-21
+ * @author Egor Puzanov
+ * @version 2023-03-26
  */
 public interface JWEEncrypter extends JWEProvider {
 
@@ -34,6 +35,8 @@ public interface JWEEncrypter extends JWEProvider {
 	 *                  a supported JWE algorithm and method. Must not be
 	 *                  {@code null}.
 	 * @param clearText The clear text to encrypt. Must not be {@code null}.
+	 * @param aad       The additional authenticated data. Must not be
+	 *                  {@code null}.
 	 *
 	 * @return The resulting JWE crypto parts.
 	 *
@@ -41,6 +44,6 @@ public interface JWEEncrypter extends JWEProvider {
 	 *                       supported or if encryption failed for some
 	 *                       other internal reason.
 	 */
-	JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText)
+	JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException;
 }
