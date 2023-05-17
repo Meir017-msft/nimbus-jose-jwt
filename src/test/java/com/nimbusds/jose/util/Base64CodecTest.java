@@ -18,8 +18,6 @@
 package com.nimbusds.jose.util;
 
 
-import java.nio.charset.StandardCharsets;
-
 import junit.framework.TestCase;
 import org.apache.commons.lang.StringUtils;
 

@@ -18,21 +18,14 @@
 package com.nimbusds.jose.crypto;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 import net.jcip.annotations.ThreadSafe;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.AAD;
-import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
-import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
 import com.nimbusds.jose.crypto.impl.MultiCryptoProvider;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;

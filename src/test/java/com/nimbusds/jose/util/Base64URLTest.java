@@ -19,7 +19,6 @@ package com.nimbusds.jose.util;
 
 
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 
 import junit.framework.TestCase;
 

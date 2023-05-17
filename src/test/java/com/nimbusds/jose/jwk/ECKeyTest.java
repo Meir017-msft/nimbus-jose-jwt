@@ -21,7 +21,6 @@ package com.nimbusds.jose.jwk;
 import java.io.File;
 import java.math.BigInteger;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.ECPrivateKey;

@@ -23,12 +23,10 @@ import java.text.ParseException;
 import java.util.*;
 
 import junit.framework.TestCase;
-import org.jose4j.json.internal.json_simple.JSONObject;
 import org.junit.Assert;
 
 import com.nimbusds.jose.HeaderParameterNames;
 import com.nimbusds.jwt.util.DateUtils;
-import com.nimbusds.jwt.util.DateUtilsTest;
 
 
 /**

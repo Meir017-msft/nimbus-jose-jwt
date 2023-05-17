@@ -30,7 +30,6 @@ import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JWEAlgorithm;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.jwk.Curve;
-import com.nimbusds.jose.util.ByteUtils;
 
 
 /**

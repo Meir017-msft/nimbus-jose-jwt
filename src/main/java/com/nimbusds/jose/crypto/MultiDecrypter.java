@@ -20,13 +20,9 @@ package com.nimbusds.jose.crypto;
 
 import java.util.Map;
 import java.util.Set;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.AAD;
-import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
-import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
 import com.nimbusds.jose.crypto.impl.CriticalHeaderParamsDeferral;
 import com.nimbusds.jose.crypto.impl.MultiCryptoProvider;
 import com.nimbusds.jose.jwk.JWK;

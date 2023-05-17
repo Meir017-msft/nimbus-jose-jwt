@@ -28,8 +28,6 @@ import java.security.spec.*;
 import java.util.Collections;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-
 import com.nimbusds.jose.crypto.bc.BouncyCastleProviderSingleton;
 import com.nimbusds.jose.crypto.opts.UserAuthenticationRequired;
 import com.nimbusds.jwt.JWTClaimNames;

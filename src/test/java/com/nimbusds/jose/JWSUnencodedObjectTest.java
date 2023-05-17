@@ -18,7 +18,6 @@
 package com.nimbusds.jose;
 
 
-import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.Collections;
 

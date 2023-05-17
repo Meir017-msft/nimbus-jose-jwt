@@ -18,8 +18,6 @@
 package com.nimbusds.jose.util;
 
 
-import java.nio.charset.StandardCharsets;
-
 import com.nimbusds.jose.util.DeflateUtils;
 import junit.framework.TestCase;
 
