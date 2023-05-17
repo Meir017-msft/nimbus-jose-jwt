@@ -18,27 +18,21 @@
 package com.nimbusds.jose.crypto;
 
 
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Logger;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-
-import junit.framework.TestCase;
-
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.KeyType;
-import com.nimbusds.jose.jwk.gen.*;
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
+import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
+import com.nimbusds.jose.jwk.gen.OctetSequenceKeyGenerator;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.util.Base64URL;
-import com.nimbusds.jose.util.JSONArrayUtils;
 import com.nimbusds.jose.util.JSONObjectUtils;
+import junit.framework.TestCase;
+
+import javax.crypto.SecretKey;
+import java.util.*;
+import java.util.logging.Logger;
 
 
 /**
@@ -159,8 +153,8 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		final String plainText = "Hello world!";
 		final EncryptionMethod enc = EncryptionMethod.A256GCM;
 		final JWKSet keys = generateJWKSet(enc);
-		final Set resipientHeader = new HashSet<>(Arrays.asList("alg", "kid"));
-		final Set ecResipientHeader = new HashSet<>(Arrays.asList("epk", "alg", "kid"));
+		final Set recipientHeader = new HashSet<>(Arrays.asList("alg", "kid"));
+		final Set ecRecipientHeader = new HashSet<>(Arrays.asList("epk", "alg", "kid"));
 
 		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.DIR, enc)
 						.compressionAlgorithm(CompressionAlgorithm.DEF)
@@ -181,23 +175,23 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		assertEquals(new HashSet<>(Arrays.asList("zip", "enc")), JSONObjectUtils.parse(JSONObjectUtils.getBase64URL(jsonJWEObject, "protected").decodeToString()).keySet());
 
 		assertEquals("ECRecipient", ((Map<String, String>) recipients[0].get("header")).get("kid"));
-		assertEquals(ecResipientHeader, ((Map<String, Object>) recipients[0].get("header")).keySet());
+		assertEquals(ecRecipientHeader, ((Map<String, Object>) recipients[0].get("header")).keySet());
 		assertEquals(true, recipients[0].containsKey("encrypted_key"));
 
 		assertEquals("RSARecipient", ((Map<String, String>) recipients[1].get("header")).get("kid"));
-		assertEquals(resipientHeader, ((Map<String, Object>) recipients[1].get("header")).keySet());
+		assertEquals(recipientHeader, ((Map<String, Object>) recipients[1].get("header")).keySet());
 		assertEquals(true, recipients[1].containsKey("encrypted_key"));
 
 		assertEquals("X25519Recipient", ((Map<String, String>) recipients[2].get("header")).get("kid"));
-		assertEquals(ecResipientHeader, ((Map<String, Object>) recipients[2].get("header")).keySet());
+		assertEquals(ecRecipientHeader, ((Map<String, Object>) recipients[2].get("header")).keySet());
 		assertEquals(true, recipients[2].containsKey("encrypted_key"));
 
 		assertEquals("AESRecipient", ((Map<String, String>) recipients[3].get("header")).get("kid"));
-		assertEquals(resipientHeader, ((Map<String, Object>) recipients[3].get("header")).keySet());
+		assertEquals(recipientHeader, ((Map<String, Object>) recipients[3].get("header")).keySet());
 		assertEquals(true, recipients[3].containsKey("encrypted_key"));
 
 		assertEquals("DirRecipient", ((Map<String, String>) recipients[4].get("header")).get("kid"));
-		assertEquals(resipientHeader, ((Map<String, Object>) recipients[4].get("header")).keySet());
+		assertEquals(recipientHeader, ((Map<String, Object>) recipients[4].get("header")).keySet());
 		assertEquals(false, recipients[4].containsKey("encrypted_key"));
 
 		for (JWK key : keys.getKeys()) {
