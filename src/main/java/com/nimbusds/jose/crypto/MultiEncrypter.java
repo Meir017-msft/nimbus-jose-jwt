@@ -84,7 +84,7 @@ import java.util.Map;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-05-17
+ * @version 2023-07-08
  */
 @ThreadSafe
 public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter {
@@ -121,7 +121,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 	public MultiEncrypter(final JWKSet keys)
 		throws KeyLengthException {
 
-		this(keys, findDirectCek(keys));
+		this(keys, findDirectCEK(keys));
 	}
 
 
@@ -168,7 +168,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 	 *
 	 * @return The SecretKey.
 	 */
-	private static SecretKey findDirectCek(final JWKSet keys) {
+	private static SecretKey findDirectCEK(final JWKSet keys) {
 		if (keys != null) {
 			for (JWK jwk : keys.getKeys()) {
 				if (JWEAlgorithm.DIR.equals(jwk.getAlgorithm()) && KeyType.OCT.equals(jwk.getKeyType())) {
