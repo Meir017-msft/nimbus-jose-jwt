@@ -576,15 +576,11 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	}
 
 
-	@Override
-	public Map<String, Object> toGeneralJSONObject() {
-
-		ensureEncryptedOrDecryptedState();
-
-		if (recipients.size() < 1 || (recipients.get(0).getHeader() == null && recipients.get(0).getEncryptedKey() == null)) {
-			throw new IllegalStateException("The general JWE JSON serialization requires at least one recipient");
-		}
-
+	/**
+	 * Returns the JSON object with the common members in general and
+	 * flattened JWE JSON serialisation.
+	 */
+	private Map<String,Object> toBaseJSONObject() {
 		Map<String, Object> jsonObject = JSONObjectUtils.newJSONObject();
 		String[] aadParts = new String(aad, StandardCharsets.US_ASCII).split("\\.");
 		jsonObject.put("protected", aadParts[0]);
@@ -594,6 +590,21 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		jsonObject.put("ciphertext", cipherText.toString());
 		jsonObject.put("iv", iv.toString());
 		jsonObject.put("tag", authTag.toString());
+		return jsonObject;
+	}
+
+
+	@Override
+	public Map<String, Object> toGeneralJSONObject() {
+
+		ensureEncryptedOrDecryptedState();
+
+		if (recipients.size() < 1 || (recipients.get(0).getHeader() == null && recipients.get(0).getEncryptedKey() == null)) {
+			throw new IllegalStateException("The general JWE JSON serialization requires at least one recipient");
+		}
+
+		Map<String, Object> jsonObject = toBaseJSONObject();
+
 		if (unprotected != null) {
 			jsonObject.put("unprotected", unprotected.toJSONObject());
 		}
@@ -619,15 +630,8 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 			throw new IllegalStateException("The flattened JWE JSON serialization requires exactly one recipient");
 		}
 
-		Map<String, Object> jsonObject = JSONObjectUtils.newJSONObject();
-		String[] aadParts = new String(aad, StandardCharsets.US_ASCII).split("\\.");
-		jsonObject.put("protected", aadParts[0]);
-		if (aadParts.length == 2) {
-			jsonObject.put("aad", aadParts[1]);
-		}
-		jsonObject.put("ciphertext", cipherText.toString());
-		jsonObject.put("iv", iv.toString());
-		jsonObject.put("tag", authTag.toString());
+		Map<String, Object> jsonObject = toBaseJSONObject();
+
 		Map<String, Object> recipientHeader = JSONObjectUtils.newJSONObject();
 		if (recipients.get(0).getHeader() != null) {
 			recipientHeader.putAll(recipients.get(0).getHeader().toJSONObject());
