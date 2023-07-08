@@ -261,10 +261,6 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 					recipientHeaderMap.put(param, keyMap.get(param));
 				}
 			}
-			if (recipientHeaderMap.get(HeaderParameterNames.KEY_ID) == null) {
-				// TODO is this appropriate?
-				recipientHeaderMap.put(HeaderParameterNames.KEY_ID, key.computeThumbprint().toString());
-			}
 			if (recipientHeaderMap.get(HeaderParameterNames.ALGORITHM) == null) {
 				// TODO is this appropriate?
 				recipientHeaderMap.put(HeaderParameterNames.ALGORITHM, header.getAlgorithm().toString());
