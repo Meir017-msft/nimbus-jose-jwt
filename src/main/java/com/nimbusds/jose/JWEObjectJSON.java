@@ -42,7 +42,7 @@ import java.util.Map;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-05-17
+ * @version 2023-07-08
  */
 @ThreadSafe
 public class JWEObjectJSON extends JOSEObjectJSON {
@@ -50,7 +50,14 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 	private static final long serialVersionUID = 1L;
 
-	private final String[] recipientHeaderParams = {"kid", "alg", "x5u", "x5t", "x5t#S256", "x5c"};
+	private static final String[] RECIPIENT_HEADER_PARAMS =
+		{
+			HeaderParameterNames.KEY_ID,
+			HeaderParameterNames.ALGORITHM,
+			HeaderParameterNames.X_509_CERT_URL,
+			HeaderParameterNames.X_509_CERT_SHA_1_THUMBPRINT,
+			HeaderParameterNames.X_509_CERT_CHAIN
+		};
 
 
 	/**
@@ -61,7 +68,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 		/**
-		 * The per-recipient unprotected header
+		 * The per-recipient unprotected header.
 		 */
 		private final UnprotectedHeader header;
 
@@ -75,10 +82,9 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		/**
 		 * Creates a new parsed recipient.
 		 *
-		 * @param header            The per-recipient unprotected header.
-		 *                          {@code null} if none.
-		 * @param encryptedKey      The encrypted key.
-		 *                          {@code null} if none.
+		 * @param header       The per-recipient unprotected header,
+		 *                     {@code null} if none.
+		 * @param encryptedKey The encrypted key, {@code null} if none.
 		 */
 		private Recipient(final UnprotectedHeader header,
 				  final Base64URL encryptedKey) {
@@ -90,7 +96,8 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		/**
 		 * Returns the per-recipient unprotected header.
 		 *
-		 * @return The per-recipient unprotected header, {@code null} if none.
+		 * @return The per-recipient unprotected header, {@code null}
+		 *         if none.
 		 */
 		public UnprotectedHeader getHeader() {
 			return header;
@@ -243,7 +250,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 			this.aad = aad;
 		} else {
 			Map<String, Object> headerMap = header.toJSONObject();
-			for (String param : recipientHeaderParams) {
+			for (String param : RECIPIENT_HEADER_PARAMS) {
 				headerMap.remove(param);
 			}
 			this.aad = AAD.compute(Base64URL.encode(JSONObjectUtils.toJSONString(headerMap)));
@@ -261,10 +268,10 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 * @param cipherText  The cipher text. Must not be {@code null}.
 	 * @param iv          The initialisation vector. Empty or {@code null}
 	 *                    if none.
-	 * @param authTag     The authentication tag. Empty of {@code null} if
+	 * @param authTag     The authentication tag. Empty or {@code null} if
 	 *                    none.
 	 * @param recipients  The recipients list. Must not be {@code null}.
-	 * @param unprotected The authentication tag. Empty of {@code null} if
+	 * @param unprotected The authentication tag. Empty or {@code null} if
 	 *                    none.
 	 * @param aad         The additional authenticated data. Must not be
 	 *                    {@code null}.
@@ -514,7 +521,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		} catch (Exception e) {
 			Map<String, Object> headerMap = header.toJSONObject();
 			Map<String, Object> recipientHeader = JSONObjectUtils.newJSONObject();
-			for (String param : recipientHeaderParams) {
+			for (String param : RECIPIENT_HEADER_PARAMS) {
 				if (headerMap.containsKey(param)) {
 					recipientHeader.put(param, headerMap.get(param));
 				}
@@ -575,7 +582,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		ensureEncryptedOrDecryptedState();
 
 		if (recipients.size() < 1 || (recipients.get(0).getHeader() == null && recipients.get(0).getEncryptedKey() == null)) {
-			throw new IllegalStateException("The general JWS JSON serialization requires at least one recipients");
+			throw new IllegalStateException("The general JWE JSON serialization requires at least one recipient");
 		}
 
 		Map<String, Object> jsonObject = JSONObjectUtils.newJSONObject();
@@ -675,7 +682,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 * @return The JWE secured object.
 	 *
 	 * @throws ParseException If the JSON object couldn't be parsed to a
-	 *                        JWS secured object.
+	 *                        JWE secured object.
 	 */
 	public static JWEObjectJSON parse(final Map<String, Object> jsonObject)
 		throws ParseException {
