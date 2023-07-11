@@ -42,7 +42,7 @@ import java.util.Map;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-07-08
+ * @version 2023-07-11
  */
 @ThreadSafe
 public class JWEObjectJSON extends JOSEObjectJSON {
@@ -334,7 +334,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 *         object has not been encrypted yet.
 	 */
 	public Base64URL getEncryptedKey() {
-		if (recipients.size() < 1) {
+		if (recipients.isEmpty()) {
 			return null;
 		} else if (recipients.size() == 1) {
 			return recipients.get(0).getEncryptedKey();
@@ -599,7 +599,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 		ensureEncryptedOrDecryptedState();
 
-		if (recipients.size() < 1 || (recipients.get(0).getHeader() == null && recipients.get(0).getEncryptedKey() == null)) {
+		if (recipients.isEmpty() || (recipients.get(0).getHeader() == null && recipients.get(0).getEncryptedKey() == null)) {
 			throw new IllegalStateException("The general JWE JSON serialization requires at least one recipient");
 		}
 
