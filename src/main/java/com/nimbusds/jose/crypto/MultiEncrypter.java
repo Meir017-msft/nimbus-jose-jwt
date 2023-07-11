@@ -112,8 +112,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 	/**
 	 * Creates a new multi-recipient encrypter.
 	 *
-	 * @param keys                 The public keys. Must not be
-	 *                             {@code null}.
+	 * @param keys The keys to encrypt to. Must not be {@code null}.
 	 *
 	 * @throws KeyLengthException If the symmetric key length is not
 	 *                            compatible.
@@ -128,7 +127,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 	/**
 	 * Creates a new multi-recipient encrypter.
 	 *
-	 * @param keys                 The public keys. Must not be
+	 * @param keys                 The keys to encrypt to. Must not be
 	 *                             {@code null}.
 	 * @param contentEncryptionKey The content encryption key (CEK) to use.
 	 *                             If specified its algorithm must be "AES"
@@ -262,7 +261,10 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 				}
 			}
 			if (recipientHeaderMap.get(HeaderParameterNames.ALGORITHM) == null) {
-				// TODO is this appropriate?
+				// The recipient JWK doesn't specify an "alg",
+				// fall back to the JWE header "alg"
+				// TODO is this safe / appropriate?
+				System.out.println("Falling back to " + header.getAlgorithm());
 				recipientHeaderMap.put(HeaderParameterNames.ALGORITHM, header.getAlgorithm().toString());
 			}
 			recipientHeaderMap.putAll(headerMap);
