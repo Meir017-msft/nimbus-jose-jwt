@@ -18,15 +18,15 @@
 package com.nimbusds.jose.crypto.impl;
 
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import javax.crypto.SecretKey;
-
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JWEAlgorithm;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.util.ByteUtils;
+
+import javax.crypto.SecretKey;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 
 /**
@@ -54,7 +54,7 @@ import com.nimbusds.jose.util.ByteUtils;
  * </ul>
  * 
  * @author Vladimir Dzhuvinov
- * @version 2022-09-20
+ * @version 2023-07-11
  */
 public abstract class DirectCryptoProvider extends BaseJWEProvider {
 
@@ -122,10 +122,6 @@ public abstract class DirectCryptoProvider extends BaseJWEProvider {
 		throws KeyLengthException {
 
 		super(SUPPORTED_ALGORITHMS, getCompatibleEncryptionMethods(ByteUtils.bitLength(cek.getEncoded())), cek);
-
-		if (cek == null) {
-			throw new KeyLengthException("The provided CEK is not supported");
-		}
 	}
 
 
