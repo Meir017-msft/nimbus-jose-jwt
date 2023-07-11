@@ -40,7 +40,7 @@ import java.util.logging.Logger;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-05-17
+ * @version 2023-07-11
  */
 public class JWEMultipleRecipientsTest extends TestCase {
 
@@ -139,7 +139,7 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		}
 
 		try {
-			decrypter = new MultiDecrypter(null);
+			new MultiDecrypter(null);
 			fail();
 		} catch (Exception e) {
 			assertEquals("The private key (JWK) must not be null", e.getMessage());
@@ -153,8 +153,8 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		final String plainText = "Hello world!";
 		final EncryptionMethod enc = EncryptionMethod.A256GCM;
 		final JWKSet keys = generateJWKSet(enc);
-		final Set recipientHeader = new HashSet<>(Arrays.asList("alg", "kid"));
-		final Set ecRecipientHeader = new HashSet<>(Arrays.asList("epk", "alg", "kid"));
+		final Set<String> recipientHeader = new HashSet<>(Arrays.asList("alg", "kid"));
+		final Set<String> ecRecipientHeader = new HashSet<>(Arrays.asList("epk", "alg", "kid"));
 
 		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.DIR, enc)
 						.compressionAlgorithm(CompressionAlgorithm.DEF)
@@ -199,19 +199,40 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			jwe.decrypt(new MultiDecrypter(key));
 			assertEquals(plainText, jwe.getPayload().toString());
 		}
+	}
+
+
+	public void testRejectNullPublicJWKSet() throws JOSEException {
+
+		SecretKey cek = new OctetSequenceKeyGenerator(EncryptionMethod.A128GCM.cekBitLength())
+			.generate()
+			.toOctetSequenceKey()
+			.toSecretKey("AES");
 
 		try {
-			encrypter = new MultiEncrypter(null, null);
+			new MultiEncrypter(null, cek);
 			fail();
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
 			assertEquals("The public key set (JWKSet) must not be null", e.getMessage());
 		}
+	}
+
+
+	public void testRejectCEK_dirKeyMismatch() throws Exception {
+
+		EncryptionMethod enc = EncryptionMethod.A256GCM;
+
+		SecretKey cek = new OctetSequenceKeyGenerator(enc.cekBitLength())
+			.generate()
+			.toOctetSequenceKey()
+			.toSecretKey("AES");
+
+		JWKSet keys = generateJWKSet(enc);
 
 		try {
-			SecretKey cek = new OctetSequenceKeyGenerator(enc.cekBitLength()).generate().toOctetSequenceKey().toSecretKey("AES");
-			encrypter = new MultiEncrypter(keys, cek);
+			new MultiEncrypter(keys, cek);
 			fail();
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
 			assertEquals("Bad CEK", e.getMessage());
 		}
 	}
