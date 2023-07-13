@@ -1543,7 +1543,7 @@ version 9.31 (2023-02-21)
     * JWTClaimsSet.parse must throw ParseException on "sub" and "aud" claims of
       illegal JSON type (iss #511).
 
-version 9.32 (2023-04-20)
+version 9.32 (2023-07-13)
     * Updates the ECDSASigner for the ESxxx JWS algorithms to support the
       UserAuthenticationRequired option, originally introduced in the
       RSASSASigner for the RSxxx and PSxxx JWS algorithms.
@@ -1561,5 +1561,7 @@ version 9.32 (2023-04-20)
       optional AAD. If no AAD is specified the JWE header becomes the AAD
       (default behaviour). Intended to support JWE JSON serialisation to
       multiple recipients.
+    * Updates JSONObjectUtils.parse(String,int) to ensure generic types not
+      erased by obfuscation tools (iss #518).
     * Updates GSon to 2.10.1.
     * Updates Google Tink to 1.9.0.

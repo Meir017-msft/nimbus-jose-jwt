@@ -18,6 +18,12 @@
 package com.nimbusds.jose.util;
 
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
+import com.google.gson.internal.LinkedTreeMap;
+import com.google.gson.reflect.TypeToken;
+
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,12 +32,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.ToNumberPolicy;
-import com.google.gson.internal.LinkedTreeMap;
-import com.google.gson.reflect.TypeToken;
 
 
 /**
@@ -121,8 +121,8 @@ public class JSONObjectUtils {
 		if (sizeLimit >= 0 && s.length() > sizeLimit) {
 			throw new ParseException("The parsed string is longer than the max accepted size of " + sizeLimit + " characters", 0);
 		}
-		
-		Type mapType = new TypeToken<Map<String, Object>>(){}.getType();
+
+		Type mapType = TypeToken.getParameterized(Map.class, String.class, Object.class).getType();
 		
 		try {
 			return GSON.fromJson(s, mapType);
