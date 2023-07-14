@@ -147,11 +147,32 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 		if (keys == null) {
 			throw new IllegalArgumentException("The public key set (JWKSet) must not be null");
 		}
+
+		KeyType kty;
+		JWEAlgorithm alg;
 		for (JWK jwk : keys.getKeys()) {
-			if (JWEAlgorithm.DIR.equals(jwk.getAlgorithm())
-					&& KeyType.OCT.equals(jwk.getKeyType())
+			kty = jwk.getKeyType();
+			if (jwk.getAlgorithm() == null) {
+				throw new IllegalArgumentException("Key encryption algorithm is not defined");
+			}
+			alg = JWEAlgorithm.parse(jwk.getAlgorithm().toString());
+			if (JWEAlgorithm.DIR.equals(alg)
+					&& KeyType.OCT.equals(kty)
 					&& !jwk.toOctetSequenceKey().toSecretKey("AES").equals(contentEncryptionKey)) {
 				throw new IllegalArgumentException("Bad CEK");
+			}
+			if (KeyType.RSA.equals(kty) && RSAEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
+				continue;
+			} else if (KeyType.EC.equals(kty) && ECDHEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
+				continue;
+			} else if (KeyType.OCT.equals(kty) && AESEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
+				continue;
+			} else if (KeyType.OCT.equals(kty) && DirectEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
+				continue;
+			} else if (KeyType.OKP.equals(kty) && X25519Encrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
+				continue;
+			} else {
+				throw new IllegalArgumentException("Unsupported key encryption algorithm");
 			}
 		}
 
@@ -259,13 +280,6 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 				if (keyMap.containsKey(param)) {
 					recipientHeaderMap.put(param, keyMap.get(param));
 				}
-			}
-			if (recipientHeaderMap.get(HeaderParameterNames.ALGORITHM) == null) {
-				// The recipient JWK doesn't specify an "alg",
-				// fall back to the JWE header "alg"
-				// TODO is this safe / appropriate?
-				System.out.println("Falling back to " + header.getAlgorithm());
-				recipientHeaderMap.put(HeaderParameterNames.ALGORITHM, header.getAlgorithm().toString());
 			}
 			recipientHeaderMap.putAll(headerMap);
 

@@ -217,9 +217,14 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			.build();
 
 		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
-		JWEEncrypter encrypter = new MultiEncrypter(keys);
+		try {
+			JWEEncrypter encrypter = new MultiEncrypter(keys);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Key encryption algorithm is not defined", e.getMessage());
+		}
 
-		jwe.encrypt(encrypter);
+		/*jwe.encrypt(encrypter);
 		String json = jwe.serializeGeneral();
 
 		LOGGER.fine("JWE JSON Object: " + json);
@@ -242,7 +247,7 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			jwe = JWEObjectJSON.parse(json);
 			jwe.decrypt(new MultiDecrypter(key));
 			assertEquals(plainText, jwe.getPayload().toString());
-		}
+		}*/
 	}
 
 
@@ -297,17 +302,22 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		final String plainText = "Hello world!";
 		final EncryptionMethod enc = EncryptionMethod.A128GCM;
 		final JWKSet keys = new JWKSet(Arrays.asList(
-			(JWK)new RSAKeyGenerator(2048).keyID("1").generate(),
-			(JWK)new ECKeyGenerator(Curve.P_256).keyID("2").generate())
+			(JWK)new RSAKeyGenerator(2048).keyID("1").algorithm(JWEAlgorithm.RSA_OAEP_256).generate(),
+			(JWK)new ECKeyGenerator(Curve.P_256).keyID("2").algorithm(JWEAlgorithm.ECDH_1PU_A128KW).generate())
 		);
 
 		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.ECDH_ES_A128KW, enc)
 			.build();
 
 		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
-		JWEEncrypter encrypter = new MultiEncrypter(keys);
+		try {
+			JWEEncrypter encrypter = new MultiEncrypter(keys);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Unsupported key encryption algorithm", e.getMessage());
+		}
 
-		jwe.encrypt(encrypter);
+		/*jwe.encrypt(encrypter);
 		String json = jwe.serializeGeneral();
 
 		LOGGER.info("JWE JSON Object: " + json);
@@ -330,7 +340,7 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			jwe = JWEObjectJSON.parse(json);
 			jwe.decrypt(new MultiDecrypter(key));
 			assertEquals(plainText, jwe.getPayload().toString());
-		}
+		}*/
 	}
 
 
