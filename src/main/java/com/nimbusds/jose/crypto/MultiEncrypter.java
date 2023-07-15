@@ -161,17 +161,11 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 					&& !jwk.toOctetSequenceKey().toSecretKey("AES").equals(contentEncryptionKey)) {
 				throw new IllegalArgumentException("Bad CEK");
 			}
-			if (KeyType.RSA.equals(kty) && RSAEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
-				continue;
-			} else if (KeyType.EC.equals(kty) && ECDHEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
-				continue;
-			} else if (KeyType.OCT.equals(kty) && AESEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
-				continue;
-			} else if (KeyType.OCT.equals(kty) && DirectEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
-				continue;
-			} else if (KeyType.OKP.equals(kty) && X25519Encrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
-				continue;
-			} else {
+			if (!((KeyType.RSA.equals(kty) && RSAEncrypter.SUPPORTED_ALGORITHMS.contains(alg))
+					|| (KeyType.EC.equals(kty) && ECDHEncrypter.SUPPORTED_ALGORITHMS.contains(alg))
+					|| (KeyType.OCT.equals(kty) && AESEncrypter.SUPPORTED_ALGORITHMS.contains(alg))
+					|| (KeyType.OCT.equals(kty) && DirectEncrypter.SUPPORTED_ALGORITHMS.contains(alg))
+					|| (KeyType.OKP.equals(kty) && X25519Encrypter.SUPPORTED_ALGORITHMS.contains(alg)))) {
 				throw new IllegalArgumentException("Unsupported key encryption algorithm");
 			}
 		}
