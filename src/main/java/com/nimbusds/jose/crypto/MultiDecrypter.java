@@ -18,6 +18,8 @@
 package com.nimbusds.jose.crypto;
 
 
+import java.net.URI;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +29,7 @@ import com.nimbusds.jose.crypto.impl.CriticalHeaderParamsDeferral;
 import com.nimbusds.jose.crypto.impl.MultiCryptoProvider;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.KeyType;
+import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import net.jcip.annotations.ThreadSafe;
@@ -94,6 +97,42 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 
 
 	/**
+	 * The key id of the private JWK key.
+	 */
+	private final String kid;
+
+
+	/**
+	 * The Cerificate URL of the private JWK key.
+	 */
+	private final URI x5u;
+
+
+	/**
+	 * The Certificate thumbprint of the private JWK key.
+	 */
+	private final Base64URL x5t;
+
+
+	/**
+	 * The Certificate SHA256 thumbprint of the private JWK key.
+	 */
+	private final Base64URL x5t256;
+
+
+	/**
+	 * The Certificate chain of the private JWK key.
+	 */
+	private final List<Base64> x5c;
+
+
+	/**
+	 * The Thumbprint of the private JWK key.
+	 */
+	private final Base64URL thumbprint;
+
+
+	/**
 	 * The critical header policy.
 	 */
 	private final CriticalHeaderParamsDeferral critPolicy = new CriticalHeaderParamsDeferral();
@@ -109,7 +148,7 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 	 *                            compatible.
 	 */
 	public MultiDecrypter(final JWK jwk)
-		throws KeyLengthException {
+		throws JOSEException, KeyLengthException {
 
 		this(jwk, null);
 	}
@@ -129,7 +168,7 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 	 *                            compatible.
 	 */
 	public MultiDecrypter(final JWK jwk, final Set<String> defCritHeaders)
-		throws KeyLengthException {
+		throws JOSEException, KeyLengthException {
 
 		super(null);
 
@@ -137,6 +176,12 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 			throw new IllegalArgumentException("The private key (JWK) must not be null");
 		}
 		this.jwk = jwk;
+		this.kid = jwk.getKeyID();
+		this.x5c = jwk.getX509CertChain();
+		this.x5u = jwk.getX509CertURL();
+		this.x5t = jwk.getX509CertThumbprint();
+		this.x5t256 = jwk.getX509CertSHA256Thumbprint();
+		this.thumbprint = jwk.computeThumbprint();
 
 		critPolicy.setDeferredCriticalHeaderParams(defCritHeaders);
 	}
@@ -153,6 +198,36 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 	public Set<String> getDeferredCriticalHeaderParams() {
 
 		return critPolicy.getProcessedCriticalHeaderParams();
+	}
+
+
+	private boolean jwkMatched(final JWEHeader recipientHeader)
+		throws JOSEException {
+
+		if (kid != null && kid.equals(recipientHeader.getKeyID())) {
+			return true;
+		}
+		if (thumbprint.toString().equals(recipientHeader.getKeyID())) {
+			return true;
+		}
+		JWK rjwk = recipientHeader.getJWK();
+		if (rjwk != null && thumbprint.equals(rjwk.computeThumbprint())) {
+			return true;
+		}
+		if (x5u != null && x5u.equals(recipientHeader.getX509CertURL())) {
+			return true;
+		}
+		if (x5t != null && x5t.equals(recipientHeader.getX509CertThumbprint())) {
+			return true;
+		}
+		if (x5t256 != null && x5t256.equals(recipientHeader.getX509CertSHA256Thumbprint())) {
+			return true;
+		}
+		List<Base64> rx5c = recipientHeader.getX509CertChain();
+		if (x5c != null && rx5c != null && x5c.containsAll(rx5c) && rx5c.containsAll(x5c)) {
+			return true;
+		}
+		return false;
 	}
 
 
@@ -200,30 +275,6 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 		              final byte[] aad)
 		throws JOSEException {
 
-		final JWEDecrypter decrypter;
-		final KeyType kty = jwk.getKeyType();
-		final Set<String> defCritHeaders = critPolicy.getDeferredCriticalHeaderParams();
-		JWEHeader recipientHeader = header;
-		Base64URL recipientEncryptedKey = encryptedKey;
-		try {
-			// The encryptedKey value contains the Base64URL encoded JSON string
-			// {"recipients":[{recipient1},{recipient2}]} if multiple recipients are used.
-			for (Object recipientMap : JSONObjectUtils.getJSONArray((JSONObjectUtils.parse(encryptedKey.decodeToString())), "recipients")) {
-				Map<String, Object> recipientHeaderMap = header.toJSONObject();
-				recipientHeaderMap.putAll(JSONObjectUtils.getJSONObject((Map<String, Object>) recipientMap, "header"));
-				String kid = JSONObjectUtils.getString(recipientHeaderMap, "kid");
-				if (kid.equals(jwk.getKeyID()) || kid.equals(jwk.computeThumbprint().toString())) {
-					recipientHeader = JWEHeader.parse(recipientHeaderMap);
-					recipientEncryptedKey = JSONObjectUtils.getBase64URL((Map<String, Object>) recipientMap, "encrypted_key");
-					break;
-				}
-			}
-		} catch (Exception e) {
-			// If encryptedKey can not be parsed as a JSON Object, it means the encryptedKey contains the RAW encrypted key value.
-		}
-
-		final JWEAlgorithm alg = recipientHeader.getAlgorithm();
-
 		if (iv == null) {
 			throw new JOSEException("Unexpected present JWE initialization vector (IV)");
 		}
@@ -235,6 +286,36 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 		if (aad == null) {
 			throw new JOSEException("Missing JWE additional authenticated data (AAD)");
 		}
+
+		final JWEDecrypter decrypter;
+		final KeyType kty = jwk.getKeyType();
+		final Set<String> defCritHeaders = critPolicy.getDeferredCriticalHeaderParams();
+		JWEHeader recipientHeader = null;
+		Base64URL recipientEncryptedKey = null;
+		try {
+			// The encryptedKey value contains the Base64URL encoded JSON string
+			// {"recipients":[{recipient1},{recipient2}]} if multiple recipients are used.
+			for (Object recipientMap : JSONObjectUtils.getJSONArray((JSONObjectUtils.parse(encryptedKey.decodeToString())), "recipients")) {
+				Map<String, Object> recipientHeaderMap = header.toJSONObject();
+				recipientHeaderMap.putAll(JSONObjectUtils.getJSONObject((Map<String, Object>) recipientMap, "header"));
+				recipientHeader = JWEHeader.parse(recipientHeaderMap);
+				if (jwkMatched(recipientHeader)) {
+					recipientEncryptedKey = JSONObjectUtils.getBase64URL((Map<String, Object>) recipientMap, "encrypted_key");
+					break;
+				}
+				recipientHeader = null;
+			}
+		} catch (Exception e) {
+			// If encryptedKey can not be parsed as a JSON Object, it means the encryptedKey contains the RAW encrypted key value.
+			recipientHeader = header;
+			recipientEncryptedKey = encryptedKey;
+		}
+
+		if (recipientHeader == null) {
+			throw new JOSEException("No recipient found");
+		}
+
+		final JWEAlgorithm alg = recipientHeader.getAlgorithm();
 
 		critPolicy.ensureHeaderPasses(recipientHeader);
 
