@@ -224,30 +224,6 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			assertEquals("Key encryption algorithm is not defined", e.getMessage());
 		}
 
-		/*jwe.encrypt(encrypter);
-		String json = jwe.serializeGeneral();
-
-		LOGGER.fine("JWE JSON Object: " + json);
-
-		Map<String, Object> jsonJWEObject = JSONObjectUtils.parse(json);
-		Map<String, Object>[] recipients = JSONObjectUtils.getJSONObjectArray(jsonJWEObject, "recipients");
-		assertEquals(keys.size(), recipients.length);
-
-		assertEquals(Collections.singleton("enc"), JSONObjectUtils.parse(JSONObjectUtils.getBase64URL(jsonJWEObject, "protected").decodeToString()).keySet());
-
-		assertEquals(JWEAlgorithm.RSA_OAEP_256.getName(), ((Map<String, Object>) recipients[0].get("header")).get("alg"));
-		assertEquals("1", ((Map<String, Object>) recipients[0].get("header")).get("kid"));
-		assertTrue(recipients[0].containsKey("encrypted_key"));
-
-		assertEquals(JWEAlgorithm.RSA_OAEP_256.getName(), ((Map<String, Object>) recipients[1].get("header")).get("alg"));
-		assertEquals("2", ((Map<String, Object>) recipients[1].get("header")).get("kid"));
-		assertTrue(recipients[1].containsKey("encrypted_key"));
-
-		for (JWK key : keys.getKeys()) {
-			jwe = JWEObjectJSON.parse(json);
-			jwe.decrypt(new MultiDecrypter(key));
-			assertEquals(plainText, jwe.getPayload().toString());
-		}*/
 	}
 
 
@@ -295,7 +271,6 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		}
 	}
 
-	// TODO test fails, JWE alg not revolved for RSA key, key silently skipped with no JOSEException
 	public void testTwoRecipients_jweAlgNotResolved()
 		throws Exception {
 
@@ -317,30 +292,6 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			assertEquals("Unsupported key encryption algorithm", e.getMessage());
 		}
 
-		/*jwe.encrypt(encrypter);
-		String json = jwe.serializeGeneral();
-
-		LOGGER.info("JWE JSON Object: " + json);
-
-		Map<String, Object> jsonJWEObject = JSONObjectUtils.parse(json);
-		Map<String, Object>[] recipients = JSONObjectUtils.getJSONObjectArray(jsonJWEObject, "recipients");
-		assertEquals(keys.size(), recipients.length);
-
-		assertEquals(Collections.singleton("enc"), JSONObjectUtils.parse(JSONObjectUtils.getBase64URL(jsonJWEObject, "protected").decodeToString()).keySet());
-
-		assertEquals(JWEAlgorithm.RSA_OAEP_256.getName(), ((Map<String, Object>) recipients[0].get("header")).get("alg"));
-		assertEquals("1", ((Map<String, Object>) recipients[0].get("header")).get("kid"));
-		assertTrue(recipients[0].containsKey("encrypted_key"));
-
-		assertEquals(JWEAlgorithm.RSA_OAEP_256.getName(), ((Map<String, Object>) recipients[1].get("header")).get("alg"));
-		assertEquals("2", ((Map<String, Object>) recipients[1].get("header")).get("kid"));
-		assertTrue(recipients[1].containsKey("encrypted_key"));
-
-		for (JWK key : keys.getKeys()) {
-			jwe = JWEObjectJSON.parse(json);
-			jwe.decrypt(new MultiDecrypter(key));
-			assertEquals(plainText, jwe.getPayload().toString());
-		}*/
 	}
 
 
