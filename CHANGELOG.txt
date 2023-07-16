@@ -1543,7 +1543,7 @@ version 9.31 (2023-02-21)
     * JWTClaimsSet.parse must throw ParseException on "sub" and "aud" claims of
       illegal JSON type (iss #511).
 
-version 9.32 (2023-07-13)
+version 9.32 (2023-07-16)
     * Updates the ECDSASigner for the ESxxx JWS algorithms to support the
       UserAuthenticationRequired option, originally introduced in the
       RSASSASigner for the RSxxx and PSxxx JWS algorithms.

@@ -96,9 +96,7 @@ The Nimbus JOSE+JWT library requires Java 7+ and has minimal dependencies.
 * (optional) Tink for OKP generation, EdDSA with Ed25519, ECDH with X25519 and 
   content encryption with XC20P.
 
-
 For Maven add:
-
 ```
 <dependency>
     <groupId>com.nimbusds</groupId>
@@ -106,8 +104,22 @@ For Maven add:
     <version>[ version ]</version>
 </dependency>
 ```
-
 where `[ version ]` is the latest stable version.
+
+
+## Use with Proguard and R8
+
+To work around missing class errors when using this library with 
+[ProGuard](https://www.guardsquare.com/manual/configuration/usage) and   
+[R8](https://developer.android.com/build/shrink-code) "full mode":
+
+```text
+-json-dontwarn net.jcip.annotations.Immutable
+-dontwarn net.jcip.annotations.ThreadSafe
+-dontwarn com.google.crypto.tink.subtle.XChaCha20Poly1305
+```
+
+See issue #518 for details.
 
 
 ## Issues / suggestions
