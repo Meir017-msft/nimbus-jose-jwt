@@ -22,10 +22,12 @@ import com.nimbusds.jose.*;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.SamplePEMEncodedObjects;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import com.nimbusds.jose.jwk.gen.OctetSequenceKeyGenerator;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import junit.framework.TestCase;
@@ -291,9 +293,10 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			put("x5t", "12345");
 			put("x5t#S256", "1234567890");
 		}};
-		JWK tmpKey;
 		RSAKeyGenerator keyGenerator = new RSAKeyGenerator(2048);
 		List<JWK> keyList = new ArrayList<JWK>();
+		JWK tmpKey = JWK.parseFromPEMEncodedObjects(SamplePEMEncodedObjects.RSA_PRIVATE_KEY_PEM + SamplePEMEncodedObjects.RSA_CERT_PEM);
+		keyList.add(extendJWK(extendJWK(tmpKey, "alg", "RSA-OAEP-256"), "x5c", (List<String>) Arrays.asList(SamplePEMEncodedObjects.RSA_CERT_PEM.replaceAll("-----[^-]*-----", "").replaceAll("\n", ""))));
 		for (Map.Entry<String, Object> entry : keyAttrs.entrySet()) {
 			tmpKey = (JWK)keyGenerator.algorithm(JWEAlgorithm.RSA_OAEP_256).generate();
 			keyList.add(extendJWK(tmpKey, entry.getKey(), entry.getValue()));
