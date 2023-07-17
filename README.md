@@ -114,7 +114,7 @@ To work around missing class errors when using this library with
 [R8](https://developer.android.com/build/shrink-code) "full mode":
 
 ```text
--json-dontwarn net.jcip.annotations.Immutable
+-dontwarn net.jcip.annotations.Immutable
 -dontwarn net.jcip.annotations.ThreadSafe
 -dontwarn com.google.crypto.tink.subtle.XChaCha20Poly1305
 ```
