@@ -84,7 +84,7 @@ import java.util.Map;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-07-08
+ * @version 2023-07-19
  */
 @ThreadSafe
 public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter {
@@ -145,17 +145,15 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 		super(contentEncryptionKey);
 
 		if (keys == null) {
-			throw new IllegalArgumentException("The public key set (JWKSet) must not be null");
+			throw new IllegalArgumentException("The JWK set must not be null");
 		}
 
-		KeyType kty;
-		JWEAlgorithm alg;
 		for (JWK jwk : keys.getKeys()) {
-			kty = jwk.getKeyType();
+			KeyType kty = jwk.getKeyType();
 			if (jwk.getAlgorithm() == null) {
-				throw new IllegalArgumentException("Key encryption algorithm is not defined");
+				throw new IllegalArgumentException("Each JWK must specify a key encryption algorithm");
 			}
-			alg = JWEAlgorithm.parse(jwk.getAlgorithm().toString());
+			JWEAlgorithm alg = JWEAlgorithm.parse(jwk.getAlgorithm().toString());
 			if (JWEAlgorithm.DIR.equals(alg)
 					&& KeyType.OCT.equals(kty)
 					&& !jwk.toOctetSequenceKey().toSecretKey("AES").equals(contentEncryptionKey)) {
@@ -166,7 +164,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 					|| (KeyType.OCT.equals(kty) && AESEncrypter.SUPPORTED_ALGORITHMS.contains(alg))
 					|| (KeyType.OCT.equals(kty) && DirectEncrypter.SUPPORTED_ALGORITHMS.contains(alg))
 					|| (KeyType.OKP.equals(kty) && X25519Encrypter.SUPPORTED_ALGORITHMS.contains(alg)))) {
-				throw new IllegalArgumentException("Unsupported key encryption algorithm");
+				throw new IllegalArgumentException("Unsupported key encryption algorithm: " + alg);
 			}
 		}
 

@@ -27,7 +27,6 @@ import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import com.nimbusds.jose.jwk.gen.OctetSequenceKeyGenerator;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
-import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import junit.framework.TestCase;
@@ -41,7 +40,7 @@ import java.util.logging.Logger;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-07-11
+ * @version 2023-07-19
  */
 public class JWEMultipleRecipientsTest extends TestCase {
 
@@ -211,25 +210,19 @@ public class JWEMultipleRecipientsTest extends TestCase {
 
 
 	public void testTwoRecipients_identicalJWEAlg_noJWKAlg()
-		throws Exception {
+		throws JOSEException {
 
-		final String plainText = "Hello world!";
-		final EncryptionMethod enc = EncryptionMethod.A128CBC_HS256;
 		RSAKeyGenerator keyGenerator = new RSAKeyGenerator(2048);
 		final JWKSet keys = new JWKSet(Arrays.asList(
 			(JWK)keyGenerator.keyID("1").generate(),
 			(JWK)keyGenerator.keyID("2").generate())
 		);
 
-		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.RSA_OAEP_256, enc)
-			.build();
-
-		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
 		try {
-			JWEEncrypter encrypter = new MultiEncrypter(keys);
+			new MultiEncrypter(keys);
 			fail();
-		} catch (Exception e) {
-			assertEquals("Key encryption algorithm is not defined", e.getMessage());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Each JWK must specify a key encryption algorithm", e.getMessage());
 		}
 
 	}
@@ -329,51 +322,37 @@ public class JWEMultipleRecipientsTest extends TestCase {
 	}
 
 
-	public void testTwoRecipients_jweAlgNotDefined()
+	public void testTwoRecipients_noJWKAlg()
 		throws Exception {
 
-		final String plainText = "Hello world!";
-		final EncryptionMethod enc = EncryptionMethod.A128GCM;
 		final JWKSet keys = new JWKSet(Arrays.asList(
 			(JWK)new RSAKeyGenerator(2048).keyID("1").generate(),
 			(JWK)new ECKeyGenerator(Curve.P_256).keyID("2").generate())
 		);
 
-		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.ECDH_ES_A128KW, enc)
-			.build();
-
-		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
 		try {
-			JWEEncrypter encrypter = new MultiEncrypter(keys);
+			new MultiEncrypter(keys);
 			fail();
-		} catch (Exception e) {
-			assertEquals("Key encryption algorithm is not defined", e.getMessage());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Each JWK must specify a key encryption algorithm", e.getMessage());
 		}
 
 	}
 
 
-	public void testTwoRecipients_jweAlgNotResolved()
-		throws Exception {
+	public void testTwoRecipients_jweAlgNotSupported() throws JOSEException {
 
-		final String plainText = "Hello world!";
-		final EncryptionMethod enc = EncryptionMethod.A128GCM;
 		final JWKSet keys = new JWKSet(Arrays.asList(
 			(JWK)new RSAKeyGenerator(2048).keyID("1").algorithm(JWEAlgorithm.RSA_OAEP_256).generate(),
 			(JWK)new ECKeyGenerator(Curve.P_256).keyID("2").algorithm(JWEAlgorithm.ECDH_1PU_A128KW).generate())
 		);
 
-		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.ECDH_ES_A128KW, enc)
-			.build();
-
-		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
 		try {
-			JWEEncrypter encrypter = new MultiEncrypter(keys);
+			new MultiEncrypter(keys);
 			fail();
-		} catch (Exception e) {
-			assertEquals("Unsupported key encryption algorithm", e.getMessage());
+		} catch (IllegalArgumentException e) {
+			assertEquals("Unsupported key encryption algorithm: " + JWEAlgorithm.ECDH_1PU_A128KW, e.getMessage());
 		}
-
 	}
 
 
@@ -388,7 +367,7 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			new MultiEncrypter(null, cek);
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertEquals("The public key set (JWKSet) must not be null", e.getMessage());
+			assertEquals("The JWK set must not be null", e.getMessage());
 		}
 	}
 
