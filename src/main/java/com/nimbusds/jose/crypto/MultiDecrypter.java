@@ -141,11 +141,12 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 	/**
 	 * Creates a new multi-recipient decrypter.
 	 *
-	 * @param jwk                 The JSON Web Key (JWK). Must contain a
-	 *                            private part. Must not be {@code null}.
+	 * @param jwk The JSON Web Key (JWK). Must contain a private part. Must
+	 *            not be {@code null}.
 	 *
 	 * @throws KeyLengthException If the symmetric key length is not
 	 *                            compatible.
+	 * @throws JOSEException      If an internal exception is encountered.
 	 */
 	public MultiDecrypter(final JWK jwk)
 		throws JOSEException, KeyLengthException {
@@ -157,15 +158,15 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 	/**
 	 * Creates a new multi-recipient decrypter.
 	 *
-	 * @param jwk                 The JSON Web Key (JWK). Must contain a
-	 *                            private part. Must not be {@code null}.
-	 * @param defCritHeaders      The names of the critical header
-	 *                            parameters that are deferred to the
-	 *                            application for processing, empty set or
-	 *                            {@code null} if none.
+	 * @param jwk            The JSON Web Key (JWK). Must contain a private
+	 *                       part. Must not be {@code null}.
+	 * @param defCritHeaders The names of the critical header parameters
+	 *                       that are deferred to the application for
+	 *                       processing, empty set or {@code null} if none.
 	 *
 	 * @throws KeyLengthException If the symmetric key length is not
 	 *                            compatible.
+	 * @throws JOSEException      If an internal exception is encountered.
 	 */
 	public MultiDecrypter(final JWK jwk, final Set<String> defCritHeaders)
 		throws JOSEException, KeyLengthException {
