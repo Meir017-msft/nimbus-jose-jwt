@@ -32,6 +32,7 @@ import com.nimbusds.jose.util.JSONObjectUtils;
 import junit.framework.TestCase;
 
 import javax.crypto.SecretKey;
+import java.text.ParseException;
 import java.util.*;
 import java.util.logging.Logger;
 
@@ -98,13 +99,13 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		try {
 			encrypter.encrypt(header, null, null);
 			fail();
-		} catch (Exception e) {
+		} catch (JOSEException e) {
 			assertEquals("Missing JWE additional authenticated data (AAD)", e.getMessage());
 		}
 	}
 
 
-	public void testDecryptParameters()
+	public void testDecrypterParameters()
 		throws Exception {
 
 		final Base64URL value = Base64URL.encode("12345");
@@ -120,35 +121,40 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		try {
 			decrypter.decrypt(header, null, null, value, value, aad);
 			fail();
-		} catch (Exception e) {
+		} catch (JOSEException e) {
 			assertEquals("Unexpected present JWE initialization vector (IV)", e.getMessage());
 		}
 
 		try {
 			decrypter.decrypt(header, null, value, value, null, aad);
 			fail();
-		} catch (Exception e) {
+		} catch (JOSEException e) {
 			assertEquals("Missing JWE authentication tag", e.getMessage());
 		}
 
 		try {
 			decrypter.decrypt(header, null, value, value, value, null);
 			fail();
-		} catch (Exception e) {
+		} catch (JOSEException e) {
 			assertEquals("Missing JWE additional authenticated data (AAD)", e.getMessage());
 		}
 
 		try {
 			decrypter.decrypt(new JWEHeader(JWEAlgorithm.ECDH_1PU, EncryptionMethod.A256GCM), null, value, value, value, aad);
 			fail();
-		} catch (Exception e) {
+		} catch (JOSEException e) {
 			assertEquals("Unsupported algorithm", e.getMessage());
 		}
+	}
+
+
+	public void testDecrypter_nullPrivateKey()
+		throws JOSEException {
 
 		try {
 			new MultiDecrypter(null);
 			fail();
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
 			assertEquals("The private key (JWK) must not be null", e.getMessage());
 		}
 	}
@@ -224,12 +230,11 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		} catch (IllegalArgumentException e) {
 			assertEquals("Each JWK must specify a key encryption algorithm", e.getMessage());
 		}
-
 	}
 
 
 	public void testTwoRecipients_identicalJWEAlg_noKeyID()
-		throws Exception {
+		throws JOSEException, ParseException {
 
 		final String plainText = "Hello world!";
 		final EncryptionMethod enc = EncryptionMethod.A128CBC_HS256;
@@ -269,11 +274,12 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			try {
 				jwe.decrypt(new MultiDecrypter(key));
 				fail();
-			} catch (Exception e) {
+			} catch (JOSEException e) {
 				assertEquals("No recipient found", e.getMessage());
 			}
 		}
 	}
+
 
 	public void testRecipients_identicalJWEAlg_recipientMatch()
 		throws Exception {
@@ -287,7 +293,7 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			put("x5t#S256", "1234567890");
 		}};
 		RSAKeyGenerator keyGenerator = new RSAKeyGenerator(2048);
-		List<JWK> keyList = new ArrayList<JWK>();
+		List<JWK> keyList = new ArrayList<>();
 		JWK tmpKey = JWK.parseFromPEMEncodedObjects(SamplePEMEncodedObjects.RSA_PRIVATE_KEY_PEM + SamplePEMEncodedObjects.RSA_CERT_PEM);
 		keyList.add(extendJWK(extendJWK(tmpKey, "alg", "RSA-OAEP-256"), "x5c", (List<String>) Arrays.asList(SamplePEMEncodedObjects.RSA_CERT_PEM.replaceAll("-----[^-]*-----", "").replaceAll("\n", ""))));
 		for (Map.Entry<String, Object> entry : keyAttrs.entrySet()) {
