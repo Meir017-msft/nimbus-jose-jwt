@@ -81,12 +81,13 @@ public class JWEMultipleRecipientsTest extends TestCase {
 	}
 
 
-	private static JWK extendJWK(final JWK jwk, final String attrName, final Object attrValue)
+	private static JWK extendJWK(final JWK jwk, final String paramName, final Object paramValue)
 		throws Exception {
 		Map<String, Object> jwkJson = jwk.toJSONObject();
-		jwkJson.put(attrName, attrValue);
+		jwkJson.put(paramName, paramValue);
 		return JWK.parse(jwkJson);
 	}
+
 
 	public void testEncrypterParameters()
 		throws Exception {
@@ -189,23 +190,23 @@ public class JWEMultipleRecipientsTest extends TestCase {
 
 		assertEquals("ECRecipient", ((Map<String, String>) recipients[0].get("header")).get("kid"));
 		assertEquals(ecRecipientHeader, ((Map<String, Object>) recipients[0].get("header")).keySet());
-		assertEquals(true, recipients[0].containsKey("encrypted_key"));
+		assertTrue(recipients[0].containsKey("encrypted_key"));
 
 		assertEquals("RSARecipient", ((Map<String, String>) recipients[1].get("header")).get("kid"));
 		assertEquals(recipientHeader, ((Map<String, Object>) recipients[1].get("header")).keySet());
-		assertEquals(true, recipients[1].containsKey("encrypted_key"));
+		assertTrue(recipients[1].containsKey("encrypted_key"));
 
 		assertEquals("X25519Recipient", ((Map<String, String>) recipients[2].get("header")).get("kid"));
 		assertEquals(ecRecipientHeader, ((Map<String, Object>) recipients[2].get("header")).keySet());
-		assertEquals(true, recipients[2].containsKey("encrypted_key"));
+		assertTrue(recipients[2].containsKey("encrypted_key"));
 
 		assertEquals("AESRecipient", ((Map<String, String>) recipients[3].get("header")).get("kid"));
 		assertEquals(recipientHeader, ((Map<String, Object>) recipients[3].get("header")).keySet());
-		assertEquals(true, recipients[3].containsKey("encrypted_key"));
+		assertTrue(recipients[3].containsKey("encrypted_key"));
 
 		assertEquals("DirRecipient", ((Map<String, String>) recipients[4].get("header")).get("kid"));
 		assertEquals(recipientHeader, ((Map<String, Object>) recipients[4].get("header")).keySet());
-		assertEquals(false, recipients[4].containsKey("encrypted_key"));
+		assertFalse(recipients[4].containsKey("encrypted_key"));
 
 		for (JWK key : keys.getKeys()) {
 			jwe = JWEObjectJSON.parse(json);
