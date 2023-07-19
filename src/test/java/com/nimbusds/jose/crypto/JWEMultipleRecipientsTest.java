@@ -22,10 +22,12 @@ import com.nimbusds.jose.*;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.SamplePEMEncodedObjects;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import com.nimbusds.jose.jwk.gen.OctetSequenceKeyGenerator;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jose.util.Base64;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import junit.framework.TestCase;
@@ -33,7 +35,6 @@ import junit.framework.TestCase;
 import javax.crypto.SecretKey;
 import java.util.*;
 import java.util.logging.Logger;
-
 
 /**
  * Tests Multiple Recipients encryption and decryption.
@@ -79,6 +80,13 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		return new JWKSet(keys);
 	}
 
+
+	private static JWK extendJWK(final JWK jwk, final String attrName, final Object attrValue)
+		throws Exception {
+		Map<String, Object> jwkJson = jwk.toJSONObject();
+		jwkJson.put(attrName, attrValue);
+		return JWK.parse(jwkJson);
+	}
 
 	public void testEncrypterParameters()
 		throws Exception {
@@ -217,36 +225,16 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			.build();
 
 		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
-		JWEEncrypter encrypter = new MultiEncrypter(keys);
-
-		jwe.encrypt(encrypter);
-		String json = jwe.serializeGeneral();
-
-		LOGGER.fine("JWE JSON Object: " + json);
-
-		Map<String, Object> jsonJWEObject = JSONObjectUtils.parse(json);
-		Map<String, Object>[] recipients = JSONObjectUtils.getJSONObjectArray(jsonJWEObject, "recipients");
-		assertEquals(keys.size(), recipients.length);
-
-		assertEquals(Collections.singleton("enc"), JSONObjectUtils.parse(JSONObjectUtils.getBase64URL(jsonJWEObject, "protected").decodeToString()).keySet());
-
-		assertEquals(JWEAlgorithm.RSA_OAEP_256.getName(), ((Map<String, Object>) recipients[0].get("header")).get("alg"));
-		assertEquals("1", ((Map<String, Object>) recipients[0].get("header")).get("kid"));
-		assertTrue(recipients[0].containsKey("encrypted_key"));
-
-		assertEquals(JWEAlgorithm.RSA_OAEP_256.getName(), ((Map<String, Object>) recipients[1].get("header")).get("alg"));
-		assertEquals("2", ((Map<String, Object>) recipients[1].get("header")).get("kid"));
-		assertTrue(recipients[1].containsKey("encrypted_key"));
-
-		for (JWK key : keys.getKeys()) {
-			jwe = JWEObjectJSON.parse(json);
-			jwe.decrypt(new MultiDecrypter(key));
-			assertEquals(plainText, jwe.getPayload().toString());
+		try {
+			JWEEncrypter encrypter = new MultiEncrypter(keys);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Key encryption algorithm is not defined", e.getMessage());
 		}
+
 	}
 
 
-	// TODO test fails, MultiDecrypter cannot handle key without "kid"
 	public void testTwoRecipients_identicalJWEAlg_noKeyID()
 		throws Exception {
 
@@ -254,8 +242,8 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		final EncryptionMethod enc = EncryptionMethod.A128CBC_HS256;
 		RSAKeyGenerator keyGenerator = new RSAKeyGenerator(2048);
 		final JWKSet keys = new JWKSet(Arrays.asList(
-			(JWK)keyGenerator.generate(),
-			(JWK)keyGenerator.generate())
+			(JWK)keyGenerator.algorithm(JWEAlgorithm.RSA_OAEP_256).generate(),
+			(JWK)keyGenerator.algorithm(JWEAlgorithm.RSA_OAEP_256).generate())
 		);
 
 		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.RSA_OAEP_256, enc)
@@ -285,13 +273,63 @@ public class JWEMultipleRecipientsTest extends TestCase {
 
 		for (JWK key : keys.getKeys()) {
 			jwe = JWEObjectJSON.parse(json);
+			try {
+				jwe.decrypt(new MultiDecrypter(key));
+				fail();
+			} catch (Exception e) {
+				assertEquals("No recipient found", e.getMessage());
+			}
+		}
+	}
+
+	public void testRecipients_identicalJWEAlg_recipientMatch()
+		throws Exception {
+
+		final String plainText = "Hello world!";
+		final EncryptionMethod enc = EncryptionMethod.A128CBC_HS256;
+		final Map<String, Object> keyAttrs = new HashMap<String, Object>() {{
+			put("kid", "1");
+			put("x5u", "http://localhost/local.jwks");
+			put("x5t", "12345");
+			put("x5t#S256", "1234567890");
+		}};
+		RSAKeyGenerator keyGenerator = new RSAKeyGenerator(2048);
+		List<JWK> keyList = new ArrayList<JWK>();
+		JWK tmpKey = JWK.parseFromPEMEncodedObjects(SamplePEMEncodedObjects.RSA_PRIVATE_KEY_PEM + SamplePEMEncodedObjects.RSA_CERT_PEM);
+		keyList.add(extendJWK(extendJWK(tmpKey, "alg", "RSA-OAEP-256"), "x5c", (List<String>) Arrays.asList(SamplePEMEncodedObjects.RSA_CERT_PEM.replaceAll("-----[^-]*-----", "").replaceAll("\n", ""))));
+		for (Map.Entry<String, Object> entry : keyAttrs.entrySet()) {
+			tmpKey = (JWK)keyGenerator.algorithm(JWEAlgorithm.RSA_OAEP_256).generate();
+			keyList.add(extendJWK(tmpKey, entry.getKey(), entry.getValue()));
+		}
+
+		final JWKSet keys = new JWKSet(keyList);
+
+		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.RSA_OAEP_256, enc)
+			.build();
+
+		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
+		JWEEncrypter encrypter = new MultiEncrypter(keys);
+
+		jwe.encrypt(encrypter);
+		String json = jwe.serializeGeneral();
+
+		LOGGER.fine("JWE JSON Object: " + json);
+
+		Map<String, Object> jsonJWEObject = JSONObjectUtils.parse(json);
+		Map<String, Object>[] recipients = JSONObjectUtils.getJSONObjectArray(jsonJWEObject, "recipients");
+		assertEquals(keys.size(), recipients.length);
+
+		assertEquals(Collections.singleton("enc"), JSONObjectUtils.parse(JSONObjectUtils.getBase64URL(jsonJWEObject, "protected").decodeToString()).keySet());
+
+		for (JWK key : keys.getKeys()) {
+			jwe = JWEObjectJSON.parse(json);
 			jwe.decrypt(new MultiDecrypter(key));
 			assertEquals(plainText, jwe.getPayload().toString());
 		}
 	}
 
-	// TODO test fails, JWE alg not revolved for RSA key, key silently skipped with no JOSEException
-	public void testTwoRecipients_jweAlgNotResolved()
+
+	public void testTwoRecipients_jweAlgNotDefined()
 		throws Exception {
 
 		final String plainText = "Hello world!";
@@ -305,32 +343,37 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			.build();
 
 		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
-		JWEEncrypter encrypter = new MultiEncrypter(keys);
-
-		jwe.encrypt(encrypter);
-		String json = jwe.serializeGeneral();
-
-		LOGGER.info("JWE JSON Object: " + json);
-
-		Map<String, Object> jsonJWEObject = JSONObjectUtils.parse(json);
-		Map<String, Object>[] recipients = JSONObjectUtils.getJSONObjectArray(jsonJWEObject, "recipients");
-		assertEquals(keys.size(), recipients.length);
-
-		assertEquals(Collections.singleton("enc"), JSONObjectUtils.parse(JSONObjectUtils.getBase64URL(jsonJWEObject, "protected").decodeToString()).keySet());
-
-		assertEquals(JWEAlgorithm.RSA_OAEP_256.getName(), ((Map<String, Object>) recipients[0].get("header")).get("alg"));
-		assertEquals("1", ((Map<String, Object>) recipients[0].get("header")).get("kid"));
-		assertTrue(recipients[0].containsKey("encrypted_key"));
-
-		assertEquals(JWEAlgorithm.RSA_OAEP_256.getName(), ((Map<String, Object>) recipients[1].get("header")).get("alg"));
-		assertEquals("2", ((Map<String, Object>) recipients[1].get("header")).get("kid"));
-		assertTrue(recipients[1].containsKey("encrypted_key"));
-
-		for (JWK key : keys.getKeys()) {
-			jwe = JWEObjectJSON.parse(json);
-			jwe.decrypt(new MultiDecrypter(key));
-			assertEquals(plainText, jwe.getPayload().toString());
+		try {
+			JWEEncrypter encrypter = new MultiEncrypter(keys);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Key encryption algorithm is not defined", e.getMessage());
 		}
+
+	}
+
+
+	public void testTwoRecipients_jweAlgNotResolved()
+		throws Exception {
+
+		final String plainText = "Hello world!";
+		final EncryptionMethod enc = EncryptionMethod.A128GCM;
+		final JWKSet keys = new JWKSet(Arrays.asList(
+			(JWK)new RSAKeyGenerator(2048).keyID("1").algorithm(JWEAlgorithm.RSA_OAEP_256).generate(),
+			(JWK)new ECKeyGenerator(Curve.P_256).keyID("2").algorithm(JWEAlgorithm.ECDH_1PU_A128KW).generate())
+		);
+
+		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.ECDH_ES_A128KW, enc)
+			.build();
+
+		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
+		try {
+			JWEEncrypter encrypter = new MultiEncrypter(keys);
+			fail();
+		} catch (Exception e) {
+			assertEquals("Unsupported key encryption algorithm", e.getMessage());
+		}
+
 	}
 
 

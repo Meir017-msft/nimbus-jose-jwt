@@ -283,10 +283,6 @@ public final class JWEHeader extends CommonSEHeader {
 		 */
 		public Builder(final JWEAlgorithm alg, final EncryptionMethod enc) {
 
-			if (alg.getName().equals(Algorithm.NONE.getName())) {
-				throw new IllegalArgumentException("The JWE algorithm \"alg\" cannot be \"none\"");
-			}
-
 			this.alg = alg;
 
 			if (enc == null) {
@@ -877,10 +873,6 @@ public final class JWEHeader extends CommonSEHeader {
 			 final Base64URL parsedBase64URL) {
 
 		super(alg, typ, cty, crit, jku, jwk, x5u, x5t, x5t256, x5c, kid, customParams, parsedBase64URL);
-
-		if (alg.getName().equals(Algorithm.NONE.getName())) {
-			throw new IllegalArgumentException("The JWE algorithm cannot be \"none\"");
-		}
 
 		if (enc == null) {
 			throw new IllegalArgumentException("The encryption method \"enc\" parameter must not be null");
