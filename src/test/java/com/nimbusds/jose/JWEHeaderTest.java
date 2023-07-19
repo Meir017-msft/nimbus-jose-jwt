@@ -301,6 +301,17 @@ public class JWEHeaderTest extends TestCase {
 	}
 
 
+	public void testRejectNone() {
+
+		try {
+			new JWEHeader(new JWEAlgorithm("none"), EncryptionMethod.A128CBC_HS256);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("The JWE algorithm cannot be \"none\"", e.getMessage());
+		}
+	}
+
+
 	public void testBuilder()
 		throws Exception {
 		
