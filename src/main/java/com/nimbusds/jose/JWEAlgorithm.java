@@ -51,10 +51,16 @@ import net.jcip.annotations.Immutable;
  *     <li>{@link #PBES2_HS512_A256KW PBES2-HS256+A256KW}
  * </ul>
  *
+ * <p>Includes the special JWE algorithm constant:
+ *
+ * <ul>
+ *     <li>{@link #JWK_ALG}
+ * </ul>
+ *
  * <p>Additional JWE algorithm names can be defined using the constructors.
  *
  * @author Vladimir Dzhuvinov
- * @version 2021-09-24
+ * @version 2023-07-20
  */
 @Immutable
 public final class JWEAlgorithm extends Algorithm {
@@ -245,6 +251,16 @@ public final class JWEAlgorithm extends Algorithm {
 	 * (RFC 3394) using 256 bit keys for the encryption scheme.
 	 */
 	public static final JWEAlgorithm PBES2_HS512_A256KW = new JWEAlgorithm("PBES2-HS512+A256KW", Requirement.OPTIONAL);
+
+
+	/**
+	 * Special JWE algorithm constant for use in application code to
+	 * construct {@link JWEHeader}s for {@link JWEObjectJSON
+	 * multi-recipient JWE JSON objects}. Denotes that the JWE algorithm
+	 * must be taken from the {@code alg} (algorithm) parameter of the
+	 * supplied recipient JSON Web Key (JWK).
+	 */
+	public static final JWEAlgorithm JWK_ALG = new JWEAlgorithm("JWK-ALG", Requirement.OPTIONAL);
 
 
 	/**

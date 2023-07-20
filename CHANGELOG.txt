@@ -1543,7 +1543,7 @@ version 9.31 (2023-02-21)
     * JWTClaimsSet.parse must throw ParseException on "sub" and "aud" claims of
       illegal JSON type (iss #511).
 
-version 9.32 (2023-07-16)
+version 9.32 (2023-07-20)
     * Updates the ECDSASigner for the ESxxx JWS algorithms to support the
       UserAuthenticationRequired option, originally introduced in the
       RSASSASigner for the RSxxx and PSxxx JWS algorithms.
@@ -1561,6 +1561,10 @@ version 9.32 (2023-07-16)
       optional AAD. If no AAD is specified the JWE header becomes the AAD
       (default behaviour). Intended to support JWE JSON serialisation to
       multiple recipients.
+    * Adds the special JWEAlgorithm.JWK_ALG constant for use in application
+      code to construct JWEHeader instances for JWEObjectJSON multi-recipient
+      JWE JSON objects. Denotes that the JWE algorithm must be taken from the
+      "alg" (algorithm) parameter of the supplied recipient JWK.
     * Updates JSONObjectUtils.parse(String,int) to ensure generic types not
       erased by obfuscation tools (iss #518).
     * Updates GSon to 2.10.1.
