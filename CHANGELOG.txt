@@ -1565,7 +1565,7 @@ version 9.32 (2023-07-20)
       code to construct JWEHeader instances for JWEObjectJSON multi-recipient
       JWE JSON objects. Denotes that the JWE algorithm must be taken from the
       "alg" (algorithm) parameter of the supplied recipient JWK.
-    * Updates JSONObjectUtils.parse(String,int) to ensure generic types not
+    * Updates JSONObjectUtils.parse(String,int) to ensure generic types are not
       erased by obfuscation tools (iss #518).
     * Updates GSon to 2.10.1.
     * Updates Google Tink to 1.9.0.

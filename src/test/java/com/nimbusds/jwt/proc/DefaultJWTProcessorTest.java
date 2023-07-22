@@ -18,20 +18,6 @@
 package com.nimbusds.jwt.proc;
 
 
-import java.net.URL;
-import java.security.*;
-import java.security.interfaces.RSAPublicKey;
-import java.security.spec.KeySpec;
-import java.text.ParseException;
-import java.util.*;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.spec.SecretKeySpec;
-
-import junit.framework.TestCase;
-
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.AESEncrypter;
 import com.nimbusds.jose.crypto.DirectEncrypter;
@@ -44,19 +30,29 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.OctetSequenceKeyGenerator;
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
-import com.nimbusds.jose.jwk.source.ImmutableSecret;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.jwk.source.RemoteJWKSet;
+import com.nimbusds.jose.jwk.source.*;
 import com.nimbusds.jose.proc.*;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.*;
+import junit.framework.TestCase;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.net.URL;
+import java.security.*;
+import java.security.interfaces.RSAPublicKey;
+import java.security.spec.KeySpec;
+import java.text.ParseException;
+import java.util.*;
 
 
 /**
  * Tests the default JWT processor.
  *
- * @version 2021-06-05
+ * @version 2023-07-22
  */
 public class DefaultJWTProcessorTest extends TestCase {
 
@@ -832,30 +828,33 @@ public class DefaultJWTProcessorTest extends TestCase {
 	public void _testValidateJWTAccessToken()
 		throws Exception {
 
-		// The access token to validate, typically submitted with a HTTP header like
-		// Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6InMxIn0.eyJzY3A...
+		// The access token to validate, typically submitted with an HTTP header like
+		// Authorization: Bearer eyJraWQiOiJDWHVwIiwidHlwIjoiYXQrand0IiwiYWxnIjoiU...
 		String accessToken =
-			"eyJraWQiOiJDWHVwIiwidHlwIjoiYXQrand0IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJib2IiLCJzY" +
-				"3AiOlsib3BlbmlkIiwiZW1haWwiXSwiY2xtIjpbIiFCZyJdLCJpc3MiOiJodHRwczpcL1wvZGVtby5jM" +
-				"mlkLmNvbVwvYzJpZCIsImV4cCI6MTU3MTMxMjAxOCwiaWF0IjoxNTcxMzExNDE4LCJ1aXAiOnsiZ3Jvd" +
-				"XBzIjpbImFkbWluIiwiYXVkaXQiXX0sImp0aSI6ImJBT1BiNWh5TW80IiwiY2lkIjoiMDAwMTIzIn0.Q" +
-				"hTAdJK8AbdJJhQarjOz_qvAINQeWJCIYSROVaeRpBfaOrTCUy5gWRf8xrpj1DMibdHwQGPdht3chlAC8" +
-				"LGbAorEu0tLLcOwKl4Ql-o30Tdd5QhjNb6PndOY89NbQ1O6cdOZhvV4XB-jUAXi3nDgCw3zvIn2348Va" +
-				"2fOAzxUvRs2OGsEDl5d9cmL3e68YqSh7ss12y9oBDyEyz8Py7dtXgt6Tg67n9WlEBG0r4KloGDBdbCCZ" +
-				"hlEyURkHaE-3nUcjwd-CEVeqWPO0bsLhwto-80j8BtsfD649GnvaMb9YdbdYhTTs-MkRUQpQIZT0s9oK" +
-				"uzKayvZhk0c_0FoSeW7rw";
+			"eyJraWQiOiJDWHVwIiwidHlwIjoiYXQrand0IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiJhbGljZSIsI" +
+			"nNjcCI6WyJvcGVuaWQiLCJlbWFpbCJdLCJjbG0iOlsiIUJnIl0sImlzcyI6Imh0dHBzOi8vZGVtby5jM" +
+			"mlkLmNvbSIsImV4cCI6MTY5MDA0MDc1OCwiaWF0IjoxNjkwMDQwMTU4LCJ1aXAiOnsiZ3JvdXBzIjpbI" +
+			"mFkbWluIiwiYXVkaXQiXX0sImp0aSI6InNjMmRodXRNRzFBIiwiY2lkIjoiMDAwMTIzIn0.QmLMSn4pn" +
+			"wGwc04kbhr-CFLHnd4BcDBAtpNLVbf3EymSyRLGcAL3wgdE-V2tMHWO1r2Q8feAr2H8R4AUrkRx2eiWT" +
+			"zrTxGLU_T1GVQ2s7nzN7BzLnKxo8y9tArUypq_25rBNNkES6IF2Mu2FwBA8eyoWodQV7xl5bmOBDuZ4l" +
+			"09HCdE9sz8PAMt6itQAv-nPsebUAL9vB5r2j8uB_84Uwa2RxtpEYrH36uYryPaW5lQbdkaFm8RA_Dd-t" +
+			"PsP5a5yqeQLXOHif1UYYK6S7oEETsmzP7IZyiEaJ5noYesuvmnDHS352ffSGW0hQC84wDJE85gl-jn4l" +
+			"d-5DmI3dWeS9A";
 
 		// Create a JWT processor for the access tokens
 		ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
-		
+
 		// Set the required "typ" header "at+jwt" for access tokens
 		jwtProcessor.setJWSTypeVerifier(new DefaultJOSEObjectTypeVerifier<>(new JOSEObjectType("at+jwt")));
 
 		// The public RSA keys to validate the signatures will be sourced from the
-		// OAuth 2.0 server's JWK set, published at a well-known URL. The RemoteJWKSet
-		// object caches the retrieved keys to speed up subsequent look-ups and can
-		// also handle key-rollover
-		JWKSource<SecurityContext> keySource = new RemoteJWKSet<>(new URL("https://demo.c2id.com/c2id/jwks.json"));
+		// OAuth 2.0 server's JWK set URL. The key source will cache the retrieved
+		// keys for 5 minutes. 30 seconds prior to the cache's expiration the JWK
+		// set will be refreshed from the URL on a separate dedicated thread.
+		// Retrial is added to mitigate transient network errors.
+		JWKSource<SecurityContext> keySource = JWKSourceBuilder.create(new URL("https://demo.c2id.com/jwks.json"))
+			.retrying(true)
+			.build();
 
 		// The expected JWS algorithm of the access tokens (agreed out-of-band)
 		JWSAlgorithm expectedJWSAlg = JWSAlgorithm.RS256;
@@ -864,15 +863,26 @@ public class DefaultJWTProcessorTest extends TestCase {
 		// RSA keys sourced from the JWK set URL
 		JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(expectedJWSAlg, keySource);
 		jwtProcessor.setJWSKeySelector(keySelector);
-		
+
 		// Set the required JWT claims for access tokens
-		jwtProcessor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier(
-			new JWTClaimsSet.Builder().issuer("https://demo.c2id.com/c2id").build(),
+		jwtProcessor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>(
+			new JWTClaimsSet.Builder().issuer("https://demo.c2id.com").build(),
 			new HashSet<>(Arrays.asList(JWTClaimNames.SUBJECT, JWTClaimNames.ISSUED_AT, JWTClaimNames.EXPIRATION_TIME, "scp", "cid", JWTClaimNames.JWT_ID))));
 
 		// Process the token
 		SecurityContext ctx = null; // optional context parameter, not required here
-		JWTClaimsSet claimsSet = jwtProcessor.process(accessToken, ctx);
+		JWTClaimsSet claimsSet;
+		try {
+			claimsSet = jwtProcessor.process(accessToken, ctx);
+		} catch (ParseException | BadJOSEException e) {
+			// Invalid token
+			System.err.println(e.getMessage());
+			return;
+		} catch (JOSEException e) {
+			// Key sourcing failed or another internal exception
+			System.err.println(e.getMessage());
+			return;
+		}
 
 		// Print out the token claims set
 		System.out.println(claimsSet.toJSONObject());
@@ -880,8 +890,7 @@ public class DefaultJWTProcessorTest extends TestCase {
 
 
 	// Wiki example
-	public void testWithEncryption()
-		throws Exception {
+	public void testWithEncryption() {
 
 		byte[] secret = new byte[32];
 
@@ -900,22 +909,6 @@ public class DefaultJWTProcessorTest extends TestCase {
 
 		ConfigurableJWTProcessor<SecurityContext> jwtProcessor = new DefaultJWTProcessor<>();
 		jwtProcessor.setJWEKeySelector(jweKeySelector);
-
-		jwtProcessor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier() {
-
-			@Override
-			public void verify(JWTClaimsSet claimsSet, SecurityContext context)
-				throws BadJWTException {
-
-				super.verify(claimsSet, context);
-
-				String issuer = claimsSet.getIssuer();
-
-				if (issuer == null || ! issuer.equals("https://demo.c2id.com/c2id")) {
-					throw new BadJWTException("Invalid token issuer");
-				}
-			}
-		});
 	}
 
 
