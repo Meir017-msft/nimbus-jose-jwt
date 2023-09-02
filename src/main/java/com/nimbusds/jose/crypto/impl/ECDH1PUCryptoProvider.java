@@ -190,6 +190,10 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 		throws JOSEException {
 		
 		final JWEAlgorithm alg = header.getAlgorithm();
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
+
 		final ECDH.AlgorithmMode algMode = ECDH1PU.resolveAlgorithmMode(alg);
 		final EncryptionMethod enc = header.getEncryptionMethod();
 		
@@ -250,6 +254,10 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 		throws JOSEException {
 		
 		final JWEAlgorithm alg = header.getAlgorithm();
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
+
 		final ECDH.AlgorithmMode algMode = ECDH1PU.resolveAlgorithmMode(alg);
 		
 		// Derive shared key via concat KDF

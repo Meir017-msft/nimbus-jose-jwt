@@ -151,6 +151,9 @@ public class DirectEncrypter extends DirectCryptoProvider implements JWEEncrypte
 		throws JOSEException {
 
 		JWEAlgorithm alg = header.getAlgorithm();
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
 
 		if (! alg.equals(JWEAlgorithm.DIR)) {
 			throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));

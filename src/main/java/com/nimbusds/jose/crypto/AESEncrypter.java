@@ -186,10 +186,18 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 		throws JOSEException {
 
 		final JWEAlgorithm alg = header.getAlgorithm();
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
+
 		final EncryptionMethod enc = header.getEncryptionMethod();
 
 		// Check the AES key size and determine the algorithm family
 		final AlgFamily algFamily;
+
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
 
 		if (alg.equals(JWEAlgorithm.A128KW)) {
 

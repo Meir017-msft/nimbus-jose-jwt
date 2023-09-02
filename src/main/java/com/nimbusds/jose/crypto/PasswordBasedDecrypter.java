@@ -184,6 +184,10 @@ public class PasswordBasedDecrypter extends PasswordBasedCryptoProvider implemen
 		critPolicy.ensureHeaderPasses(header);
 
 		final JWEAlgorithm alg = header.getAlgorithm();
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
+
 		final byte[] formattedSalt = PBKDF2.formatSalt(alg, salt);
 		final PRFParams prfParams = PRFParams.resolve(alg, getJCAContext().getMACProvider());
 		final SecretKey psKey = PBKDF2.deriveKey(getPassword(), formattedSalt, iterationCount, prfParams);

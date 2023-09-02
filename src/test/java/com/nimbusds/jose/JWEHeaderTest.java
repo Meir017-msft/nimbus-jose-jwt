@@ -45,6 +45,33 @@ public class JWEHeaderTest extends TestCase {
 
 	public void testMinimalConstructor() {
 
+		JWEHeader h = new JWEHeader(EncryptionMethod.A128GCM);
+
+		assertEquals(EncryptionMethod.A128GCM, h.getEncryptionMethod());
+		assertNull(h.getAlgorithm());
+		assertNull(h.getJWKURL());
+		assertNull(h.getJWK());
+		assertNull(h.getX509CertURL());
+		assertNull(h.getX509CertThumbprint());
+		assertNull(h.getX509CertSHA256Thumbprint());
+		assertNull(h.getX509CertChain());
+		assertNull(h.getType());
+		assertNull(h.getContentType());
+		assertNull(h.getCriticalParams());
+		assertNull(h.getEphemeralPublicKey());
+		assertNull(h.getCompressionAlgorithm());
+		assertNull(h.getAgreementPartyUInfo());
+		assertNull(h.getAgreementPartyVInfo());
+		assertNull(h.getPBES2Salt());
+		assertEquals(0, h.getPBES2Count());
+		assertNull(h.getIV());
+		assertNull(h.getAuthTag());
+		assertNull(h.getSenderKeyID());
+		assertTrue(h.getCustomParams().isEmpty());
+	}
+
+	public void testMinimalDeprecatedConstructor() {
+
 		JWEHeader h = new JWEHeader(JWEAlgorithm.A128KW, EncryptionMethod.A128GCM);
 
 		assertEquals(JWEAlgorithm.A128KW, h.getAlgorithm());
@@ -139,7 +166,8 @@ public class JWEHeaderTest extends TestCase {
 		certChain.add(new Base64("fgh"));
 		certChain.add(new Base64("jkl"));
 
-		JWEHeader h = new JWEHeader.Builder(JWEAlgorithm.RSA1_5, EncryptionMethod.A256GCM)
+		JWEHeader h = new JWEHeader.Builder(EncryptionMethod.A256GCM)
+			.alg(JWEAlgorithm.RSA1_5)
 			.type(new JOSEObjectType("JWT"))
 			.compressionAlgorithm(CompressionAlgorithm.DEF)
 			.jwkURL(new URI("https://example.com/jku.json"))
@@ -280,7 +308,8 @@ public class JWEHeaderTest extends TestCase {
 		crit.add(JWTClaimNames.EXPIRATION_TIME);
 		crit.add(JWTClaimNames.NOT_BEFORE);
 
-		JWEHeader h = new JWEHeader.Builder(JWEAlgorithm.RSA1_5, EncryptionMethod.A128CBC_HS256).
+		JWEHeader h = new JWEHeader.Builder(EncryptionMethod.A128CBC_HS256).
+			alg(JWEAlgorithm.RSA1_5).
 			criticalParams(crit).
 			build();
 
@@ -317,7 +346,8 @@ public class JWEHeaderTest extends TestCase {
 		
 		JWK jwk = new RSAKeyGenerator(2048).generate().toPublicJWK();
 
-		JWEHeader h = new JWEHeader.Builder(JWEAlgorithm.A128KW, EncryptionMethod.A128GCM).
+		JWEHeader h = new JWEHeader.Builder(EncryptionMethod.A128GCM).
+			alg(JWEAlgorithm.A128KW).
 			type(JOSEObjectType.JOSE).
 			contentType("application/json").
 			criticalParams(new HashSet<>(Arrays.asList(JWTClaimNames.EXPIRATION_TIME, JWTClaimNames.NOT_BEFORE))).
@@ -398,7 +428,8 @@ public class JWEHeaderTest extends TestCase {
 		customParams.put("x", "1");
 		customParams.put("y", "2");
 
-		JWEHeader h = new JWEHeader.Builder(JWEAlgorithm.A128KW, EncryptionMethod.A128GCM).
+		JWEHeader h = new JWEHeader.Builder(EncryptionMethod.A128GCM).
+			alg(JWEAlgorithm.A128KW).
 			customParams(customParams).
 			build();
 
@@ -471,7 +502,8 @@ public class JWEHeaderTest extends TestCase {
 		JWK jwk = new RSAKeyGenerator(2048).generate();
 		
 		try {
-			new JWEHeader.Builder(JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A128GCM)
+			new JWEHeader.Builder(EncryptionMethod.A128GCM)
+				.alg(JWEAlgorithm.RSA_OAEP_256)
 				.jwk(jwk);
 			fail();
 		} catch (IllegalArgumentException e) {

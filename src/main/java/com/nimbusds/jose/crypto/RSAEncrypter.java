@@ -171,6 +171,10 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 		throws JOSEException {
 
 		final JWEAlgorithm alg = header.getAlgorithm();
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
+
 		final EncryptionMethod enc = header.getEncryptionMethod();
 		final SecretKey cek = getCEK(enc); // Generate and encrypt the CEK according to the enc method
 

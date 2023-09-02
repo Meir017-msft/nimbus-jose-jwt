@@ -284,6 +284,9 @@ public class RSADecrypter extends RSACryptoProvider implements JWEDecrypter, Cri
 
 		// Derive the content encryption key
 		JWEAlgorithm alg = header.getAlgorithm();
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
 
 		SecretKey cek;
 

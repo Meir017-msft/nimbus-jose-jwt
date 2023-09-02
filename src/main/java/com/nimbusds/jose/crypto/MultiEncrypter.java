@@ -282,6 +282,10 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 				throw new JOSEException(e.getMessage(), e);
 			}
 			alg = recipientHeader.getAlgorithm();
+			if (alg == null) {
+				throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+			}
+
 			if (KeyType.RSA.equals(kty) && RSAEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
 				encrypter = new RSAEncrypter(key.toRSAKey().toRSAPublicKey(), cek);
 			} else if (KeyType.EC.equals(kty) && ECDHEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {

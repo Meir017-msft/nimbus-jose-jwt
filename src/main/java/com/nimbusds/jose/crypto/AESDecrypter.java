@@ -225,10 +225,14 @@ public class AESDecrypter extends AESCryptoProvider implements JWEDecrypter, Cri
 			throw new JOSEException("Missing JWE authentication tag");
 		}
 
-		critPolicy.ensureHeaderPasses(header);
-
 		// Derive the content encryption key
 		JWEAlgorithm alg = header.getAlgorithm();
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
+
+		critPolicy.ensureHeaderPasses(header);
+
 		int keyLength = header.getEncryptionMethod().cekBitLength();
 
 		final SecretKey cek;

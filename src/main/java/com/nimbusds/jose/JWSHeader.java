@@ -632,6 +632,10 @@ public final class JWSHeader extends CommonSEHeader {
 
 		super(alg, typ, cty, crit, jku, jwk, x5u, x5t, x5t256, x5c, kid, customParams, parsedBase64URL);
 
+		if (alg == null) {
+			throw new IllegalArgumentException("The algorithm \"alg\" header parameter must not be null");
+		}
+
 		if (alg.getName().equals(Algorithm.NONE.getName())) {
 			throw new IllegalArgumentException("The JWS algorithm \"alg\" cannot be \"none\"");
 		}

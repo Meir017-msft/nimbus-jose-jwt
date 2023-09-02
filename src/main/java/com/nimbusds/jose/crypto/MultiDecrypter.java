@@ -317,6 +317,9 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 		}
 
 		final JWEAlgorithm alg = recipientHeader.getAlgorithm();
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
 
 		critPolicy.ensureHeaderPasses(recipientHeader);
 
