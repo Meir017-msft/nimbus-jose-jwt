@@ -384,6 +384,34 @@ public abstract class Header implements Serializable {
 
 
 	/**
+	 * Join a {@link PlainHeader}, {@link JWSHeader} or {@link JWEHeader}
+	 * with an Unprotected header.
+	 *
+	 * @param unprotected     The Unprotected header. {@code null}
+	 *                        if not applicable.
+	 *
+	 * @return The header.
+	 *
+	 * @throws ParseException If the specified Unprotected header can not be
+	 *                        merged to protected header.
+	 */
+	public Header join(final UnprotectedHeader unprotected)
+		throws ParseException {
+
+		Map<String, Object> jsonObject = toJSONObject();
+		try {
+			HeaderValidation.ensureDisjoint(this, unprotected);
+		} catch (IllegalHeaderException e) {
+			throw new ParseException(e.getMessage(), 0);
+		}
+		if (unprotected != null) {
+			jsonObject.putAll(unprotected.toJSONObject());
+		}
+		return parse(jsonObject, null);
+	}
+
+
+	/**
 	 * Parses a {@link PlainHeader}, {@link JWSHeader} or {@link JWEHeader}
 	 * from the specified JSON object.
 	 *

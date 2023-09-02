@@ -131,4 +131,27 @@ public class HeaderTest extends TestCase {
 			);
 		}
 	}
+
+
+	public void testJoinHeader()
+		throws Exception {
+
+		JWEHeader header = new JWEHeader.Builder(EncryptionMethod.A128GCM)
+			.alg(JWEAlgorithm.A128KW)
+			.build();
+
+		UnprotectedHeader unprotected = new UnprotectedHeader.Builder()
+			.keyID("123")
+			.build();
+
+		header = (JWEHeader) header.join(unprotected);
+		assertEquals("123", header.getKeyID());
+
+		try {
+			header.join(unprotected);
+			fail();
+		} catch (ParseException e) {
+			assertEquals("The parameters in the protected header and the unprotected header must be disjoint", e.getMessage());
+		}
+	}
 }
