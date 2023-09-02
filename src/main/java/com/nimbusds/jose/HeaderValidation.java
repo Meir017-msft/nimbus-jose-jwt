@@ -25,12 +25,12 @@ class HeaderValidation {
 	
 	
 	/**
-	 * Ensures the parameter names in the JWS protected header and the
+	 * Ensures the parameter names in the JOSE protected header and the
 	 * unprotected header are disjoint.
 	 *
 	 * <p>See https://datatracker.ietf.org/doc/html/rfc7515#section-7.2.1
 	 *
-	 * @param jwsHeader         The JWS protected header, {@code null} if
+	 * @param header         The protected header, {@code null} if
 	 *                          not specified.
 	 * @param unprotectedHeader The unprotected header, {@code null} if
 	 *                          not specified.
@@ -38,16 +38,16 @@ class HeaderValidation {
 	 * @throws IllegalHeaderException If both headers are specified and not
 	 *                                disjoint.
 	 */
-	static void ensureDisjoint(final JWSHeader jwsHeader, final UnprotectedHeader unprotectedHeader)
+	static void ensureDisjoint(final Header header, final UnprotectedHeader unprotectedHeader)
 		throws IllegalHeaderException {
 		
-		if (jwsHeader == null || unprotectedHeader == null) {
+		if (header == null || unprotectedHeader == null) {
 			return;
 		}
 		
 		for (String unprotectedParamName: unprotectedHeader.getIncludedParams()) {
-			if (jwsHeader.getIncludedParams().contains(unprotectedParamName)) {
-				throw new IllegalHeaderException("The parameters in the JWS protected header and the unprotected header must be disjoint");
+			if (header.getIncludedParams().contains(unprotectedParamName)) {
+				throw new IllegalHeaderException("The parameters in the protected header and the unprotected header must be disjoint");
 			}
 		}
 	}

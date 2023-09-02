@@ -670,7 +670,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 		for (String unprotectedParamName: unprotectedHeader.getIncludedParams()) {
 			if (header.containsKey(unprotectedParamName)) {
-				throw new IllegalHeaderException("The parameters in the JWE protected header and the unprotected header must be disjoint");
+				throw new IllegalHeaderException("The parameters in the protected header and the unprotected header must be disjoint");
 			}
 		}
 	}

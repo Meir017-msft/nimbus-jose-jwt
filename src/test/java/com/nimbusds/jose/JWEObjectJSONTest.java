@@ -306,7 +306,7 @@ public class JWEObjectJSONTest extends TestCase {
 			JWEObjectJSON.parse(rawJson);
 			fail();
 		} catch (ParseException e) {
-			assertEquals("The parameters in the JWE protected header and the unprotected header must be disjoint", e.getMessage());
+			assertEquals("The parameters in the protected header and the unprotected header must be disjoint", e.getMessage());
 		}
 	}
 
