@@ -296,7 +296,6 @@ public final class JWEHeader extends CommonSEHeader {
 		 *            not be "none" or {@code null}.
 		 * @param enc The encryption method. Must not be {@code null}.
 		 */
-		@Deprecated
 		public Builder(final JWEAlgorithm alg, final EncryptionMethod enc) {
 
 			if (alg.getName().equals(Algorithm.NONE.getName())) {
@@ -835,7 +834,6 @@ public final class JWEHeader extends CommonSEHeader {
 	 * @param enc The encryption method parameter. Must not be
 	 *            {@code null}.
 	 */
-	@Deprecated
 	public JWEHeader(final JWEAlgorithm alg, final EncryptionMethod enc) {
 
 		this(
@@ -1287,7 +1285,7 @@ public final class JWEHeader extends CommonSEHeader {
 		for(final String name: jsonObject.keySet()) {
 
 			if(HeaderParameterNames.ALGORITHM.equals(name)) {
-				header = header.alg((JWEAlgorithm) Header.parseAlgorithm(jsonObject));
+				header = header.alg(JWEAlgorithm.parse(JSONObjectUtils.getString(jsonObject, name)));
 			} else if(HeaderParameterNames.ENCRYPTION_ALGORITHM.equals(name)) {
 				// skip
 			} else if(HeaderParameterNames.TYPE.equals(name)) {

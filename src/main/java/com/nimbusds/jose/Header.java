@@ -451,19 +451,17 @@ public abstract class Header implements Serializable {
 
 		String algName = JSONObjectUtils.getString(jsonObject, HeaderParameterNames.ALGORITHM);
 
-		if (algName == null) {
-			throw new ParseException("Missing \"alg\" in header JSON object", 0);
+		if (jsonObject.containsKey(HeaderParameterNames.ENCRYPTION_ALGORITHM)) {
+			// JWE
+			return JWEHeader.parse(jsonObject, parsedBase64URL);
 		} else if (Algorithm.NONE.getName().equals(algName)) {
 			// Plain
 			return PlainHeader.parse(jsonObject, parsedBase64URL);
-		} else if (jsonObject.containsKey(HeaderParameterNames.ENCRYPTION_ALGORITHM)) {
-			// JWE
-			return JWEHeader.parse(jsonObject, parsedBase64URL);
 		} else if (jsonObject.containsKey(HeaderParameterNames.ALGORITHM)) {
 			// JWS
 			return JWSHeader.parse(jsonObject, parsedBase64URL);
 		} else {
-			throw new AssertionError("Unexpected algorithm type: " + algName);
+			throw new ParseException("Missing \"alg\" in header JSON object", 0);
 		}
 	}
 
