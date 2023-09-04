@@ -205,9 +205,6 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 	private boolean jwkMatched(final JWEHeader recipientHeader)
 		throws JOSEException {
 
-		if (kid != null && kid.equals(recipientHeader.getKeyID())) {
-			return true;
-		}
 		if (thumbprint.toString().equals(recipientHeader.getKeyID())) {
 			return true;
 		}
@@ -226,6 +223,9 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 		}
 		List<Base64> rx5c = recipientHeader.getX509CertChain();
 		if (x5c != null && rx5c != null && x5c.containsAll(rx5c) && rx5c.containsAll(x5c)) {
+			return true;
+		}
+		if (kid != null && kid.equals(recipientHeader.getKeyID())) {
 			return true;
 		}
 		return false;
@@ -291,17 +291,19 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 		final JWEDecrypter decrypter;
 		final KeyType kty = jwk.getKeyType();
 		final Set<String> defCritHeaders = critPolicy.getDeferredCriticalHeaderParams();
+		JWEObjectJSON.Recipient recipient = null;
 		JWEHeader recipientHeader = null;
-		Base64URL recipientEncryptedKey = null;
 		try {
 			// The encryptedKey value contains the Base64URL encoded JSON string
 			// {"recipients":[{recipient1},{recipient2}]} if multiple recipients are used.
 			for (Object recipientMap : JSONObjectUtils.getJSONArray((JSONObjectUtils.parse(encryptedKey.decodeToString())), "recipients")) {
-				Map<String, Object> recipientHeaderMap = header.toJSONObject();
-				recipientHeaderMap.putAll(JSONObjectUtils.getJSONObject((Map<String, Object>) recipientMap, "header"));
-				recipientHeader = JWEHeader.parse(recipientHeaderMap);
+				try {
+					recipient = JWEObjectJSON.Recipient.parse((Map<String, Object>) recipientMap);
+					recipientHeader = (JWEHeader) header.join(recipient.getHeader());
+				} catch (Exception e) {
+					throw new JOSEException(e.getMessage());
+				}
 				if (jwkMatched(recipientHeader)) {
-					recipientEncryptedKey = JSONObjectUtils.getBase64URL((Map<String, Object>) recipientMap, "encrypted_key");
 					break;
 				}
 				recipientHeader = null;
@@ -309,7 +311,7 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 		} catch (Exception e) {
 			// If encryptedKey can not be parsed as a JSON Object, it means the encryptedKey contains the RAW encrypted key value.
 			recipientHeader = header;
-			recipientEncryptedKey = encryptedKey;
+			recipient = new JWEObjectJSON.Recipient(null, encryptedKey);
 		}
 
 		if (recipientHeader == null) {
@@ -337,6 +339,6 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 			throw new JOSEException("Unsupported algorithm");
 		}
 
-		return decrypter.decrypt(recipientHeader, recipientEncryptedKey, iv, cipherText, authTag, aad);
+		return decrypter.decrypt(recipientHeader, recipient.getEncryptedKey(), iv, cipherText, authTag, aad);
 	}
 }

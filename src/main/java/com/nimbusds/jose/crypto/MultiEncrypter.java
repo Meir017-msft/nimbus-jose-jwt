@@ -193,31 +193,6 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 
 
 	/**
-	 * Splits the AAD string and returns the first part as the header map,
-	 * as described in the step 14 of
-	 * https://www.rfc-editor.org/rfc/rfc7516#section-5.1.
-	 *
-	 * @param aad The additional authenticated data. Must not be
-	 *            {@code null}.
-	 *
-	 * @return The header map.
-	 *
-	 * @throws JOSEException If the JWE algorithm or method is not
-	 *                       supported or if encryption failed for some
-	 *                       other internal reason.
-	 */
-	private static Map<String, Object> getHeaderMapFromAAD(final byte[] aad)
-		throws JOSEException {
-		try {
-			String protectedHeader = new String(aad).split("\\.")[0];
-			return JSONObjectUtils.parse(Base64URL.from(protectedHeader).decodeToString());
-		} catch (Exception e) {
-			throw new JOSEException(e.getMessage(), e);
-		}
-	}
-
-
-	/**
 	 * Encrypts the specified clear text of a {@link JWEObject JWE object}.
 	 *
 	 * @param header    The JSON Web Encryption (JWE) header. Must specify
@@ -248,7 +223,6 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 		}
 
 		final EncryptionMethod enc = header.getEncryptionMethod();
-		final Map<String, Object> headerMap = getHeaderMapFromAAD(aad);
 		final SecretKey cek = getCEK(enc);
 
 		JWECryptoParts jweParts;
@@ -267,17 +241,16 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 
 			// build JWEHeader from protected header and recipients public key parameters
 			Map<String, Object> keyMap = key.toJSONObject();
-			Map<String, Object> recipientHeaderMap = JSONObjectUtils.newJSONObject();
+			UnprotectedHeader.Builder unprotected = new UnprotectedHeader.Builder();
 			for (String param : RECIPIENT_HEADER_PARAMS) {
 				if (keyMap.containsKey(param)) {
-					recipientHeaderMap.put(param, keyMap.get(param));
+					unprotected.param(param, keyMap.get(param));
 				}
 			}
-			recipientHeaderMap.putAll(headerMap);
 
 			// create recipients JWEObject, select encrypter and encrypt the payload.
 			try {
-				recipientHeader = JWEHeader.parse(recipientHeaderMap);
+				recipientHeader = (JWEHeader) header.join(unprotected.build());
 			} catch (Exception e) {
 				throw new JOSEException(e.getMessage(), e);
 			}
@@ -302,9 +275,8 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 			jweParts = encrypter.encrypt(recipientHeader, payload.toBytes(), aad);
 
 			// build recipients header object by removing protected header params from recipients JWEHeader
-			recipientHeader = jweParts.getHeader();
-			recipientHeaderMap = recipientHeader.toJSONObject();
-			for (String param : headerMap.keySet()) {
+			Map<String, Object> recipientHeaderMap = jweParts.getHeader().toJSONObject();
+			for (String param : header.getIncludedParams()) {
 				recipientHeaderMap.remove(param);
 			}
 			Map<String, Object> recipient = JSONObjectUtils.newJSONObject();
@@ -325,12 +297,11 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 				tag = jweParts.getAuthenticationTag();
 			}
 		}
-		if (!headerMap.containsKey(HeaderParameterNames.ALGORITHM)) {
-			// TODO is this appropriate?
+		if (recipients.size() > 1) {
 			Map<String, Object> jweJsonObject = JSONObjectUtils.newJSONObject();
 			jweJsonObject.put("recipients", recipients);
 			encryptedKey = Base64URL.encode(JSONObjectUtils.toJSONString(jweJsonObject));
 		}
-		return new JWECryptoParts(recipientHeader, encryptedKey, iv, cipherText, tag);
+		return new JWECryptoParts(header, encryptedKey, iv, cipherText, tag);
 	}
 }
