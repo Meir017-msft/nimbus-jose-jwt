@@ -318,11 +318,7 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 			throw new JOSEException("No recipient found");
 		}
 
-		final JWEAlgorithm alg = recipientHeader.getAlgorithm();
-		if (alg == null) {
-			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
-		}
-
+		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(recipientHeader);
 		critPolicy.ensureHeaderPasses(recipientHeader);
 
 		if (KeyType.RSA.equals(kty) && RSADecrypter.SUPPORTED_ALGORITHMS.contains(alg)) {

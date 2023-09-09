@@ -176,11 +176,7 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 	protected JWECryptoParts encryptWithZ(final JWEHeader header, final SecretKey Z, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
-		final JWEAlgorithm alg = header.getAlgorithm();
-		if (alg == null) {
-			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
-		}
-
+		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
 		final ECDH.AlgorithmMode algMode = ECDH.resolveAlgorithmMode(alg);
 		final EncryptionMethod enc = header.getEncryptionMethod();
 
@@ -221,11 +217,7 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 				      final Base64URL authTag)
 		throws JOSEException {
 
-		final JWEAlgorithm alg = header.getAlgorithm();
-		if (alg == null) {
-			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
-		}
-
+		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
 		final ECDH.AlgorithmMode algMode = ECDH.resolveAlgorithmMode(alg);
 
 		// Derive shared key via concat KDF

@@ -226,10 +226,7 @@ public class AESDecrypter extends AESCryptoProvider implements JWEDecrypter, Cri
 		}
 
 		// Derive the content encryption key
-		JWEAlgorithm alg = header.getAlgorithm();
-		if (alg == null) {
-			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
-		}
+		JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
 
 		critPolicy.ensureHeaderPasses(header);
 

@@ -30,7 +30,7 @@ class HeaderValidation {
 	 *
 	 * <p>See https://datatracker.ietf.org/doc/html/rfc7515#section-7.2.1
 	 *
-	 * @param header         The protected header, {@code null} if
+	 * @param header            The protected header, {@code null} if
 	 *                          not specified.
 	 * @param unprotectedHeader The unprotected header, {@code null} if
 	 *                          not specified.

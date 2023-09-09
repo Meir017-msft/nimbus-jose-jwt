@@ -247,8 +247,8 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 *
 	 * @param header      The JWE header. Must not be {@code null}.
 	 * @param payload     The payload. Must not be {@code null}.
-	 * @param unprotected The authentication tag. Empty or {@code null} if
-	 *                    none.
+	 * @param unprotected The unprotected shared header. Empty or
+	 *                    {@code null} if none.
 	 * @param aad         The additional authenticated data. {@code null} if
 	 *                    none.
 	 */

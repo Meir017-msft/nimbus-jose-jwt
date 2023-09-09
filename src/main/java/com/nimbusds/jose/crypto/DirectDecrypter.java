@@ -286,10 +286,7 @@ public class DirectDecrypter extends DirectCryptoProvider implements JWEDecrypte
 		// Validate required JWE parts
 		if (! promiscuousMode) {
 			
-			JWEAlgorithm alg = header.getAlgorithm();
-			if (alg == null) {
-				throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
-			}
+			JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
 			
 			if (!alg.equals(JWEAlgorithm.DIR)) {
 				throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));

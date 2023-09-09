@@ -165,11 +165,7 @@ public class PasswordBasedEncrypter extends PasswordBasedCryptoProvider implemen
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
-		final JWEAlgorithm alg = header.getAlgorithm();
-		if (alg == null) {
-			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
-		}
-
+		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
 		final EncryptionMethod enc = header.getEncryptionMethod();
 
 		final byte[] salt = new byte[saltLength];
