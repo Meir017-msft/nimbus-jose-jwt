@@ -19,6 +19,7 @@ package com.nimbusds.jose.crypto;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.AAD;
+import com.nimbusds.jose.crypto.impl.JWEHeaderValidation;
 import com.nimbusds.jose.crypto.impl.MultiCryptoProvider;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -84,7 +85,7 @@ import java.util.Map;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-07-19
+ * @version 2023-09-10
  */
 @ThreadSafe
 public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter {
@@ -254,7 +255,7 @@ public class MultiEncrypter extends MultiCryptoProvider implements JWEEncrypter 
 			} catch (Exception e) {
 				throw new JOSEException(e.getMessage(), e);
 			}
-			alg = getAlgorithmAndEnsureNotNull(recipientHeader);
+			alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(recipientHeader);
 
 			if (KeyType.RSA.equals(kty) && RSAEncrypter.SUPPORTED_ALGORITHMS.contains(alg)) {
 				encrypter = new RSAEncrypter(key.toRSAKey().toRSAPublicKey(), cek);

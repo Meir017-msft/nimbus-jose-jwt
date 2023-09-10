@@ -72,7 +72,7 @@ import com.nimbusds.jose.util.Base64URL;
  * @author Melisa Halsband
  * @author Vladimir Dzhuvinov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-09-10
  */
 @ThreadSafe
 public class AESDecrypter extends AESCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
@@ -226,7 +226,7 @@ public class AESDecrypter extends AESCryptoProvider implements JWEDecrypter, Cri
 		}
 
 		// Derive the content encryption key
-		JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 
 		critPolicy.ensureHeaderPasses(header);
 

@@ -26,6 +26,7 @@ import java.util.Set;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.crypto.impl.CriticalHeaderParamsDeferral;
+import com.nimbusds.jose.crypto.impl.JWEHeaderValidation;
 import com.nimbusds.jose.crypto.impl.MultiCryptoProvider;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.KeyType;
@@ -84,7 +85,7 @@ import net.jcip.annotations.ThreadSafe;
  * </ul>
  *
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-09-10
  */
 @ThreadSafe
 public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
@@ -318,7 +319,7 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 			throw new JOSEException("No recipient found");
 		}
 
-		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(recipientHeader);
+		final JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(recipientHeader);
 		critPolicy.ensureHeaderPasses(recipientHeader);
 
 		if (KeyType.RSA.equals(kty) && RSADecrypter.SUPPORTED_ALGORITHMS.contains(alg)) {

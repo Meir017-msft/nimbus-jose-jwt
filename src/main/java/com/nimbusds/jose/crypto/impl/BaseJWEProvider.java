@@ -18,18 +18,17 @@
 package com.nimbusds.jose.crypto.impl;
 
 
+import com.nimbusds.jose.EncryptionMethod;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.JWEProvider;
+import com.nimbusds.jose.jca.JWEJCAContext;
+
+import javax.crypto.SecretKey;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import javax.crypto.SecretKey;
-
-import com.nimbusds.jose.EncryptionMethod;
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEAlgorithm;
-import com.nimbusds.jose.JWEHeader;
-import com.nimbusds.jose.JWEProvider;
-import com.nimbusds.jose.jca.JWEJCAContext;
 
 
 /**
@@ -37,10 +36,8 @@ import com.nimbusds.jose.jca.JWEJCAContext;
  * decrypters.
  *
  * @author Vladimir Dzhuvinov
- * @version 2015-11-16
+ * @version 2023-09-10
  */
-
-
 abstract class BaseJWEProvider implements JWEProvider {
 
 
@@ -154,15 +151,6 @@ abstract class BaseJWEProvider implements JWEProvider {
 		return cek != null;
 	}
 
-	protected static JWEAlgorithm getAlgorithmAndEnsureNotNull(JWEHeader jweHeader)
-		throws JOSEException {
-
-		JWEAlgorithm alg = jweHeader.getAlgorithm();
-		if (alg == null) {
-			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
-		}
-		return alg;
-	}
 
 	protected SecretKey getCEK(EncryptionMethod enc)
 		throws JOSEException {

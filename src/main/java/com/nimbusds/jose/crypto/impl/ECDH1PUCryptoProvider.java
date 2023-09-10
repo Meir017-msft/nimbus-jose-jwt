@@ -77,7 +77,7 @@ import com.nimbusds.jose.util.Base64URL;
  *
  * @author Alexander Martynov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-09-10
  */
 public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 	
@@ -189,7 +189,7 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 					      final byte[] aad)
 		throws JOSEException {
 		
-		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		final JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 		final ECDH.AlgorithmMode algMode = ECDH1PU.resolveAlgorithmMode(alg);
 		final EncryptionMethod enc = header.getEncryptionMethod();
 		
@@ -249,7 +249,7 @@ public abstract class ECDH1PUCryptoProvider extends BaseJWEProvider {
 				      final Base64URL authTag)
 		throws JOSEException {
 		
-		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		final JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 		final ECDH.AlgorithmMode algMode = ECDH1PU.resolveAlgorithmMode(alg);
 		
 		// Derive shared key via concat KDF

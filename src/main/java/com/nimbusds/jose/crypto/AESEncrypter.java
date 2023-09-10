@@ -73,7 +73,7 @@ import net.jcip.annotations.ThreadSafe;
  * @author Vladimir Dzhuvinov
  * @author Dimitar A. Stoikov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-09-10
  */
 @ThreadSafe
 public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
@@ -185,7 +185,7 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
-		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		final JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 		final EncryptionMethod enc = header.getEncryptionMethod();
 
 		// Check the AES key size and determine the algorithm family

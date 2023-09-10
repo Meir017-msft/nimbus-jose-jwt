@@ -21,13 +21,10 @@ package com.nimbusds.jose.crypto;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.nimbusds.jose.crypto.impl.*;
 import net.jcip.annotations.ThreadSafe;
 
 import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.impl.AAD;
-import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
-import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
-import com.nimbusds.jose.crypto.impl.DirectCryptoProvider;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.util.Base64URL;
 
@@ -64,7 +61,7 @@ import com.nimbusds.jose.util.Base64URL;
  *
  * @author Vladimir Dzhuvinov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-09-10
  */
 @ThreadSafe
 public class DirectEncrypter extends DirectCryptoProvider implements JWEEncrypter {
@@ -150,7 +147,7 @@ public class DirectEncrypter extends DirectCryptoProvider implements JWEEncrypte
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
-		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		final JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 
 		if (! alg.equals(JWEAlgorithm.DIR)) {
 			throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));

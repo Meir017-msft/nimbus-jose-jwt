@@ -71,7 +71,7 @@ import com.nimbusds.jose.util.Base64URL;
  * @author Vladimir Dzhuvinov
  * @author Jun Yu
  * @author Egor Puzanov
- * @version 2023-05-17
+ * @version 2023-09-10
  */
 @ThreadSafe
 public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
@@ -170,7 +170,7 @@ public class RSAEncrypter extends RSACryptoProvider implements JWEEncrypter {
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
-		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		final JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 		final EncryptionMethod enc = header.getEncryptionMethod();
 		final SecretKey cek = getCEK(enc); // Generate and encrypt the CEK according to the enc method
 

@@ -68,7 +68,7 @@ import com.nimbusds.jose.util.Base64URL;
  * @author Vladimir Dzhuvinov
  * @author Fernando González Callejas
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-09-10
  */
 public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 
@@ -169,6 +169,7 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 		return curve;
 	}
 
+
 	/**
 	 * Encrypts the specified plaintext using the specified shared secret
 	 * ("Z").
@@ -176,7 +177,7 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 	protected JWECryptoParts encryptWithZ(final JWEHeader header, final SecretKey Z, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
-		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		final JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 		final ECDH.AlgorithmMode algMode = ECDH.resolveAlgorithmMode(alg);
 		final EncryptionMethod enc = header.getEncryptionMethod();
 
@@ -217,7 +218,7 @@ public abstract class ECDHCryptoProvider extends BaseJWEProvider {
 				      final Base64URL authTag)
 		throws JOSEException {
 
-		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		final JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 		final ECDH.AlgorithmMode algMode = ECDH.resolveAlgorithmMode(alg);
 
 		// Derive shared key via concat KDF

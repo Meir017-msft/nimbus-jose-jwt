@@ -62,7 +62,7 @@ import net.jcip.annotations.ThreadSafe;
  *
  * @author Vladimir Dzhuvinov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-09-10
  */
 @ThreadSafe
 public class PasswordBasedDecrypter extends PasswordBasedCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
@@ -183,7 +183,7 @@ public class PasswordBasedDecrypter extends PasswordBasedCryptoProvider implemen
 
 		critPolicy.ensureHeaderPasses(header);
 
-		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		final JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 		final byte[] formattedSalt = PBKDF2.formatSalt(alg, salt);
 		final PRFParams prfParams = PRFParams.resolve(alg, getJCAContext().getMACProvider());
 		final SecretKey psKey = PBKDF2.deriveKey(getPassword(), formattedSalt, iterationCount, prfParams);

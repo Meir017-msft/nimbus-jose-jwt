@@ -73,7 +73,7 @@ import com.nimbusds.jose.util.Base64URL;
  * @author Vladimir Dzhuvinov
  * @author Dimitar A. Stoikov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-09-10
  */
 @ThreadSafe
 public class RSADecrypter extends RSACryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
@@ -283,7 +283,7 @@ public class RSADecrypter extends RSACryptoProvider implements JWEDecrypter, Cri
 		
 
 		// Derive the content encryption key
-		JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 
 		SecretKey cek;
 

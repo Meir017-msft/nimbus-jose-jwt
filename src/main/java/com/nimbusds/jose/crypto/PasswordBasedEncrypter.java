@@ -61,7 +61,7 @@ import net.jcip.annotations.ThreadSafe;
  *
  * @author Vladimir Dzhuvinov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-09-10
  */
 @ThreadSafe
 public class PasswordBasedEncrypter extends PasswordBasedCryptoProvider implements JWEEncrypter {
@@ -165,7 +165,7 @@ public class PasswordBasedEncrypter extends PasswordBasedCryptoProvider implemen
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
-		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+		final JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 		final EncryptionMethod enc = header.getEncryptionMethod();
 
 		final byte[] salt = new byte[saltLength];

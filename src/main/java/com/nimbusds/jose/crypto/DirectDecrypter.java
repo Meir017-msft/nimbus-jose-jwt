@@ -23,11 +23,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
 import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.impl.AAD;
-import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
-import com.nimbusds.jose.crypto.impl.ContentCryptoProvider;
-import com.nimbusds.jose.crypto.impl.CriticalHeaderParamsDeferral;
-import com.nimbusds.jose.crypto.impl.DirectCryptoProvider;
+import com.nimbusds.jose.crypto.impl.*;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.util.Base64URL;
 import net.jcip.annotations.ThreadSafe;
@@ -70,7 +66,7 @@ import net.jcip.annotations.ThreadSafe;
  * 
  * @author Vladimir Dzhuvinov
  * @author Egor Puzanov
- * @version 2023-03-26
+ * @version 2023-09-10
  */
 @ThreadSafe
 public class DirectDecrypter extends DirectCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
@@ -286,7 +282,7 @@ public class DirectDecrypter extends DirectCryptoProvider implements JWEDecrypte
 		// Validate required JWE parts
 		if (! promiscuousMode) {
 			
-			JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
+			JWEAlgorithm alg = JWEHeaderValidation.getAlgorithmAndEnsureNotNull(header);
 			
 			if (!alg.equals(JWEAlgorithm.DIR)) {
 				throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));
