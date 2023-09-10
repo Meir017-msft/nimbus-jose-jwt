@@ -277,21 +277,6 @@ public final class JWEHeader extends CommonSEHeader {
 		/**
 		 * Creates a new JWE header builder.
 		 *
-		 * @param enc The encryption method. Must not be {@code null}.
-		 */
-		public Builder(final EncryptionMethod enc) {
-
-			if (enc == null) {
-				throw new IllegalArgumentException("The encryption method \"enc\" parameter must not be null");
-			}
-
-			this.enc = enc;
-		}
-
-
-		/**
-		 * Creates a new JWE header builder.
-		 *
 		 * @param alg The JWE algorithm ({@code alg}) parameter. Must
 		 *            not be "none" or {@code null}.
 		 * @param enc The encryption method. Must not be {@code null}.
@@ -303,6 +288,22 @@ public final class JWEHeader extends CommonSEHeader {
 			}
 
 			this.alg = alg;
+
+			if (enc == null) {
+				throw new IllegalArgumentException("The encryption method \"enc\" parameter must not be null");
+			}
+
+			this.enc = enc;
+		}
+
+
+		/**
+		 * Creates a new JWE header builder. This builder is intended
+		 * for {@link JWEObjectJSON multi-recipient JWE}.
+		 *
+		 * @param enc The encryption method. Must not be {@code null}.
+		 */
+		public Builder(final EncryptionMethod enc) {
 
 			if (enc == null) {
 				throw new IllegalArgumentException("The encryption method \"enc\" parameter must not be null");
