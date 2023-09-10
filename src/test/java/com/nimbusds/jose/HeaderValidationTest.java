@@ -78,7 +78,7 @@ public class HeaderValidationTest extends TestCase {
 			HeaderValidation.ensureDisjoint(jwsHeader, unprotectedHeader);
 			fail();
 		} catch (IllegalHeaderException e) {
-			assertEquals("The parameters in the JWS protected header and the unprotected header must be disjoint", e.getMessage());
+			assertEquals("The parameters in the protected header and the unprotected header must be disjoint", e.getMessage());
 		}
 	}
 }

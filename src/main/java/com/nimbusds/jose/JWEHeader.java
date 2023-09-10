@@ -135,15 +135,15 @@ public final class JWEHeader extends CommonSEHeader {
 
 
 		/**
-		 * The JWE algorithm.
-		 */
-		private final JWEAlgorithm alg;
-
-
-		/**
 		 * The encryption method.
 		 */
 		private final EncryptionMethod enc;
+
+
+		/**
+		 * The JWE algorithm.
+		 */
+		private JWEAlgorithm alg;
 
 
 		/**
@@ -277,6 +277,21 @@ public final class JWEHeader extends CommonSEHeader {
 		/**
 		 * Creates a new JWE header builder.
 		 *
+		 * @param enc The encryption method. Must not be {@code null}.
+		 */
+		public Builder(final EncryptionMethod enc) {
+
+			if (enc == null) {
+				throw new IllegalArgumentException("The encryption method \"enc\" parameter must not be null");
+			}
+
+			this.enc = enc;
+		}
+
+
+		/**
+		 * Creates a new JWE header builder.
+		 *
 		 * @param alg The JWE algorithm ({@code alg}) parameter. Must
 		 *            not be "none" or {@code null}.
 		 * @param enc The encryption method. Must not be {@code null}.
@@ -302,12 +317,13 @@ public final class JWEHeader extends CommonSEHeader {
 		 * the specified header.
 		 *
 		 * @param jweHeader The JWE header to use. Must not be
-		 *                  {@code null}.              
+		 *                  {@code null}.
 		 */
 		public Builder(final JWEHeader jweHeader) {
 
-			this(jweHeader.getAlgorithm(), jweHeader.getEncryptionMethod());
+			this(jweHeader.getEncryptionMethod());
 
+			alg = jweHeader.getAlgorithm();
 			typ = jweHeader.getType();
 			cty = jweHeader.getContentType();
 			crit = jweHeader.getCriticalParams();
@@ -333,6 +349,22 @@ public final class JWEHeader extends CommonSEHeader {
 			skid = jweHeader.getSenderKeyID();
 
 			customParams = jweHeader.getCustomParams();
+		}
+
+
+
+		/**
+		 * Sets the algorithm ({@code alg}) parameter.
+		 *
+		 * @param alg The alg parameter, {@code null} if not
+		 *            specified.
+		 *
+		 * @return This builder.
+		 */
+		public Builder alg(final JWEAlgorithm alg) {
+
+			this.alg = alg;
+			return this;
 		}
 
 
@@ -777,12 +809,29 @@ public final class JWEHeader extends CommonSEHeader {
 	/**
 	 * Creates a new minimal JSON Web Encryption (JWE) header.
 	 *
+	 * @param enc The encryption method parameter. Must not be
+	 *            {@code null}.
+	 */
+	public JWEHeader(final EncryptionMethod enc) {
+
+		this(
+			null, enc,
+			null, null, null, null, null, null, null, null, null, null,
+			null, null, null, null, null, 0,
+			null, null,
+			null, null, null);
+	}
+
+
+	/**
+	 * Creates a new minimal JSON Web Encryption (JWE) header.
+	 *
 	 * <p>Note: Use {@link PlainHeader} to create a header with algorithm
 	 * {@link Algorithm#NONE none}.
 	 *
 	 * @param alg The JWE algorithm parameter. Must not be "none" or
 	 *            {@code null}.
-	 * @param enc The encryption method parameter. Must not be 
+	 * @param enc The encryption method parameter. Must not be
 	 *            {@code null}.
 	 */
 	public JWEHeader(final JWEAlgorithm alg, final EncryptionMethod enc) {
@@ -803,7 +852,7 @@ public final class JWEHeader extends CommonSEHeader {
 	 * {@link Algorithm#NONE none}.
 	 *
 	 * @param alg             The JWE algorithm ({@code alg}) parameter.
-	 *                        Must not be "none" or {@code null}.
+	 *                        {@code null} if not specified.
 	 * @param enc             The encryption method parameter. Must not be
 	 *                        {@code null}.
 	 * @param typ             The type ({@code typ}) parameter,
@@ -878,7 +927,7 @@ public final class JWEHeader extends CommonSEHeader {
 
 		super(alg, typ, cty, crit, jku, jwk, x5u, x5t, x5t256, x5c, kid, customParams, parsedBase64URL);
 
-		if (alg.getName().equals(Algorithm.NONE.getName())) {
+		if (alg != null && alg.getName().equals(Algorithm.NONE.getName())) {
 			throw new IllegalArgumentException("The JWE algorithm cannot be \"none\"");
 		}
 
@@ -1227,23 +1276,16 @@ public final class JWEHeader extends CommonSEHeader {
 				      final Base64URL parsedBase64URL)
 		throws ParseException {
 
-		// Get the "alg" parameter
-		Algorithm alg = Header.parseAlgorithm(jsonObject);
-
-		if (! (alg instanceof JWEAlgorithm)) {
-			throw new ParseException("The algorithm \"alg\" header parameter must be for encryption", 0);
-		}
-
 		// Get the "enc" parameter
 		EncryptionMethod enc = parseEncryptionMethod(jsonObject);
 
-		JWEHeader.Builder header = new Builder((JWEAlgorithm)alg, enc).parsedBase64URL(parsedBase64URL);
+		JWEHeader.Builder header = new Builder(enc).parsedBase64URL(parsedBase64URL);
 
 		// Parse optional + custom parameters
 		for(final String name: jsonObject.keySet()) {
 
 			if(HeaderParameterNames.ALGORITHM.equals(name)) {
-				// skip
+				header = header.alg(JWEAlgorithm.parse(JSONObjectUtils.getString(jsonObject, name)));
 			} else if(HeaderParameterNames.ENCRYPTION_ALGORITHM.equals(name)) {
 				// skip
 			} else if(HeaderParameterNames.TYPE.equals(name)) {

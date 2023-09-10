@@ -185,7 +185,7 @@ public class AESEncrypter extends AESCryptoProvider implements JWEEncrypter {
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
-		final JWEAlgorithm alg = header.getAlgorithm();
+		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
 		final EncryptionMethod enc = header.getEncryptionMethod();
 
 		// Check the AES key size and determine the algorithm family

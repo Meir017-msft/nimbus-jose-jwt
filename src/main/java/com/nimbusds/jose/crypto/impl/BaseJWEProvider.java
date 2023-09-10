@@ -27,6 +27,7 @@ import javax.crypto.SecretKey;
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.JWEHeader;
 import com.nimbusds.jose.JWEProvider;
 import com.nimbusds.jose.jca.JWEJCAContext;
 
@@ -151,6 +152,16 @@ abstract class BaseJWEProvider implements JWEProvider {
 
 	protected boolean isCEKProvided() {
 		return cek != null;
+	}
+
+	protected static JWEAlgorithm getAlgorithmAndEnsureNotNull(JWEHeader jweHeader)
+		throws JOSEException {
+
+		JWEAlgorithm alg = jweHeader.getAlgorithm();
+		if (alg == null) {
+			throw new JOSEException("The algorithm \"alg\" header parameter must not be null");
+		}
+		return alg;
 	}
 
 	protected SecretKey getCEK(EncryptionMethod enc)

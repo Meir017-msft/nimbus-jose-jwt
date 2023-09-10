@@ -742,7 +742,7 @@ public class JWSObjectJSONTest extends TestCase {
 			jwsObject.sign(jwsHeader, unprotectedHeader, new ECDSASigner(EC_JWK));
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertEquals("The parameters in the JWS protected header and the unprotected header must be disjoint", e.getMessage());
+			assertEquals("The parameters in the protected header and the unprotected header must be disjoint", e.getMessage());
 		}
 	}
 	
@@ -776,7 +776,7 @@ public class JWSObjectJSONTest extends TestCase {
 			JWSObjectJSON.parse(json);
 			fail();
 		} catch (ParseException e) {
-			assertEquals("The parameters in the JWS protected header and the unprotected header must be disjoint", e.getMessage());
+			assertEquals("The parameters in the protected header and the unprotected header must be disjoint", e.getMessage());
 		}
 	}
 	

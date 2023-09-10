@@ -113,6 +113,7 @@ public abstract class MultiCryptoProvider extends BaseJWEProvider {
 
 	static {
 		Set<JWEAlgorithm> algs = new LinkedHashSet<>();
+		algs.add(null);
 		algs.add(JWEAlgorithm.A128KW);
 		algs.add(JWEAlgorithm.A192KW);
 		algs.add(JWEAlgorithm.A256KW);

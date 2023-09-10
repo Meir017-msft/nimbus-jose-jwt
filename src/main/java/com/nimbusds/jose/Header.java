@@ -118,12 +118,7 @@ public abstract class Header implements Serializable {
 			 final Map<String,Object> customParams,
 			 final Base64URL parsedBase64URL) {
 
-		if (alg == null) {
-			throw new IllegalArgumentException("The algorithm \"alg\" header parameter must not be null");
-		}
-
 		this.alg = alg;
-
 		this.typ = typ;
 		this.cty = cty;
 
@@ -256,7 +251,9 @@ public abstract class Header implements Serializable {
 		Set<String> includedParameters =
 			new HashSet<>(getCustomParams().keySet());
 
-		includedParameters.add(HeaderParameterNames.ALGORITHM);
+		if (getAlgorithm() != null) {
+			includedParameters.add(HeaderParameterNames.ALGORITHM);
+		}
 
 		if (getType() != null) {
 			includedParameters.add(HeaderParameterNames.TYPE);
@@ -288,8 +285,9 @@ public abstract class Header implements Serializable {
 		Map<String, Object> o = JSONObjectUtils.newJSONObject();
 		o.putAll(customParams);
 
-		// Alg is always defined
-		o.put(HeaderParameterNames.ALGORITHM, alg.toString());
+		if (alg != null) {
+			o.put(HeaderParameterNames.ALGORITHM, alg.toString());
+		}
 
 		if (typ != null) {
 			o.put(HeaderParameterNames.TYPE, typ.toString());
@@ -386,6 +384,34 @@ public abstract class Header implements Serializable {
 
 
 	/**
+	 * Join a {@link PlainHeader}, {@link JWSHeader} or {@link JWEHeader}
+	 * with an Unprotected header.
+	 *
+	 * @param unprotected     The Unprotected header. {@code null}
+	 *                        if not applicable.
+	 *
+	 * @return The header.
+	 *
+	 * @throws ParseException If the specified Unprotected header can not be
+	 *                        merged to protected header.
+	 */
+	public Header join(final UnprotectedHeader unprotected)
+		throws ParseException {
+
+		Map<String, Object> jsonObject = toJSONObject();
+		try {
+			HeaderValidation.ensureDisjoint(this, unprotected);
+		} catch (IllegalHeaderException e) {
+			throw new ParseException(e.getMessage(), 0);
+		}
+		if (unprotected != null) {
+			jsonObject.putAll(unprotected.toJSONObject());
+		}
+		return parse(jsonObject, null);
+	}
+
+
+	/**
 	 * Parses a {@link PlainHeader}, {@link JWSHeader} or {@link JWEHeader}
 	 * from the specified JSON object.
 	 *
@@ -422,23 +448,20 @@ public abstract class Header implements Serializable {
 				   final Base64URL parsedBase64URL)
 		throws ParseException {
 
-		Algorithm alg = parseAlgorithm(jsonObject);
 
-		if (alg.equals(Algorithm.NONE)) {
+		String algName = JSONObjectUtils.getString(jsonObject, HeaderParameterNames.ALGORITHM);
 
-			return PlainHeader.parse(jsonObject, parsedBase64URL);
-
-		} else if (alg instanceof JWSAlgorithm) {
-
-			return JWSHeader.parse(jsonObject, parsedBase64URL);
-
-		} else if (alg instanceof JWEAlgorithm) {
-
+		if (jsonObject.containsKey(HeaderParameterNames.ENCRYPTION_ALGORITHM)) {
+			// JWE
 			return JWEHeader.parse(jsonObject, parsedBase64URL);
-
+		} else if (Algorithm.NONE.getName().equals(algName)) {
+			// Plain
+			return PlainHeader.parse(jsonObject, parsedBase64URL);
+		} else if (jsonObject.containsKey(HeaderParameterNames.ALGORITHM)) {
+			// JWS
+			return JWSHeader.parse(jsonObject, parsedBase64URL);
 		} else {
-
-			throw new AssertionError("Unexpected algorithm type: " + alg);
+			throw new ParseException("Missing \"alg\" in header JSON object", 0);
 		}
 	}
 

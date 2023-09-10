@@ -150,7 +150,7 @@ public class DirectEncrypter extends DirectCryptoProvider implements JWEEncrypte
 	public JWECryptoParts encrypt(final JWEHeader header, final byte[] clearText, final byte[] aad)
 		throws JOSEException {
 
-		JWEAlgorithm alg = header.getAlgorithm();
+		final JWEAlgorithm alg = getAlgorithmAndEnsureNotNull(header);
 
 		if (! alg.equals(JWEAlgorithm.DIR)) {
 			throw new JOSEException(AlgorithmSupportMessage.unsupportedJWEAlgorithm(alg, SUPPORTED_ALGORITHMS));

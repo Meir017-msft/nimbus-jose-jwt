@@ -170,7 +170,7 @@ public class JWEMultipleRecipientsTest extends TestCase {
 		final Set<String> recipientHeader = new HashSet<>(Arrays.asList("alg", "kid"));
 		final Set<String> ecRecipientHeader = new HashSet<>(Arrays.asList("epk", "alg", "kid"));
 
-		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.DIR, enc)
+		JWEHeader header = new JWEHeader.Builder(enc)
 						.compressionAlgorithm(CompressionAlgorithm.DEF)
 						.build();
 		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
@@ -245,8 +245,7 @@ public class JWEMultipleRecipientsTest extends TestCase {
 			(JWK)keyGenerator.algorithm(JWEAlgorithm.RSA_OAEP_256).generate())
 		);
 
-		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.RSA_OAEP_256, enc)
-			.build();
+		JWEHeader header = new JWEHeader(enc);
 
 		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
 		JWEEncrypter encrypter = new MultiEncrypter(keys);
@@ -304,8 +303,7 @@ public class JWEMultipleRecipientsTest extends TestCase {
 
 		final JWKSet keys = new JWKSet(keyList);
 
-		JWEHeader header = new JWEHeader.Builder(JWEAlgorithm.RSA_OAEP_256, enc)
-			.build();
+		JWEHeader header = new JWEHeader(enc);
 
 		JWEObjectJSON jwe = new JWEObjectJSON(header, new Payload(plainText));
 		JWEEncrypter encrypter = new MultiEncrypter(keys);

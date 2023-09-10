@@ -98,11 +98,10 @@ public class JWEObjectJSONTest extends TestCase {
 
 		assertNull(jwe.getPayload());
 
-		assertEquals(JWEAlgorithm.DIR, jwe.getHeader().getAlgorithm());
+		assertNull(jwe.getHeader().getAlgorithm());
 		assertEquals(EncryptionMethod.A256GCM, jwe.getHeader().getEncryptionMethod());
 		assertEquals(CompressionAlgorithm.DEF, jwe.getHeader().getCompressionAlgorithm());
-		assertEquals("DirRecipient", jwe.getHeader().getKeyID());
-		assertEquals(4, jwe.getHeader().toJSONObject().size());
+		assertEquals(2, jwe.getHeader().toJSONObject().size());
 
 		assertNull(jwe.getUnprotected());
 
@@ -138,13 +137,10 @@ public class JWEObjectJSONTest extends TestCase {
 
 			assertNull(jwe.getPayload());
 
-			assertEquals(JWEAlgorithm.A128KW, jwe.getHeader().getAlgorithm());
+			assertNull(jwe.getHeader().getAlgorithm());
 			assertEquals(EncryptionMethod.A256GCM, jwe.getHeader().getEncryptionMethod());
 			assertEquals(CompressionAlgorithm.DEF, jwe.getHeader().getCompressionAlgorithm());
-			assertEquals("AESRecipient", jwe.getHeader().getKeyID());
-			assertEquals(4, jwe.getHeader().toJSONObject().size());
-
-			assertNull(jwe.getUnprotected());
+			assertEquals(2, jwe.getHeader().toJSONObject().size());
 
 			assertEquals(new Base64URL("BCNhlw39FueuKrwH"), jwe.getIV());
 
@@ -154,12 +150,19 @@ public class JWEObjectJSONTest extends TestCase {
 
 			assertEquals(new Base64URL("lhNLaDMKVVvjlGaeYdqbrQ"), jwe.getAuthTag());
 
+			UnprotectedHeader unprotected = jwe.getUnprotected();
 			List<JWEObjectJSON.Recipient> recipients = jwe.getRecipients();
-			assertEquals(JWEAlgorithm.A128KW.getName(), recipients.get(0).getHeader().getParam("alg"));
-			assertEquals("AESRecipient", recipients.get(0).getHeader().getKeyID());
-			assertEquals(2, recipients.get(0).getHeader().toJSONObject().size());
-			assertEquals(new Base64URL("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g"), recipients.get(0).getEncryptedKey());
 			assertEquals(1, recipients.size());
+			assertEquals(new Base64URL("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g"), recipients.get(0).getEncryptedKey());
+			if (unprotected == null) {
+				assertEquals(JWEAlgorithm.A128KW.getName(), recipients.get(0).getHeader().getParam("alg"));
+				assertEquals("AESRecipient", recipients.get(0).getHeader().getKeyID());
+				assertEquals(2, recipients.get(0).getHeader().toJSONObject().size());
+			} else {
+				assertEquals(JWEAlgorithm.A128KW.getName(), unprotected.getParam("alg"));
+				assertEquals("AESRecipient", unprotected.getKeyID());
+				assertEquals(2, unprotected.toJSONObject().size());
+			}
 		}
 	}
 
@@ -278,6 +281,7 @@ public class JWEObjectJSONTest extends TestCase {
 		assertNull(jwe.getPayload());
 
 		Map<String, Object> rawJson = JSONObjectUtils.parse(jweGeneralJsonString);
+		rawJson.put("unprotected", "");
 
 		assertEquals(rawJson.keySet(), jwe.toGeneralJSONObject().keySet());
 	}
@@ -306,7 +310,7 @@ public class JWEObjectJSONTest extends TestCase {
 			JWEObjectJSON.parse(rawJson);
 			fail();
 		} catch (ParseException e) {
-			assertEquals("The parameters in the JWE protected header and the unprotected header must be disjoint", e.getMessage());
+			assertEquals("The parameters in the protected header and the unprotected header must be disjoint", e.getMessage());
 		}
 	}
 
