@@ -36,7 +36,7 @@ import java.util.Set;
  * decrypters.
  *
  * @author Vladimir Dzhuvinov
- * @version 2023-09-10
+ * @version 2023-09-11
  */
 abstract class BaseJWEProvider implements JWEProvider {
 
@@ -147,12 +147,31 @@ abstract class BaseJWEProvider implements JWEProvider {
 		return jcaContext;
 	}
 
+
+	/**
+	 * Returns {@code true} if a content encryption key (CEK) was
+	 * provided at construction time.
+	 *
+	 * @return {@code true} if a CEK was provided at construction time,
+	 *         {@code false} if CEKs will be internally generated.
+	 */
 	protected boolean isCEKProvided() {
 		return cek != null;
 	}
 
 
-	protected SecretKey getCEK(EncryptionMethod enc)
+	/**
+	 * Returns the content encryption key (CEK) to use. Unless a CEK was
+	 * provided at construction time this will be a new internally
+	 * generated CEK.
+	 *
+	 * @param enc The encryption method. Must not be {@code null}.
+	 *
+	 * @return The content encryption key (CEK).
+	 *
+	 * @throws JOSEException If an internal exception is encountered.
+	 */
+	protected SecretKey getCEK(final EncryptionMethod enc)
 		throws JOSEException {
 
 		return (isCEKProvided() || enc == null) ? cek : ContentCryptoProvider.generateCEK(enc, jcaContext.getSecureRandom());
