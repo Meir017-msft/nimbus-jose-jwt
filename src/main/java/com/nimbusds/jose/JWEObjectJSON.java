@@ -34,8 +34,9 @@ import java.util.Map;
 
 
 /**
- * JSON Web Encryption (JWE) secured object serialisable to
- * <a href="https://datatracker.ietf.org/doc/html/rfc7516#section-7.2">JWE JSON Serialization</a>
+ * JSON Web Encryption (JWE) secured object with
+ * <a href="https://datatracker.ietf.org/doc/html/rfc7516#section-7.2">JSON
+ * serialisation</a>.
  *
  * <p>This class is thread-safe.
  *

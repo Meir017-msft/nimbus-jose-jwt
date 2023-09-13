@@ -18,20 +18,19 @@
 package com.nimbusds.jose;
 
 
+import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jose.util.StandardCharset;
+import net.jcip.annotations.ThreadSafe;
+
 import java.security.Signature;
 import java.text.ParseException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import net.jcip.annotations.ThreadSafe;
-
-import com.nimbusds.jose.util.Base64URL;
-import com.nimbusds.jose.util.StandardCharset;
-
 
 /**
- * JSON Web Signature (JWS) secured object serialisable to
+ * JSON Web Signature (JWS) secured object with
  * <a href="https://datatracker.ietf.org/doc/html/rfc7515#section-7.1">compact
- * encoding</a>.
+ * serialisation</a>.
  *
  * <p>This class is thread-safe.
  *

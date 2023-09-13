@@ -18,21 +18,21 @@
 package com.nimbusds.jose;
 
 
+import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jose.util.JSONArrayUtils;
+import com.nimbusds.jose.util.JSONObjectUtils;
+import net.jcip.annotations.Immutable;
+import net.jcip.annotations.ThreadSafe;
+
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import net.jcip.annotations.Immutable;
-import net.jcip.annotations.ThreadSafe;
-
-import com.nimbusds.jose.util.Base64URL;
-import com.nimbusds.jose.util.JSONArrayUtils;
-import com.nimbusds.jose.util.JSONObjectUtils;
-
 
 /**
- * JSON Web Signature (JWS) secured object serialisable to
- * <a href="https://datatracker.ietf.org/doc/html/rfc7515#section-3.2">JSON</a>.
+ * JSON Web Signature (JWS) secured object with
+ * <a href="https://datatracker.ietf.org/doc/html/rfc7515#section-3.2">JSON
+ * serialisation</a>.
  *
  * <p>This class is thread-safe.
  *

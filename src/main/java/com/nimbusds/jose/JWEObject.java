@@ -18,18 +18,17 @@
 package com.nimbusds.jose;
 
 
-import java.text.ParseException;
-
-import net.jcip.annotations.ThreadSafe;
-
 import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.util.Base64URL;
+import net.jcip.annotations.ThreadSafe;
+
+import java.text.ParseException;
 
 
 /**
- * JSON Web Encryption (JWE) secured object serialisable to
+ * JSON Web Encryption (JWE) secured object with
  * <a href="https://datatracker.ietf.org/doc/html/rfc7516#section-7.1">compact
- * encoding</a>.
+ * serialisation</a>.
  *
  * <p>This class is thread-safe.
  *

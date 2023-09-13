@@ -18,15 +18,18 @@
 package com.nimbusds.jose;
 
 
-import java.text.ParseException;
-
+import com.nimbusds.jose.util.Base64URL;
 import net.jcip.annotations.ThreadSafe;
 
-import com.nimbusds.jose.util.Base64URL;
+import java.text.ParseException;
 
 
 /**
- * Unsecured (plain / {@code alg=none}) JOSE object. This class is thread-safe.
+ * Unsecured (plain / {@code alg=none}) JOSE object with
+ * <a href="https://datatracker.ietf.org/doc/html/rfc7515#section-7.1">compact
+ * serialisation</a>.
+ *
+ * <p>This class is thread-safe.
  *
  * @author Vladimir Dzhuvinov
  * @version 2014-04-08
