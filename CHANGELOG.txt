@@ -1544,13 +1544,12 @@ version 9.31 (2023-02-21)
       illegal JSON type (iss #511).
 
 version 9.32 (2023-09-13)
-    * Updates the ECDSASigner for the ESxxx JWS algorithms to support the
-      UserAuthenticationRequired option, originally introduced in the
-      RSASSASigner for the RSxxx and PSxxx JWS algorithms.
-    * Adds a getInitializedSignature method to the CompletableJWSObjectSigning
-      interface. Enables the binding of a user verification to a specific
-      instance of a java.security.Signature.
-    * Adds a new RSASSASigner(RSAKey, Set<JWSSignerOption>) constructor.
+    * Adds JWEObjectJSON class to support general and flattened JSON
+      serialisation.
+    * Adds MultiEncrypter and MultiDecrypter classes for multi-recipient JWE.
+    * Updates JWEHeader to support "enc" header parameter only construction for
+      multi-recipient JWE.
+    * Updates the BaseJWEProvider classes to support multi-recipient JWE.
     * Updates ContentCryptoProvider to support passing of an optional AAD. If
       no AAD is specified the JWE header becomes the AAD (default behaviour).
     * Updates the RSAEncrypter and RSADecrypter to support passing of an
@@ -1561,6 +1560,13 @@ version 9.32 (2023-09-13)
       optional AAD. If no AAD is specified the JWE header becomes the AAD
       (default behaviour). Intended to support JWE JSON serialisation to
       multiple recipients.
+    * Adds a getInitializedSignature method to the CompletableJWSObjectSigning
+      interface. Enables the binding of a user verification to a specific
+      instance of a java.security.Signature.
+    * Updates the ECDSASigner for the ESxxx JWS algorithms to support the
+      UserAuthenticationRequired option, originally introduced in the
+      RSASSASigner for the RSxxx and PSxxx JWS algorithms.
+    * Adds a new RSASSASigner(RSAKey, Set<JWSSignerOption>) constructor.
     * Updates JSONObjectUtils.parse(String,int) to ensure generic types are not
       erased by obfuscation tools (iss #518).
     * Updates GSon to 2.10.1.
