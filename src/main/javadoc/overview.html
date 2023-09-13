@@ -25,6 +25,7 @@
 					<li>With JSON serialisation:
 						<ul>
 							<li>{@link com.nimbusds.jose.JWSObjectJSON JWS JSON objects} with one or more signatures.</li>
+							<li>{@link com.nimbusds.jose.JWEObjectJSON JWE JSON objects} with one or more recipients.</li>
 						</ul>
 					</li>
 				</ul>
@@ -71,10 +72,10 @@
         </ol>
 
         <p>New JWA algorithms can be easily added. The library provides a set
-			of simple interfaces to decouple the representation of JOSE / JWT
-			objects from JWA crypto code for signing / verification or
-			encryption / decryption. Multiple JCA providers, including
-			hardware-based can be configured.</p>
+			of interfaces to decouple the representation of JOSE / JWT objects
+			from JWA cryptography code for signing / verification or encryption
+			/ decryption. Multiple JCA providers, including hardware-based
+			(PKCS#11) can be configured.</p>
 		
 		<p>Supported specifications:</p>
 		
