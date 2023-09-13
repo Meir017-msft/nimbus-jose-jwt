@@ -1564,4 +1564,4 @@ version 9.32 (2023-09-13)
     * Updates JSONObjectUtils.parse(String,int) to ensure generic types are not
       erased by obfuscation tools (iss #518).
     * Updates GSon to 2.10.1.
-    * Updates Google Tink to 1.9.0.
+    * Updates Google Tink to 1.10.0.
