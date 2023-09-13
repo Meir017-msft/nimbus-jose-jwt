@@ -18,7 +18,11 @@
 package com.nimbusds.jose;
 
 
+import com.nimbusds.jose.crypto.RSADecrypter;
+import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jose.jca.JWEJCAContext;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import junit.framework.TestCase;
@@ -26,7 +30,6 @@ import junit.framework.TestCase;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.*;
-import java.util.logging.Logger;
 
 
 /**
@@ -34,11 +37,9 @@ import java.util.logging.Logger;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-05-17
+ * @version 2023-09-13
  */
 public class JWEObjectJSONTest extends TestCase {
-
-	private static final Logger LOGGER = Logger.getLogger(JWEObjectJSONTest.class.getName());
 
 	private static final String jweMultiRecipientJsonString =
 		"{" +
@@ -190,6 +191,27 @@ public class JWEObjectJSONTest extends TestCase {
 			     "YySHNLSU1NbHJvRGhoYlVkc1JvcHRPbnh0dUpLV0JwLW9BcVdEc1VDc" +
 			     "XJ5R1lsNVItZyIsImhlYWRlciI6eyJhbGciOiJBMTI4S1ciLCJraWQi" +
 			     "OiJBRVNSZWNpcGllbnQifX1dfQ", jwe.getEncryptedKey().toString());
+	}
+
+
+	public void testPayloadConstructorIllegalArgumentExceptions() {
+
+		final JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A128CBC_HS256);
+		final Payload payload = new Payload("Hello, world!");
+
+		try {
+			new JWEObjectJSON(null, payload);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("The JWE protected header must not be null", e.getMessage());
+		}
+
+		try {
+			new JWEObjectJSON(header, null);
+			fail();
+		} catch (IllegalArgumentException e) {
+			assertEquals("The payload must not be null", e.getMessage());
+		}
 	}
 
 
@@ -467,5 +489,90 @@ public class JWEObjectJSONTest extends TestCase {
 		} catch (NullPointerException e) {
 			assertNull(e.getMessage());
 		}
+	}
+
+
+	public void testConstructor_jweObject_stateUnencrypted() {
+
+		JWEObject jweObject = new JWEObject(
+			new JWEHeader(JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A128GCM),
+			new Payload("Hello, world")
+		);
+
+		assertEquals(JWEObject.State.UNENCRYPTED, jweObject.getState());
+
+		JWEObjectJSON jweo = new JWEObjectJSON(jweObject);
+		assertEquals(JWEObject.State.UNENCRYPTED, jweo.getState());
+
+		assertEquals(0, jweo.getRecipients().size());
+
+		try {
+			jweo.toFlattenedJSONObject();
+			fail();
+		} catch (IllegalStateException e) {
+			assertEquals("The JWE object must be in an encrypted or decrypted state", e.getMessage());
+		}
+	}
+
+
+	public void testConstructor_jweObject_stateEncrypted()
+		throws JOSEException {
+
+		JWEObject jweObject = new JWEObject(
+			new JWEHeader(JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A128GCM),
+			new Payload("Hello, world")
+		);
+
+		RSAKey rsaKey = new RSAKeyGenerator(2048)
+			.keyIDFromThumbprint(true)
+			.generate();
+
+		jweObject.encrypt(new RSAEncrypter(rsaKey.toRSAPublicKey()));
+
+		assertEquals(JWEObject.State.ENCRYPTED, jweObject.getState());
+
+		JWEObjectJSON jweo = new JWEObjectJSON(jweObject);
+		assertEquals(JWEObject.State.ENCRYPTED, jweo.getState());
+
+		assertEquals(1, jweo.getRecipients().size());
+
+		List<JWEObjectJSON.Recipient> recipients = jweo.getRecipients();
+		JWEObjectJSON.Recipient recipient = recipients.get(0);
+		assertEquals(jweObject.getEncryptedKey(), recipient.getEncryptedKey());
+		assertNull(recipient.getUnprotectedHeader());
+
+		jweo.toFlattenedJSONObject();
+	}
+
+
+	public void testConstructor_jweObject_stateDecrypted()
+		throws JOSEException {
+
+		JWEObject jweObject = new JWEObject(
+			new JWEHeader(JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A128GCM),
+			new Payload("Hello, world")
+		);
+
+		RSAKey rsaKey = new RSAKeyGenerator(2048)
+			.keyIDFromThumbprint(true)
+			.generate();
+
+		jweObject.encrypt(new RSAEncrypter(rsaKey.toRSAPublicKey()));
+
+		assertEquals(JWEObject.State.ENCRYPTED, jweObject.getState());
+
+		jweObject.decrypt(new RSADecrypter(rsaKey));
+
+		JWEObjectJSON jweo = new JWEObjectJSON(jweObject);
+		assertEquals(JWEObject.State.DECRYPTED, jweo.getState());
+
+		assertEquals(1, jweo.getRecipients().size());
+
+		List<JWEObjectJSON.Recipient> recipients = jweo.getRecipients();
+		JWEObjectJSON.Recipient recipient = recipients.get(0);
+		assertEquals(jweObject.getEncryptedKey(), recipient.getEncryptedKey());
+		assertNull(recipient.getUnprotectedHeader());
+
+		jweo.toFlattenedJSONObject();
 	}
 }
