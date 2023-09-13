@@ -300,7 +300,7 @@ public class MultiDecrypter extends MultiCryptoProvider implements JWEDecrypter,
 			for (Object recipientMap : JSONObjectUtils.getJSONArray((JSONObjectUtils.parse(encryptedKey.decodeToString())), "recipients")) {
 				try {
 					recipient = JWEObjectJSON.Recipient.parse((Map<String, Object>) recipientMap);
-					recipientHeader = (JWEHeader) header.join(recipient.getHeader());
+					recipientHeader = (JWEHeader) header.join(recipient.getUnprotectedHeader());
 				} catch (Exception e) {
 					throw new JOSEException(e.getMessage());
 				}

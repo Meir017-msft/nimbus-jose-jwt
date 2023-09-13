@@ -1,7 +1,7 @@
 /*
  * nimbus-jose-jwt
  *
- * Copyright 2012-2021, Connect2id Ltd and contributors.
+ * Copyright 2012-2023, Connect2id Ltd and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use
  * this file except in compliance with the License. You may obtain a copy of the
@@ -115,7 +115,7 @@ public class JWSObjectJSON extends JOSEObjectJSON {
 		/**
 		 * Returns the JWS protected header.
 		 *
-		 * @return The JWS protected, {@code null} if none.
+		 * @return The JWS protected header, {@code null} if none.
 		 */
 		public JWSHeader getHeader() {
 			return header;

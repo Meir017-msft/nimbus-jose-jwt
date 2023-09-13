@@ -42,7 +42,7 @@ import java.util.Map;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-07-11
+ * @version 2023-09-13
  */
 @ThreadSafe
 public class JWEObjectJSON extends JOSEObjectJSON {
@@ -61,7 +61,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		/**
 		 * The per-recipient unprotected header.
 		 */
-		private final UnprotectedHeader header;
+		private final UnprotectedHeader unprotectedHeader;
 
 
 		/**
@@ -73,13 +73,14 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		/**
 		 * Creates a new parsed recipient.
 		 *
-		 * @param header       The per-recipient unprotected header,
-		 *                     {@code null} if none.
-		 * @param encryptedKey The encrypted key, {@code null} if none.
+		 * @param unprotectedHeader The per-recipient unprotected
+		 *                          header, {@code null} if none.
+		 * @param encryptedKey      The encrypted key, {@code null} if
+		 *                          none.
 		 */
-		public Recipient(final UnprotectedHeader header,
-				  final Base64URL encryptedKey) {
-			this.header = header;
+		public Recipient(final UnprotectedHeader unprotectedHeader,
+				 final Base64URL encryptedKey) {
+			this.unprotectedHeader = unprotectedHeader;
 			this.encryptedKey = encryptedKey;
 		}
 
@@ -90,8 +91,8 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		 * @return The per-recipient unprotected header, {@code null}
 		 *         if none.
 		 */
-		public UnprotectedHeader getHeader() {
-			return header;
+		public UnprotectedHeader getUnprotectedHeader() {
+			return unprotectedHeader;
 		}
 
 
@@ -114,8 +115,8 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		public Map<String, Object> toJSONObject() {
 			Map<String, Object> jsonObject = JSONObjectUtils.newJSONObject();
 			
-			if (header != null && ! header.getIncludedParams().isEmpty()) {
-				jsonObject.put("header", header.toJSONObject());
+			if (unprotectedHeader != null && ! unprotectedHeader.getIncludedParams().isEmpty()) {
+				jsonObject.put("header", unprotectedHeader.toJSONObject());
 			}
 			if (encryptedKey != null) {
 				jsonObject.put("encrypted_key", encryptedKey.toString());
@@ -130,10 +131,10 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		 * @param json The JSON object string to parse. Must not be
 		 *             {@code null}.
 		 *
-		 * @return The Recipient object.
+		 * @return The recipient object.
 		 *
-		 * @throws ParseException If the string couldn't be parsed to a JWE
-		 *                        object.
+		 * @throws ParseException If the string couldn't be parsed to a
+		 *                        JWE object.
 		 */
 		public static Recipient parse(final Map<String, Object> json)
 			throws ParseException {
@@ -151,15 +152,15 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * The protected header.
+	 * The JWE protected header.
 	 */
-	private JWEHeader header;
+	private final JWEHeader header;
 
 
 	/**
-	 * The unprotected header.
+	 * The shared unprotected header.
 	 */
-	private UnprotectedHeader unprotected;
+	private UnprotectedHeader unprotectedHeader;
 
 
 	/**
@@ -188,7 +189,8 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * The additional authenticated data, {@code null} if not computed or applicable.
+	 * The additional authenticated data, {@code null} if not computed or
+	 * applicable.
 	 */
 	private final byte[] aad;
 
@@ -200,10 +202,11 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Creates a new JWE JSON object from the specified JWEObject. The
-	 * initial state is copied from the JWEObject.
+	 * Creates a new JWE JSON object from the specified JWE object with
+	 * compact serialisation. The initial state is copied from the JWE
+	 * object.
 	 *
-	 * @param jweObject  The JWEObject. Must not be {@code null}.
+	 * @param jweObject  The JWE object. Must not be {@code null}.
 	 */
 	public JWEObjectJSON(final JWEObject jweObject) {
 
@@ -228,10 +231,10 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 	/**
 	 * Creates a new to-be-encrypted JSON Web Encryption (JWE) object with
-	 * the specified header and payload. The initial state will be
-	 * {@link State#UNENCRYPTED unencrypted}.
+	 * the specified JWE protected header and payload. The initial state
+	 * will be {@link State#UNENCRYPTED unencrypted}.
 	 *
-	 * @param header  The JWE header. Must not be {@code null}.
+	 * @param header  The JWE protected header. Must not be {@code null}.
 	 * @param payload The payload. Must not be {@code null}.
 	 */
 	public JWEObjectJSON(final JWEHeader header, final Payload payload) {
@@ -242,25 +245,27 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 	/**
 	 * Creates a new to-be-encrypted JSON Web Encryption (JWE) object with
-	 * the specified header, payload and aad. The initial state will be
+	 * the specified JWE protected header, payload and Additional
+	 * Authenticated Data (AAD). The initial state will be
 	 * {@link State#UNENCRYPTED unencrypted}.
 	 *
-	 * @param header      The JWE header. Must not be {@code null}.
-	 * @param payload     The payload. Must not be {@code null}.
-	 * @param unprotected The unprotected shared header. Empty or
-	 *                    {@code null} if none.
-	 * @param aad         The additional authenticated data. {@code null} if
-	 *                    none.
+	 * @param header            The JWE protected header. Must not be
+	 *                          {@code null}.
+	 * @param payload           The payload. Must not be {@code null}.
+	 * @param unprotectedHeader The shared unprotected header, empty or
+	 *                          {@code null} if none.
+	 * @param aad               The additional authenticated data (AAD),
+	 *                          {@code null} if none.
 	 */
 	public JWEObjectJSON(final JWEHeader header,
 		             final Payload payload,
-		             final UnprotectedHeader unprotected,
+		             final UnprotectedHeader unprotectedHeader,
 		             final byte[] aad) {
 
 		super(payload);
 
 		if (header == null) {
-			throw new IllegalArgumentException("The JWE header must not be null");
+			throw new IllegalArgumentException("The JWE protected header must not be null");
 		}
 		this.header = header;
 
@@ -269,7 +274,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		}
 		setPayload(payload);
 
-		this.unprotected = unprotected;
+		this.unprotectedHeader = unprotectedHeader;
 		this.aad = aad;
 		this.cipherText = null;
 		this.state = State.UNENCRYPTED;
@@ -280,17 +285,19 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 	 * Creates a new encrypted JSON Web Encryption (JWE) object. The state
 	 * will be {@link State#ENCRYPTED encrypted}.
 	 *
-	 * @param header      The protected header. Must not be {@code null}.
-	 * @param cipherText  The cipher text. Must not be {@code null}.
-	 * @param iv          The initialisation vector. Empty or {@code null}
-	 *                    if none.
-	 * @param authTag     The authentication tag. Empty or {@code null} if
-	 *                    none.
-	 * @param recipients  The recipients list. Must not be {@code null}.
-	 * @param unprotected The authentication tag. Empty or {@code null} if
-	 *                    none.
-	 * @param aad         The additional authenticated data. Must not be
-	 *                    {@code null}.
+	 * @param header            The JWE protected header. Must not be
+	 *                          {@code null}.
+	 * @param cipherText        The cipher text. Must not be {@code null}.
+	 * @param iv                The initialisation vector, empty or
+	 *                          {@code null} if none.
+	 * @param authTag           The authentication tag, empty or
+	 *                          {@code null} if none.
+	 * @param recipients        The recipients list. Must not be
+	 *                          {@code null}.
+	 * @param unprotectedHeader The shared unprotected header, empty or
+	 *                          {@code null} if none.
+	 * @param aad               The additional authenticated data. Must not
+	 *                          be {@code null}.
 	 *
 	 */
 	public JWEObjectJSON(final JWEHeader header,
@@ -298,13 +305,13 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		             final Base64URL iv,
 		             final Base64URL authTag,
 		             final List<Recipient> recipients,
-		             final UnprotectedHeader unprotected,
+		             final UnprotectedHeader unprotectedHeader,
 		             final byte[] aad) {
 
 		super(null); // Payload not decrypted yet, must be null
 
 		if (header == null) {
-			throw new IllegalArgumentException("The header must not be null");
+			throw new IllegalArgumentException("The JWE protected header must not be null");
 		}
 
 		if (cipherText == null) {
@@ -313,7 +320,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 		this.header = header;
 		this.recipients.addAll(recipients);
-		this.unprotected = unprotected;
+		this.unprotectedHeader = unprotectedHeader;
 		this.aad = aad;
 		this.iv = iv;
 		this.cipherText = cipherText;
@@ -324,9 +331,9 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Returns the JWEHeader of this JWE object.
+	 * Returns the JWE protected header of this JWE object.
 	 *
-	 * @return The JWEHeader.
+	 * @return The JWE protected header.
 	 */
 	public JWEHeader getHeader() {
 		return header;
@@ -334,12 +341,13 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Returns the unprotected header of this JWE object.
+	 * Returns the shared unprotected header of this JWE object.
 	 *
-	 * @return The unprotected header.
+	 * @return The shared unprotected header, empty or {@code null} if
+	 *         none.
 	 */
-	public UnprotectedHeader getUnprotected() {
-		return unprotected;
+	public UnprotectedHeader getUnprotectedHeader() {
+		return unprotectedHeader;
 	}
 
 
@@ -399,9 +407,9 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Returns the Additional Authenticated Data of this JWE object.
+	 * Returns the Additional Authenticated Data (AAD) of this JWE object.
 	 *
-	 * @return The additional authenticated Data.
+	 * @return The Additional Authenticated Data (AAD).
 	 */
 	public byte[] getAAD() {
 		StringBuilder aadSB = new StringBuilder(header.toBase64URL().toString());
@@ -413,7 +421,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Returns the recipients list of the JWE secured object.
+	 * Returns the recipients list of the JWE object.
 	 *
 	 * @return The recipients list.
 	 */
@@ -423,7 +431,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Returns the state of the JWE secured object.
+	 * Returns the state of this JWE object.
 	 *
 	 * @return The state.
 	 */
@@ -515,7 +523,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 		JWEHeader jweJoinedHeader = getHeader();
 		try {
-			jweJoinedHeader = (JWEHeader) getHeader().join(unprotected);
+			jweJoinedHeader = (JWEHeader) getHeader().join(unprotectedHeader);
 			parts = encrypter.encrypt(jweJoinedHeader, getPayload().toBytes(), getAAD());
 		} catch (JOSEException e) {
 			throw e;
@@ -609,14 +617,14 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 		ensureEncryptedOrDecryptedState();
 
-		if (recipients.isEmpty() || (recipients.get(0).getHeader() == null && recipients.get(0).getEncryptedKey() == null)) {
+		if (recipients.isEmpty() || (recipients.get(0).getUnprotectedHeader() == null && recipients.get(0).getEncryptedKey() == null)) {
 			throw new IllegalStateException("The general JWE JSON serialization requires at least one recipient");
 		}
 
 		Map<String, Object> jsonObject = toBaseJSONObject();
 
-		if (unprotected != null) {
-			jsonObject.put("unprotected", unprotected.toJSONObject());
+		if (unprotectedHeader != null) {
+			jsonObject.put("unprotected", unprotectedHeader.toJSONObject());
 		}
 
 		List<Object> recipientsJSONArray = JSONArrayUtils.newJSONArray();
@@ -643,11 +651,11 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		Map<String, Object> jsonObject = toBaseJSONObject();
 
 		Map<String, Object> recipientHeader = JSONObjectUtils.newJSONObject();
-		if (recipients.get(0).getHeader() != null) {
-			recipientHeader.putAll(recipients.get(0).getHeader().toJSONObject());
+		if (recipients.get(0).getUnprotectedHeader() != null) {
+			recipientHeader.putAll(recipients.get(0).getUnprotectedHeader().toJSONObject());
 		}
-		if (unprotected != null) {
-			recipientHeader.putAll(unprotected.toJSONObject());
+		if (unprotectedHeader != null) {
+			recipientHeader.putAll(unprotectedHeader.toJSONObject());
 		}
 		if (recipientHeader.size() > 0) {
 			jsonObject.put("unprotected", recipientHeader);
@@ -672,8 +680,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Parses a JWE secured object from the specified JSON object
-	 * representation.
+	 * Parses a JWE object from the specified JSON object representation.
 	 *
 	 * @param jsonObject The JSON object to parse. Must not be
 	 *                   {@code null}.
@@ -711,7 +718,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 			for (Map<String, Object> recipientJSONObject: recipients) {
 				Recipient recipient = Recipient.parse(recipientJSONObject);
 				try {
-					HeaderValidation.ensureDisjoint(jweJoinedHeader, recipient.getHeader());
+					HeaderValidation.ensureDisjoint(jweJoinedHeader, recipient.getUnprotectedHeader());
 				} catch (IllegalHeaderException e) {
 					throw new ParseException(e.getMessage(), 0);
 				}
@@ -727,7 +734,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 
 
 	/**
-	 * Parses a JWE secured object from the specified JSON object string.
+	 * Parses a JWE object from the specified JSON object string.
 	 *
 	 * @param json The JSON object string to parse. Must not be
 	 *             {@code null}.

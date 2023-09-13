@@ -23,6 +23,7 @@ import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
 import junit.framework.TestCase;
 
+import java.net.URI;
 import java.text.ParseException;
 import java.util.*;
 import java.util.logging.Logger;
@@ -103,7 +104,7 @@ public class JWEObjectJSONTest extends TestCase {
 		assertEquals(CompressionAlgorithm.DEF, jwe.getHeader().getCompressionAlgorithm());
 		assertEquals(2, jwe.getHeader().toJSONObject().size());
 
-		assertNull(jwe.getUnprotected());
+		assertNull(jwe.getUnprotectedHeader());
 
 		assertEquals(new Base64URL("BCNhlw39FueuKrwH"), jwe.getIV());
 
@@ -115,14 +116,14 @@ public class JWEObjectJSONTest extends TestCase {
 
 		List<JWEObjectJSON.Recipient> recipients = jwe.getRecipients();
 
-		assertEquals(JWEAlgorithm.DIR.getName(), recipients.get(0).getHeader().getParam("alg"));
-		assertEquals("DirRecipient", recipients.get(0).getHeader().getKeyID());
-		assertEquals(2, recipients.get(0).getHeader().toJSONObject().size());
+		assertEquals(JWEAlgorithm.DIR.getName(), recipients.get(0).getUnprotectedHeader().getParam("alg"));
+		assertEquals("DirRecipient", recipients.get(0).getUnprotectedHeader().getKeyID());
+		assertEquals(2, recipients.get(0).getUnprotectedHeader().toJSONObject().size());
 		assertNull(recipients.get(0).getEncryptedKey());
 
-		assertEquals(JWEAlgorithm.A128KW.getName(), recipients.get(1).getHeader().getParam("alg"));
-		assertEquals("AESRecipient", recipients.get(1).getHeader().getKeyID());
-		assertEquals(2, recipients.get(1).getHeader().toJSONObject().size());
+		assertEquals(JWEAlgorithm.A128KW.getName(), recipients.get(1).getUnprotectedHeader().getParam("alg"));
+		assertEquals("AESRecipient", recipients.get(1).getUnprotectedHeader().getKeyID());
+		assertEquals(2, recipients.get(1).getUnprotectedHeader().toJSONObject().size());
 		assertEquals(new Base64URL("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g"), recipients.get(1).getEncryptedKey());
 
 		assertEquals(2, recipients.size());
@@ -150,14 +151,14 @@ public class JWEObjectJSONTest extends TestCase {
 
 			assertEquals(new Base64URL("lhNLaDMKVVvjlGaeYdqbrQ"), jwe.getAuthTag());
 
-			UnprotectedHeader unprotected = jwe.getUnprotected();
+			UnprotectedHeader unprotected = jwe.getUnprotectedHeader();
 			List<JWEObjectJSON.Recipient> recipients = jwe.getRecipients();
 			assertEquals(1, recipients.size());
 			assertEquals(new Base64URL("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g"), recipients.get(0).getEncryptedKey());
 			if (unprotected == null) {
-				assertEquals(JWEAlgorithm.A128KW.getName(), recipients.get(0).getHeader().getParam("alg"));
-				assertEquals("AESRecipient", recipients.get(0).getHeader().getKeyID());
-				assertEquals(2, recipients.get(0).getHeader().toJSONObject().size());
+				assertEquals(JWEAlgorithm.A128KW.getName(), recipients.get(0).getUnprotectedHeader().getParam("alg"));
+				assertEquals("AESRecipient", recipients.get(0).getUnprotectedHeader().getKeyID());
+				assertEquals(2, recipients.get(0).getUnprotectedHeader().toJSONObject().size());
 			} else {
 				assertEquals(JWEAlgorithm.A128KW.getName(), unprotected.getParam("alg"));
 				assertEquals("AESRecipient", unprotected.getKeyID());
@@ -200,7 +201,7 @@ public class JWEObjectJSONTest extends TestCase {
 			new JWEObjectJSON(null, null, null, null, null, null, null);
 			fail();
 		} catch (IllegalArgumentException e) {
-			assertEquals("The header must not be null", e.getMessage());
+			assertEquals("The JWE protected header must not be null", e.getMessage());
 		}
 
 		try {
@@ -371,5 +372,88 @@ public class JWEObjectJSONTest extends TestCase {
 		} catch (JOSEException e) {
 			assertEquals("The A128CBC-HS256 encryption method or key size is not supported by the JWE encrypter: Supported methods: [xyz]", e.getMessage());
 		}
+	}
+
+
+	// https://datatracker.ietf.org/doc/html/rfc7516#appendix-A.4.7
+	public void testParseExample_RFC7516_A_4_7()
+		throws ParseException {
+
+		String json =
+			"{" +
+			" \"protected\":" +
+			"  \"eyJlbmMiOiJBMTI4Q0JDLUhTMjU2In0\"," +
+			" \"unprotected\":" +
+			"  {\"jku\":\"https://server.example.com/keys.jwks\"}," +
+			" \"recipients\":[" +
+			"  {\"header\":" +
+			"    {\"alg\":\"RSA1_5\",\"kid\":\"2011-04-29\"}," +
+			"   \"encrypted_key\":" +
+			"    \"UGhIOguC7IuEvf_NPVaXsGMoLOmwvc1GyqlIKOK1nN94nHPoltGRhWhw7Zx0-" +
+			"kFm1NJn8LE9XShH59_i8J0PH5ZZyNfGy2xGdULU7sHNF6Gp2vPLgNZ__deLKx" +
+			"GHZ7PcHALUzoOegEI-8E66jX2E4zyJKx-YxzZIItRzC5hlRirb6Y5Cl_p-ko3" +
+			"YvkkysZIFNPccxRU7qve1WYPxqbb2Yw8kZqa2rMWI5ng8OtvzlV7elprCbuPh" +
+			"cCdZ6XDP0_F8rkXds2vE4X-ncOIM8hAYHHi29NX0mcKiRaD0-D-ljQTP-cFPg" +
+			"wCp6X-nZZd9OHBv-B3oWh2TbqmScqXMR4gp_A\"}," +
+			"  {\"header\":" +
+			"    {\"alg\":\"A128KW\",\"kid\":\"7\"}," +
+			"   \"encrypted_key\":" +
+			"    \"6KB707dM9YTIgHtLvtgWQ8mKwboJW3of9locizkDTHzBC2IlrT1oOQ\"}]," +
+			" \"iv\":" +
+			"  \"AxY8DCtDaGlsbGljb3RoZQ\"," +
+			" \"ciphertext\":" +
+			"  \"KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY\"," +
+			" \"tag\":" +
+			"  \"Mz-VPPyU4RlcuYv1IwIvzw\"" +
+			"}";
+
+		JWEObjectJSON jweo = JWEObjectJSON.parse(json);
+
+		JWEHeader protectedHeader = jweo.getHeader();
+		assertEquals(EncryptionMethod.A128CBC_HS256, protectedHeader.getEncryptionMethod());
+		assertEquals(1, protectedHeader.toJSONObject().size());
+
+		UnprotectedHeader unprotectedHeader = jweo.getUnprotectedHeader();
+		assertEquals(URI.create("https://server.example.com/keys.jwks").toString(), unprotectedHeader.getParam("jku"));
+		assertEquals(1, unprotectedHeader.toJSONObject().size());
+
+		List<JWEObjectJSON.Recipient> recipients = jweo.getRecipients();
+		assertEquals(2, recipients.size());
+		
+		JWEObjectJSON.Recipient recipient_1 = recipients.get(0);
+		UnprotectedHeader unprotectedHeader_1 = recipient_1.getUnprotectedHeader();
+		assertEquals(JWEAlgorithm.RSA1_5.getName(), unprotectedHeader_1.getParam("alg"));
+		assertEquals("2011-04-29", unprotectedHeader_1.getParam("kid"));
+		assertEquals(2, unprotectedHeader_1.toJSONObject().size());
+		Base64URL encryptedKey_1 = recipient_1.getEncryptedKey();
+		assertEquals(
+			new Base64URL("UGhIOguC7IuEvf_NPVaXsGMoLOmwvc1GyqlIKOK1nN94nHPoltGRhWhw7Zx0-" +
+			"kFm1NJn8LE9XShH59_i8J0PH5ZZyNfGy2xGdULU7sHNF6Gp2vPLgNZ__deLKx" +
+			"GHZ7PcHALUzoOegEI-8E66jX2E4zyJKx-YxzZIItRzC5hlRirb6Y5Cl_p-ko3" +
+			"YvkkysZIFNPccxRU7qve1WYPxqbb2Yw8kZqa2rMWI5ng8OtvzlV7elprCbuPh" +
+			"cCdZ6XDP0_F8rkXds2vE4X-ncOIM8hAYHHi29NX0mcKiRaD0-D-ljQTP-cFPg" +
+			"wCp6X-nZZd9OHBv-B3oWh2TbqmScqXMR4gp_A"),
+			encryptedKey_1
+		);
+
+		JWEObjectJSON.Recipient recipient_2 = recipients.get(1);
+		UnprotectedHeader unprotectedHeader_2 = recipient_2.getUnprotectedHeader();
+		assertEquals(JWEAlgorithm.A128KW.getName(), unprotectedHeader_2.getParam("alg"));
+		assertEquals("7", unprotectedHeader_2.getParam("kid"));
+		assertEquals(2, unprotectedHeader_2.toJSONObject().size());
+		Base64URL encryptedKey_2 = recipient_2.getEncryptedKey();
+		assertEquals(
+			new Base64URL("6KB707dM9YTIgHtLvtgWQ8mKwboJW3of9locizkDTHzBC2IlrT1oOQ"),
+			encryptedKey_2
+		);
+
+		Base64URL iv = jweo.getIV();
+		assertEquals(new Base64URL("AxY8DCtDaGlsbGljb3RoZQ"), iv);
+
+		Base64URL cipherText = jweo.getCipherText();
+		assertEquals(new Base64URL("KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY"), cipherText);
+
+		Base64URL authTag = jweo.getAuthTag();
+		assertEquals(new Base64URL("Mz-VPPyU4RlcuYv1IwIvzw"), authTag);
 	}
 }
