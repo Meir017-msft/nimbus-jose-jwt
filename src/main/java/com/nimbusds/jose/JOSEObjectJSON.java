@@ -103,7 +103,7 @@ public abstract class JOSEObjectJSON implements Serializable {
 	 * @throws IllegalStateException If the JOSE object is not in a state
 	 *                               that permits serialisation.
 	 */
-	abstract Map<String, Object> toGeneralJSONObject();
+	public abstract Map<String, Object> toGeneralJSONObject();
 	
 	
 	/**
@@ -124,7 +124,7 @@ public abstract class JOSEObjectJSON implements Serializable {
 	 *                               is more than one JWS signature or JWE
 	 *                               recipient.
 	 */
-	abstract Map<String, Object> toFlattenedJSONObject();
+	public abstract Map<String, Object> toFlattenedJSONObject();
 	
 	
 	/**
