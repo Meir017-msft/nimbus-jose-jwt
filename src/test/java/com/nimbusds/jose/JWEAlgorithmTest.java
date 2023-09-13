@@ -24,7 +24,7 @@ import junit.framework.TestCase;
  * Tests the JWS Algorithm class.
  *
  * @author Vladimir Dzhuvinov
- * @version 2023-07-20
+ * @version 2023-09-13
  */
 public class JWEAlgorithmTest extends TestCase {
 
@@ -148,13 +148,5 @@ public class JWEAlgorithmTest extends TestCase {
 		assertTrue(JWEAlgorithm.Family.SYMMETRIC.contains(JWEAlgorithm.A256GCMKW));
 		assertTrue(JWEAlgorithm.Family.SYMMETRIC.contains(JWEAlgorithm.DIR));
 		assertEquals(7, JWEAlgorithm.Family.SYMMETRIC.size());
-	}
-
-
-	public void testSpecialConstant_JWK_ALG() {
-
-		assertEquals("JWK-ALG", JWEAlgorithm.JWK_ALG.getName());
-
-		assertNotSame("Not intended to be serialized / parsed", JWEAlgorithm.JWK_ALG, JWEAlgorithm.parse("JWK-ALG"));
 	}
 }
