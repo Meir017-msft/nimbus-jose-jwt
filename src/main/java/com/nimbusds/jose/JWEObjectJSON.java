@@ -19,7 +19,6 @@ package com.nimbusds.jose;
 
 
 import com.nimbusds.jose.JWEObject.State;
-import com.nimbusds.jose.crypto.impl.AAD;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONArrayUtils;
 import com.nimbusds.jose.util.JSONObjectUtils;
