@@ -128,7 +128,7 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		/**
 		 * Parses a recipients object from the specified JSON object.
 		 *
-		 * @param json The JSON object string to parse. Must not be
+		 * @param jsonObject The JSON object to parse. Must not be
 		 *             {@code null}.
 		 *
 		 * @return The recipient object.
@@ -136,15 +136,11 @@ public class JWEObjectJSON extends JOSEObjectJSON {
 		 * @throws ParseException If the string couldn't be parsed to a
 		 *                        JWE object.
 		 */
-		public static Recipient parse(final Map<String, Object> json)
+		public static Recipient parse(final Map<String, Object> jsonObject)
 			throws ParseException {
 
-			if (json == null) {
-				throw new IllegalArgumentException("The JSON object must not be null");
-			}
-
-			final UnprotectedHeader header = UnprotectedHeader.parse(JSONObjectUtils.getJSONObject(json, "header"));
-			final Base64URL encryptedKey = JSONObjectUtils.getBase64URL(json, "encrypted_key");
+			final UnprotectedHeader header = UnprotectedHeader.parse(JSONObjectUtils.getJSONObject(jsonObject, "header"));
+			final Base64URL encryptedKey = JSONObjectUtils.getBase64URL(jsonObject, "encrypted_key");
 
 			return new Recipient(header, encryptedKey);
 		}

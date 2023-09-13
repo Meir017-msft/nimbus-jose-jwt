@@ -456,4 +456,16 @@ public class JWEObjectJSONTest extends TestCase {
 		Base64URL authTag = jweo.getAuthTag();
 		assertEquals(new Base64URL("Mz-VPPyU4RlcuYv1IwIvzw"), authTag);
 	}
+
+
+	public void testParseRecipient_null()
+		throws ParseException {
+
+		try {
+			JWEObjectJSON.Recipient.parse(null);
+			fail();
+		} catch (NullPointerException e) {
+			assertNull(e.getMessage());
+		}
+	}
 }
