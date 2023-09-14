@@ -18,9 +18,6 @@
 package com.nimbusds.jose.crypto;
 
 
-import java.util.Set;
-import javax.crypto.SecretKey;
-
 import com.nimbusds.jose.CriticalHeaderParamsAware;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSHeader;
@@ -33,6 +30,9 @@ import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.StandardCharset;
 import net.jcip.annotations.ThreadSafe;
+
+import javax.crypto.SecretKey;
+import java.util.Set;
 
 
 /**
@@ -52,6 +52,8 @@ import net.jcip.annotations.ThreadSafe;
  *     <li>{@link com.nimbusds.jose.JWSAlgorithm#HS384}
  *     <li>{@link com.nimbusds.jose.JWSAlgorithm#HS512}
  * </ul>
+ *
+ <p>Tested with the AWS CloudHSM JCE provider.
  * 
  * @author Vladimir Dzhuvinov
  * @version 2016-06-26
@@ -110,7 +112,7 @@ public class MACVerifier extends MACProvider implements JWSVerifier, CriticalHea
 	public MACVerifier(final SecretKey secretKey)
 		throws JOSEException {
 
-		this(secretKey.getEncoded());
+		this(secretKey, null);
 	}
 
 
@@ -133,25 +135,6 @@ public class MACVerifier extends MACProvider implements JWSVerifier, CriticalHea
 	/**
 	 * Creates a new Message Authentication (MAC) verifier.
 	 *
-	 * @param jwk            The secret as a JWK. Must be at least 256 bits
-	 *                       long and not {@code null}.
-	 * @param defCritHeaders The names of the critical header parameters
-	 *                       that are deferred to the application for
-	 *                       processing, empty set or {@code null} if none.
-	 *
-	 * @throws JOSEException If the secret length is shorter than the
-	 *                       minimum 256-bit requirement.
-	 */
-	public MACVerifier(final OctetSequenceKey jwk,
-			   final Set<String> defCritHeaders)
-		throws JOSEException {
-
-		this(jwk.toByteArray(), defCritHeaders);
-	}
-
-	/**
-	 * Creates a new Message Authentication (MAC) verifier.
-	 *
 	 * @param secret         The secret. Must be at least 256 bits long
 	 *                       and not {@code null}.
 	 * @param defCritHeaders The names of the critical header parameters
@@ -168,6 +151,48 @@ public class MACVerifier extends MACProvider implements JWSVerifier, CriticalHea
 		super(secret, SUPPORTED_ALGORITHMS);
 
 		critPolicy.setDeferredCriticalHeaderParams(defCritHeaders);
+	}
+
+
+	/**
+	 * Creates a new Message Authentication (MAC) verifier.
+	 *
+	 * @param secretKey      The secret key. Must be at least 256 bits long
+	 *                       and not {@code null}.
+	 * @param defCritHeaders The names of the critical header parameters
+	 *                       that are deferred to the application for
+	 *                       processing, empty set or {@code null} if none.
+	 *
+	 * @throws JOSEException If the secret length is shorter than the
+	 *                       minimum 256-bit requirement.
+	 */
+	public MACVerifier(final SecretKey secretKey,
+			   final Set<String> defCritHeaders)
+		throws JOSEException {
+
+		super(secretKey, SUPPORTED_ALGORITHMS);
+
+		critPolicy.setDeferredCriticalHeaderParams(defCritHeaders);
+	}
+
+
+	/**
+	 * Creates a new Message Authentication (MAC) verifier.
+	 *
+	 * @param jwk            The secret as a JWK. Must be at least 256 bits
+	 *                       long and not {@code null}.
+	 * @param defCritHeaders The names of the critical header parameters
+	 *                       that are deferred to the application for
+	 *                       processing, empty set or {@code null} if none.
+	 *
+	 * @throws JOSEException If the secret length is shorter than the
+	 *                       minimum 256-bit requirement.
+	 */
+	public MACVerifier(final OctetSequenceKey jwk,
+			   final Set<String> defCritHeaders)
+		throws JOSEException {
+
+		this(jwk.toByteArray(), defCritHeaders);
 	}
 
 
@@ -196,7 +221,7 @@ public class MACVerifier extends MACProvider implements JWSVerifier, CriticalHea
 		}
 
 		String jcaAlg = getJCAAlgorithmName(header.getAlgorithm());
-		byte[] expectedHMAC = HMAC.compute(jcaAlg, getSecret(), signedContent, getJCAContext().getProvider());
+		byte[] expectedHMAC = HMAC.compute(jcaAlg, getSecretKey(), signedContent, getJCAContext().getProvider());
 		return ConstantTimeUtils.areEqual(expectedHMAC, signature.decode());
 	}
 }

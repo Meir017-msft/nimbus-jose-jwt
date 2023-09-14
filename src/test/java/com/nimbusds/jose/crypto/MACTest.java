@@ -18,25 +18,20 @@
 package com.nimbusds.jose.crypto;
 
 
-import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNotEquals;
-
-import junit.framework.TestCase;
-
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.MACProvider;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimNames;
+import junit.framework.TestCase;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.SecureRandom;
+import java.util.*;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNotEquals;
 
 
 /**
@@ -89,9 +84,9 @@ public class MACTest extends TestCase {
 		throws JOSEException {
 
 		// 256-bit key
-		byte[] key256 = new byte[32];
+		final byte[] key256 = new byte[32];
 		new SecureRandom().nextBytes(key256);
-		SecretKey secretKey256 = new SecretKeySpec(key256, "HMACSHA256");
+		final SecretKey secretKey256 = new SecretKeySpec(key256, "HMACSHA256");
 
 		for (MACSigner signer: Arrays.asList(new MACSigner(key256), new MACSigner(secretKey256))) {
 			assertEquals(1, signer.supportedJWSAlgorithms().size());
@@ -106,9 +101,9 @@ public class MACTest extends TestCase {
 		}
 
 		// 384-bit key
-		byte[] key384 = new byte[48];
+		final byte[] key384 = new byte[48];
 		new SecureRandom().nextBytes(key384);
-		SecretKey secretKey384 = new SecretKeySpec(key384, "HMACSHA384");
+		final SecretKey secretKey384 = new SecretKeySpec(key384, "HMACSHA384");
 
 		for (MACSigner signer: Arrays.asList(new MACSigner(key384), new MACSigner(secretKey384))) {
 			assertEquals(2, signer.supportedJWSAlgorithms().size());
@@ -124,9 +119,9 @@ public class MACTest extends TestCase {
 		}
 
 		// 512-bit key
-		byte[] key512 = new byte[64];
+		final byte[] key512 = new byte[64];
 		new SecureRandom().nextBytes(key512);
-		SecretKey secretKey512 = new SecretKeySpec(key512, "HMACSHA512");
+		final SecretKey secretKey512 = new SecretKeySpec(key512, "HMACSHA512");
 
 		for (MACSigner signer: Arrays.asList(new MACSigner(key512), new MACSigner(secretKey512))) {
 			assertEquals(3, signer.supportedJWSAlgorithms().size());
@@ -167,24 +162,17 @@ public class MACTest extends TestCase {
 			}
 		};
 
-		MACSigner signer = new MACSigner(secretKey);
-		assertEquals(3, signer.supportedJWSAlgorithms().size());
-		assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
-		assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
-		assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS512));
+		for (MACProvider macProvider: Arrays.asList(new MACSigner(secretKey), new MACVerifier(secretKey))) {
 
-		assertEquals(secretKey, signer.getSecretKey());
-		assertNull(signer.getSecret());
-		assertNull(signer.getSecretString());
+			assertEquals(3, macProvider.supportedJWSAlgorithms().size());
+			assertTrue(macProvider.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
+			assertTrue(macProvider.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
+			assertTrue(macProvider.supportedJWSAlgorithms().contains(JWSAlgorithm.HS512));
 
-		// HSM-based SecretKeys not supported yet
-		try {
-			new MACVerifier(secretKey);
-			fail();
-		} catch (NullPointerException e) {
-			assertNull(e.getMessage());
+			assertEquals(secretKey, macProvider.getSecretKey());
+			assertNull(macProvider.getSecret());
+			assertNull(macProvider.getSecretString());
 		}
-
 	}
 
 
@@ -254,109 +242,186 @@ public class MACTest extends TestCase {
 	public void testSignAndVerifyWithRandomSecret()
 		throws Exception {
 
-		// Generate random 32-bit shared secret
-		byte[] sharedSecret = new byte[32];
-		new SecureRandom().nextBytes(sharedSecret);
+		Map<JWSAlgorithm, Integer> secretLengthMap = new HashMap<>();
+		secretLengthMap.put(JWSAlgorithm.HS256, 256);
+		secretLengthMap.put(JWSAlgorithm.HS384, 384);
+		secretLengthMap.put(JWSAlgorithm.HS512, 512);
 
-		// Create HMAC signer
-		MACSigner signer = new MACSigner(sharedSecret);
-		assertArrayEquals(sharedSecret, signer.getSecretKey().getEncoded());
+		for (Map.Entry<JWSAlgorithm, Integer> en: secretLengthMap.entrySet()) {
 
-		// Prepare JWS object with "Hello, world!" payload
-		JWSObject jwsObject = new JWSObject(new JWSHeader(JWSAlgorithm.HS256), new Payload("Hello, world!"));
+			JWSAlgorithm alg = en.getKey();
+			int bitLength = en.getValue();
 
-		// Apply the HMAC
-		jwsObject.sign(signer);
-		
-		assertEquals(jwsObject.getState(), JWSObject.State.SIGNED);
+			byte[] sharedSecret = new byte[bitLength / 8];
+			new SecureRandom().nextBytes(sharedSecret);
 
-		// To serialize to compact form, produces something like
-		// eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA
-		String s = jwsObject.serialize();
+			// Create HMAC signer
+			MACSigner signer = new MACSigner(sharedSecret);
+			assertArrayEquals(sharedSecret, signer.getSecretKey().getEncoded());
 
-		// To parse the JWS and verify it, e.g. on client-side
-		jwsObject = JWSObject.parse(s);
+			// Prepare JWS object with "Hello, world!" payload
+			JWSObject jwsObject = new JWSObject(new JWSHeader(alg), new Payload("Hello, world!"));
 
-		MACVerifier verifier = new MACVerifier(sharedSecret);
-		assertArrayEquals(sharedSecret, verifier.getSecretKey().getEncoded());
+			// Apply the HMAC
+			jwsObject.sign(signer);
 
-		assertTrue(jwsObject.verify(verifier));
+			assertEquals(jwsObject.getState(), JWSObject.State.SIGNED);
 
-		assertEquals("Hello, world!", jwsObject.getPayload().toString());
+			// To serialize to compact form, produces something like
+			// eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA
+			String s = jwsObject.serialize();
+
+			// To parse the JWS and verify it, e.g. on client-side
+			jwsObject = JWSObject.parse(s);
+
+			MACVerifier verifier = new MACVerifier(sharedSecret);
+			assertArrayEquals(sharedSecret, verifier.getSecretKey().getEncoded());
+
+			assertTrue(jwsObject.verify(verifier));
+
+			assertEquals("Hello, world!", jwsObject.getPayload().toString());
+		}
 	}
 
 
 	public void testSignAndVerifyWithStringSecret()
 		throws Exception {
 
-		byte[] sharedSecret = new byte[64];
-		new SecureRandom().nextBytes(sharedSecret);
+		Map<JWSAlgorithm, Integer> secretLengthMap = new HashMap<>();
+		secretLengthMap.put(JWSAlgorithm.HS256, 256);
+		secretLengthMap.put(JWSAlgorithm.HS384, 384);
+		secretLengthMap.put(JWSAlgorithm.HS512, 512);
 
-		final String stringSecret = new String(sharedSecret);
+		for (Map.Entry<JWSAlgorithm, Integer> en: secretLengthMap.entrySet()) {
 
-		JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+			JWSAlgorithm alg = en.getKey();
+			int bitLength = en.getValue();
 
-		assertEquals("HS512 alg check", JWSAlgorithm.HS512, header.getAlgorithm());
+			byte[] sharedSecret = new byte[bitLength / 8];
+			new SecureRandom().nextBytes(sharedSecret);
 
-		JWSObject jwsObject = new JWSObject(header, payload);
+			final String stringSecret = new String(sharedSecret);
 
-		assertEquals("State check", JWSObject.State.UNSIGNED, jwsObject.getState());
+			JWSObject jwsObject = new JWSObject(new JWSHeader(alg), payload);
 
-
-		MACSigner signer = new MACSigner(stringSecret);
-		assertEquals("Shared secret string check", stringSecret, signer.getSecretString());
-
-		jwsObject.sign(signer);
-
-		assertEquals("State check", JWSObject.State.SIGNED, jwsObject.getState());
+			assertEquals("State check", JWSObject.State.UNSIGNED, jwsObject.getState());
 
 
-		MACVerifier verifier = new MACVerifier(stringSecret);
-		assertEquals("Shared secret string check", stringSecret, verifier.getSecretString());
+			MACSigner signer = new MACSigner(stringSecret);
+			assertEquals("Shared secret string check", stringSecret, signer.getSecretString());
 
-		boolean verified = jwsObject.verify(verifier);
+			jwsObject.sign(signer);
 
-		assertTrue("Verified signature", verified);
+			assertEquals("State check", JWSObject.State.SIGNED, jwsObject.getState());
 
-		assertEquals("State check", JWSObject.State.VERIFIED, jwsObject.getState());
+
+			MACVerifier verifier = new MACVerifier(stringSecret);
+			assertEquals("Shared secret string check", stringSecret, verifier.getSecretString());
+
+			boolean verified = jwsObject.verify(verifier);
+
+			assertTrue("Verified signature", verified);
+
+			assertEquals("State check", JWSObject.State.VERIFIED, jwsObject.getState());
+		}
 	}
 
 
 	public void testSignAndVerifyWithSecretKey()
 		throws Exception {
 
-		// Generate random 32-bit shared secret
-		byte[] sharedSecret = new byte[32];
-		new SecureRandom().nextBytes(sharedSecret);
-		SecretKey secretKey = new SecretKeySpec(sharedSecret, "HMACSHA256");
+		Map<JWSAlgorithm, Integer> secretLengthMap = new HashMap<>();
+		secretLengthMap.put(JWSAlgorithm.HS256, 256);
+		secretLengthMap.put(JWSAlgorithm.HS384, 384);
+		secretLengthMap.put(JWSAlgorithm.HS512, 512);
 
-		// Create HMAC signer
-		MACSigner signer = new MACSigner(secretKey);
-		assertEquals(secretKey, signer.getSecretKey());
-		assertArrayEquals(sharedSecret, signer.getSecretKey().getEncoded());
+		for (Map.Entry<JWSAlgorithm, Integer> en: secretLengthMap.entrySet()) {
 
-		// Prepare JWS object with "Hello, world!" payload
-		JWSObject jwsObject = new JWSObject(new JWSHeader(JWSAlgorithm.HS256), new Payload("Hello, world!"));
+			JWSAlgorithm alg = en.getKey();
+			int bitLength = en.getValue();
 
-		// Apply the HMAC
-		jwsObject.sign(signer);
+			byte[] sharedSecret = new byte[bitLength / 8];
+			new SecureRandom().nextBytes(sharedSecret);
+			SecretKey secretKey = new SecretKeySpec(sharedSecret, "HMACSHA" + bitLength);
 
-		assertEquals(jwsObject.getState(), JWSObject.State.SIGNED);
+			// Create HMAC signer
+			MACSigner signer = new MACSigner(secretKey);
+			assertEquals(secretKey, signer.getSecretKey());
+			assertArrayEquals(sharedSecret, signer.getSecretKey().getEncoded());
 
-		// To serialize to compact form, produces something like
-		// eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA
-		String s = jwsObject.serialize();
+			// Prepare JWS object with "Hello, world!" payload
+			JWSObject jwsObject = new JWSObject(new JWSHeader(alg), new Payload("Hello, world!"));
 
-		// To parse the JWS and verify it, e.g. on client-side
-		jwsObject = JWSObject.parse(s);
+			// Apply the HMAC
+			jwsObject.sign(signer);
 
-		MACVerifier verifier = new MACVerifier(secretKey);
-		assertNotEquals(secretKey, verifier.getSecretKey());
-		assertArrayEquals(sharedSecret, verifier.getSecretKey().getEncoded());
+			assertEquals(jwsObject.getState(), JWSObject.State.SIGNED);
 
-		assertTrue(jwsObject.verify(verifier));
+			// To serialize to compact form, produces something like
+			// eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA
+			String s = jwsObject.serialize();
 
-		assertEquals("Hello, world!", jwsObject.getPayload().toString());
+			// To parse the JWS and verify it, e.g. on client-side
+			jwsObject = JWSObject.parse(s);
+
+			MACVerifier verifier = new MACVerifier(secretKey);
+			assertEquals(secretKey, verifier.getSecretKey());
+			assertArrayEquals(sharedSecret, verifier.getSecretKey().getEncoded());
+
+			assertTrue(jwsObject.verify(verifier));
+
+			assertEquals("Hello, world!", jwsObject.getPayload().toString());
+		}
+	}
+
+
+	public void testSignAndVerifyWithJWK()
+		throws Exception {
+
+		Map<JWSAlgorithm, Integer> secretLengthMap = new HashMap<>();
+		secretLengthMap.put(JWSAlgorithm.HS256, 256);
+		secretLengthMap.put(JWSAlgorithm.HS384, 384);
+		secretLengthMap.put(JWSAlgorithm.HS512, 512);
+
+		for (Map.Entry<JWSAlgorithm, Integer> en: secretLengthMap.entrySet()) {
+
+			JWSAlgorithm alg = en.getKey();
+			int bitLength = en.getValue();
+
+			byte[] sharedSecret = new byte[bitLength / 8];
+			new SecureRandom().nextBytes(sharedSecret);
+			SecretKey secretKey = new SecretKeySpec(sharedSecret, "HMACSHA" + bitLength);
+			OctetSequenceKey jwk = new OctetSequenceKey.Builder(secretKey)
+				.build();
+
+			// Create HMAC signer
+			MACSigner signer = new MACSigner(jwk);
+			assertNotEquals(secretKey, signer.getSecretKey());
+			assertArrayEquals(sharedSecret, signer.getSecretKey().getEncoded());
+
+			// Prepare JWS object with "Hello, world!" payload
+			JWSObject jwsObject = new JWSObject(new JWSHeader(alg), new Payload("Hello, world!"));
+
+			// Apply the HMAC
+			jwsObject.sign(signer);
+
+			assertEquals(jwsObject.getState(), JWSObject.State.SIGNED);
+
+			// To serialize to compact form, produces something like
+			// eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA
+			String s = jwsObject.serialize();
+
+			// To parse the JWS and verify it, e.g. on client-side
+			jwsObject = JWSObject.parse(s);
+
+			MACVerifier verifier = new MACVerifier(jwk);
+			assertNotEquals(secretKey, verifier.getSecretKey());
+			assertArrayEquals(sharedSecret, verifier.getSecretKey().getEncoded());
+
+			assertTrue(jwsObject.verify(verifier));
+
+			assertEquals("Hello, world!", jwsObject.getPayload().toString());
+		}
 	}
 
 
@@ -466,13 +531,19 @@ public class MACTest extends TestCase {
 
 		assertEquals("State check", JWSObject.State.SIGNED, jwsObject.getState());
 
-		MACVerifier verifier = new MACVerifier(secret, new HashSet<>(Collections.singletonList(JWTClaimNames.EXPIRATION_TIME)));
+		Set<String> defCritHeaders = new HashSet<>(Collections.singletonList(JWTClaimNames.EXPIRATION_TIME));
 
-		boolean verified = jwsObject.verify(verifier);
+		for (MACVerifier verifier: Arrays.asList(
+			new MACVerifier(secret, defCritHeaders),
+			new MACVerifier(new SecretKeySpec(secret, "HMACSHA512"), defCritHeaders),
+			new MACVerifier(new OctetSequenceKey.Builder(secret).build(), defCritHeaders))) {
 
-		assertTrue("Verified signature", verified);
+			boolean verified = jwsObject.verify(verifier);
 
-		assertEquals("State check", JWSObject.State.VERIFIED, jwsObject.getState());
+			assertTrue("Verified signature", verified);
+
+			assertEquals("State check",JWSObject.State.VERIFIED, jwsObject.getState());
+		}
 	}
 
 
@@ -495,13 +566,17 @@ public class MACTest extends TestCase {
 
 		assertEquals("State check", JWSObject.State.SIGNED, jwsObject.getState());
 
-		MACVerifier verifier = new MACVerifier(secret);
+		for (MACVerifier verifier: Arrays.asList(
+			new MACVerifier(secret),
+			new MACVerifier(new SecretKeySpec(secret, "HMACSHA512")),
+			new MACVerifier(new OctetSequenceKey.Builder(secret).build()))) {
 
-		boolean verified = jwsObject.verify(verifier);
+			boolean verified = jwsObject.verify(verifier);
 
-		assertFalse("Verified signature", verified);
+			assertFalse("Verified signature", verified);
 
-		assertEquals("State check", JWSObject.State.SIGNED, jwsObject.getState());
+			assertEquals("State check", JWSObject.State.SIGNED, jwsObject.getState());
+		}
 	}
 
 
@@ -519,13 +594,33 @@ public class MACTest extends TestCase {
 	}
 
 
-	public void testRejectShortSecretOnSign()
+	public void testRejectShortSecretOnSign_byteArrayConstructor()
 		throws Exception {
 
 		byte[] secret = new byte[32];
 		new SecureRandom().nextBytes(secret);
 
 		JWSSigner signer = new MACSigner(secret);
+
+		JWSObject jwsObject;
+
+		try {
+			jwsObject = new JWSObject(new JWSHeader(JWSAlgorithm.HS384), new Payload("Hello world!"));
+			jwsObject.sign(signer);
+			fail();
+		} catch (JOSEException e) {
+			assertEquals("The HS384 algorithm is not allowed or supported by the JWS signer: Supported algorithms: [HS256]", e.getMessage());
+		}
+	}
+
+
+	public void testRejectShortSecretOnSign_secretKeyConstructor()
+		throws Exception {
+
+		byte[] secret = new byte[32];
+		new SecureRandom().nextBytes(secret);
+
+		JWSSigner signer = new MACSigner(new SecretKeySpec(secret, "HMACSHA256"));
 
 		JWSObject jwsObject;
 

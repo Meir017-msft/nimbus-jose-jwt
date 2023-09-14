@@ -1584,6 +1584,9 @@ version 9.33 (2023-09-14)
       its key material.
 
 version 9.34 (2023-09-14)
+    * Updates the MACVerifier to support JCE providers, such as PKCS#11
+      providers or Amazon's CloudHSM, that don't expose the underlying
+      SecretKey material (iss #520).
     * Fixes the MACSigner.sign method for SecretKey instances that don't expose
       their key material (iss #520).
     * Deprecates HMAC.compute(String,byte[],byte[],Provider), use

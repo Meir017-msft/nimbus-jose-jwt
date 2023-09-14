@@ -120,6 +120,7 @@ public class HMAC {
 	 * @throws JOSEException If the algorithm is not supported or the
 	 *                       MAC secret key is invalid.
 	 */
+	@Deprecated
 	public static byte[] compute(final String alg,
 				     final byte[] secret,
 				     final byte[] message,
