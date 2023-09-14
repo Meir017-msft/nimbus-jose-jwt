@@ -1571,3 +1571,6 @@ version 9.32 (2023-09-13)
       erased by obfuscation tools (iss #518).
     * Updates GSon to 2.10.1.
     * Updates Google Tink to 1.10.0.
+
+version 9.33 (2023-09-14)
+    * Refactors the HMAC class to support PKCS#11 providers.

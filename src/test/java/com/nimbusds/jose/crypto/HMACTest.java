@@ -18,25 +18,26 @@
 package com.nimbusds.jose.crypto;
 
 
-import java.security.Provider;
-import java.security.SecureRandom;
-import java.util.Arrays;
-import javax.crypto.Mac;
-
-import junit.framework.TestCase;
-import org.junit.Assert;
-
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.impl.HMAC;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.ByteUtils;
 import com.nimbusds.jose.util.StandardCharset;
+import junit.framework.TestCase;
+import org.junit.Assert;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.Provider;
+import java.security.SecureRandom;
+import java.util.Arrays;
 
 
 /**
  * Tests the HMAC helper class.
  *
  * @author Vladimir Dzhuvinov
- * @version 2022-01-24
+ * @version 2023-09-14
  */
 public class HMACTest extends TestCase {
 
@@ -52,30 +53,25 @@ public class HMACTest extends TestCase {
 		
 		assertEquals(16, key.length);
 
-		final Provider provider = null;
-		byte[] computedMac = HMAC.compute("HMACSHA256", key, msg, provider);
+		final Provider defaultProvider = null;
+		final Provider explicitProvider = Mac.getInstance("HMACSHA256").getProvider();
 
-		assertEquals(computedMac.length, mac.length);
-		Assert.assertArrayEquals(mac, computedMac);
-	}
+		byte[] computedMac;
 
+		for (Provider provider: Arrays.asList(defaultProvider, explicitProvider)) {
 
-	public void testVectorWithExplicitProvider()
-		throws Exception {
+			// Key is byte[]
+			computedMac = HMAC.compute("HMACSHA256", key, msg, provider);
+			Assert.assertArrayEquals(mac, computedMac);
 
-		// Vectors from http://openidtest.uninett.no/jwt#
+			// Key is SecretKey
+			computedMac = HMAC.compute(new SecretKeySpec(key, "HMACSHA256"), msg, provider);
+			Assert.assertArrayEquals(mac, computedMac);
 
-		byte[] msg = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJodHRwczovL2V4YW1wbGUub3JnIiwidHlwIjoiSldUIn0".getBytes(StandardCharset.UTF_8);
-		byte[] mac = new Base64URL("eagkgLML8Ccrn4eIvidX4a10JBE4Q3eaOAf4Blj9P4c").decode();
-		byte[] key = "1879197b29d8ec57".getBytes(StandardCharset.UTF_8);
-		
-		assertEquals(16, key.length);
-
-		final Provider provider = Mac.getInstance("HMACSHA256").getProvider();
-		byte[] computedMac = HMAC.compute("HMACSHA256", key, msg, provider);
-
-		assertEquals(computedMac.length, mac.length);
-		Assert.assertArrayEquals(mac, computedMac);
+			// Key is SecretKey with alg override
+			computedMac = HMAC.compute("HMACSHA256", new SecretKeySpec(key, "xxx"), msg, provider);
+			Assert.assertArrayEquals(mac, computedMac);
+		}
 	}
 	
 	
@@ -90,5 +86,25 @@ public class HMACTest extends TestCase {
 		byte[] secondHmac = HMAC.compute("HMACSHA256", ByteUtils.concat(secret, secret), "Hello, world!".getBytes(StandardCharset.UTF_8), null);
 		
 		assertFalse(Arrays.equals(computedHmac, secondHmac));
+	}
+
+
+	public void testGetInitMac_unsupportedAlgorithm() {
+
+		byte[] key = "1879197b29d8ec57".getBytes(StandardCharset.UTF_8);
+
+		try {
+			HMAC.getInitMac(new SecretKeySpec(key, "xxx"), null);
+			fail();
+		} catch (JOSEException e) {
+			assertEquals("Unsupported HMAC algorithm: Algorithm xxx not available", e.getMessage());
+		}
+
+		try {
+			HMAC.getInitMac("xxx", new SecretKeySpec(key, "HMACSHA256"), null);
+			fail();
+		} catch (JOSEException e) {
+			assertEquals("Unsupported HMAC algorithm: Algorithm xxx not available", e.getMessage());
+		}
 	}
 }
