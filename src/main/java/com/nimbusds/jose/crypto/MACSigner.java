@@ -18,11 +18,7 @@
 package com.nimbusds.jose.crypto;
 
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.KeyLengthException;
+import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
 import com.nimbusds.jose.crypto.impl.HMAC;
 import com.nimbusds.jose.crypto.impl.MACProvider;
@@ -198,10 +194,13 @@ public class MACSigner extends MACProvider implements JWSSigner {
 	public Base64URL sign(final JWSHeader header, final byte[] signingInput)
 		throws JOSEException {
 
-		final int minRequiredLength = getMinRequiredSecretLength(header.getAlgorithm());
+		if (getSecret() != null) {
 
-		if (getSecret().length < ByteUtils.byteLength(minRequiredLength)) {
-			throw new KeyLengthException("The secret length for " + header.getAlgorithm() + " must be at least " + minRequiredLength + " bits");
+			final int minRequiredLength = getMinRequiredSecretLength(header.getAlgorithm());
+
+			if (getSecret().length < ByteUtils.byteLength(minRequiredLength)) {
+				throw new KeyLengthException("The secret length for " + header.getAlgorithm() + " must be at least " + minRequiredLength + " bits");
+			}
 		}
 
 		String jcaAlg = getJCAAlgorithmName(header.getAlgorithm());

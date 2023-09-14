@@ -1582,3 +1582,9 @@ version 9.33 (2023-09-14)
     * The MACProvider.getSecret and getSecretString methods will return null
       when the provider was constructed with a SecretKey that doesn't expose
       its key material.
+
+version 9.34 (2023-09-14)
+    * Fixes the MACSigner.sign method for SecretKey instances that don't expose
+      their key material (iss #520).
+    * Deprecates HMAC.compute(String,byte[],byte[],Provider), use
+      HMAC.compute(String,SecretKey,byte[],Provider) instead.
