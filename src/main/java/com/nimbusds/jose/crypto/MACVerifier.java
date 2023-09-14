@@ -133,8 +133,8 @@ public class MACVerifier extends MACProvider implements JWSVerifier, CriticalHea
 	/**
 	 * Creates a new Message Authentication (MAC) verifier.
 	 *
-	 * @param jwk The secret as a JWK. Must be at least 256 bits long and
-	 *            not {@code null}.
+	 * @param jwk            The secret as a JWK. Must be at least 256 bits
+	 *                       long and not {@code null}.
 	 * @param defCritHeaders The names of the critical header parameters
 	 *                       that are deferred to the application for
 	 *                       processing, empty set or {@code null} if none.
@@ -143,8 +143,8 @@ public class MACVerifier extends MACProvider implements JWSVerifier, CriticalHea
 	 *                       minimum 256-bit requirement.
 	 */
 	public MACVerifier(final OctetSequenceKey jwk,
-					   final Set<String> defCritHeaders)
-			throws JOSEException {
+			   final Set<String> defCritHeaders)
+		throws JOSEException {
 
 		this(jwk.toByteArray(), defCritHeaders);
 	}
