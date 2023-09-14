@@ -1,7 +1,7 @@
 /*
  * nimbus-jose-jwt
  *
- * Copyright 2012-2016, Connect2id Ltd and contributors.
+ * Copyright 2012-2023, Connect2id Ltd and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use
  * this file except in compliance with the License. You may obtain a copy of the
@@ -18,16 +18,16 @@
 package com.nimbusds.jose.crypto.impl;
 
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.util.StandardCharset;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 
 /**
@@ -43,7 +43,8 @@ import com.nimbusds.jose.util.StandardCharset;
  * </ul>
  * 
  * @author Vladimir Dzhuvinov
- * @version 2016-07-27
+ * @author Ulrich Winter
+ * @version 2019-09-14
  */
 public abstract class MACProvider extends BaseJWSProvider {
 
@@ -92,9 +93,15 @@ public abstract class MACProvider extends BaseJWSProvider {
 
 
 	/**
-	 * The secret.
+	 * The secret, {@code null} if specified as {@link SecretKey}.
 	 */
 	private final byte[] secret;
+
+
+	/**
+	 * The secret key, {@code null} if specified as byte array.
+	 */
+	private final SecretKey secretKey;
 
 
 	/**
@@ -119,6 +126,34 @@ public abstract class MACProvider extends BaseJWSProvider {
 		}
 
 		this.secret = secret;
+		this.secretKey = null;
+	}
+
+
+	/**
+	 * Creates a new Message Authentication (MAC) provider.
+	 *
+	 * @param secretKey     The secret key. Must be at least 256 bits long
+	 *                      and not {@code null}.
+	 * @param supportedAlgs The supported HMAC algorithms. Must not be
+	 *                      {@code null}.
+	 *
+	 * @throws KeyLengthException If the secret length is shorter than the
+	 *                            minimum 256-bit requirement.
+	 */
+	protected MACProvider(final SecretKey secretKey,
+			      final Set<JWSAlgorithm> supportedAlgs)
+		throws KeyLengthException {
+
+		super(supportedAlgs);
+
+		// An HSM based key will not expose its material and return null
+		if (secretKey.getEncoded() != null && secretKey.getEncoded().length < 256 / 8) {
+			throw new KeyLengthException("The secret length must be at least 256 bits");
+		}
+
+		this.secretKey = secretKey;
+		this.secret = null;
 	}
 
 
@@ -128,28 +163,48 @@ public abstract class MACProvider extends BaseJWSProvider {
 	 * @return The secret key.
 	 */
 	public SecretKey getSecretKey() {
-
-		return new SecretKeySpec(secret, "MAC");
+		if(this.secretKey != null) {
+			return secretKey;
+		} else if (secret != null){
+			return new SecretKeySpec(secret, "MAC");
+		} else {
+			throw new IllegalStateException("Unexpected state");
+		}
 	}
 
 
 	/**
 	 * Gets the secret bytes.
 	 *
-	 * @return The secret bytes.
+	 * @return The secret bytes, {@code null} if this provider was
+	 *         constructed with a {@link SecretKey} that doesn't expose the
+	 *         key material.
 	 */
 	public byte[] getSecret() {
-
-		return secret;
+		if(this.secretKey != null) {
+			return secretKey.getEncoded();
+		} else if (secret != null){
+			return secret;
+		} else {
+			throw new IllegalStateException("Unexpected state");
+		}
 	}
 
 
 	/**
 	 * Gets the secret as a UTF-8 encoded string.
 	 *
-	 * @return The secret as a UTF-8 encoded string.
+	 * @return The secret as a UTF-8 encoded string, {@code null} if this
+	 *         provider was constructed with a {@link SecretKey} that
+	 *         doesn't expose the key material.
 	 */
 	public String getSecretString() {
+
+		byte[] secret = getSecret();
+
+		if (secret == null) {
+			return null;
+		}
 
 		return new String(secret, StandardCharset.UTF_8);
 	}

@@ -1573,4 +1573,12 @@ version 9.32 (2023-09-13)
     * Updates Google Tink to 1.10.0.
 
 version 9.33 (2023-09-14)
+    * Updates the MACSigner to support JCE providers, such as PKCS#11 providers
+      or Amazon's CloudHSM, that don't expose the underlying SecretKey
+      material (iss #520).
     * Refactors the HMAC class to support PKCS#11 providers.
+    * Adds new MACProvider.MACProvider(SecretKey,Set<JWSAlgorithm>)
+      constructor.
+    * The MACProvider.getSecret and getSecretString methods will return null
+      when the provider was constructed with a SecretKey that doesn't expose
+      its key material.

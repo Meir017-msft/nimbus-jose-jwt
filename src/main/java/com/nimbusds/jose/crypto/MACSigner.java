@@ -1,7 +1,7 @@
 /*
  * nimbus-jose-jwt
  *
- * Copyright 2012-2016, Connect2id Ltd.
+ * Copyright 2012-2023, Connect2id Ltd.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use
  * this file except in compliance with the License. You may obtain a copy of the
@@ -18,12 +18,11 @@
 package com.nimbusds.jose.crypto;
 
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import javax.crypto.SecretKey;
-
-import com.nimbusds.jose.*;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.impl.AlgorithmSupportMessage;
 import com.nimbusds.jose.crypto.impl.HMAC;
 import com.nimbusds.jose.crypto.impl.MACProvider;
@@ -32,6 +31,11 @@ import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.ByteUtils;
 import com.nimbusds.jose.util.StandardCharset;
 import net.jcip.annotations.ThreadSafe;
+
+import javax.crypto.SecretKey;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 
 
@@ -52,9 +56,12 @@ import net.jcip.annotations.ThreadSafe;
  *     <li>{@link com.nimbusds.jose.JWSAlgorithm#HS384}
  *     <li>{@link com.nimbusds.jose.JWSAlgorithm#HS512}
  * </ul>
+ *
+ * <p>Tested with the AWS CloudHSM JCE provider.
  * 
  * @author Vladimir Dzhuvinov
- * @version 2016-07-27
+ * @author Ulrich Winter
+ * @version 2023-09-14
  */
 @ThreadSafe
 public class MACSigner extends MACProvider implements JWSSigner {
@@ -159,7 +166,15 @@ public class MACSigner extends MACProvider implements JWSSigner {
 	public MACSigner(final SecretKey secretKey)
 		throws KeyLengthException {
 
-		this(secretKey.getEncoded());
+		super(
+			secretKey,
+			secretKey.getEncoded() != null ?
+				// Get the compatible HSxxx algs for the secret key length
+				getCompatibleAlgorithms(ByteUtils.bitLength(secretKey.getEncoded()))
+				:
+				// HSM-based SecretKey will not expose its key material, assume support for all algs
+				SUPPORTED_ALGORITHMS
+			);
 	}
 
 
@@ -190,7 +205,7 @@ public class MACSigner extends MACProvider implements JWSSigner {
 		}
 
 		String jcaAlg = getJCAAlgorithmName(header.getAlgorithm());
-		byte[] hmac = HMAC.compute(jcaAlg, getSecret(), signingInput, getJCAContext().getProvider());
+		byte[] hmac = HMAC.compute(jcaAlg, getSecretKey(), signingInput, getJCAContext().getProvider());
 		return Base64URL.encode(hmac);
 	}
 }

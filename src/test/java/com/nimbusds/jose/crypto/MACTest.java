@@ -19,11 +19,13 @@ package com.nimbusds.jose.crypto;
 
 
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNotEquals;
 
 import junit.framework.TestCase;
 
@@ -33,12 +35,15 @@ import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimNames;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
 
 /**
  * Tests HMAC JWS signing and verification. Uses test vectors from JWS spec.
  *
  * @author Vladimir Dzhuvinov
- * @version 2022-01-24
+ * @version 2023-09-14
  */
 public class MACTest extends TestCase {
 
@@ -86,47 +91,100 @@ public class MACTest extends TestCase {
 		// 256-bit key
 		byte[] key256 = new byte[32];
 		new SecureRandom().nextBytes(key256);
+		SecretKey secretKey256 = new SecretKeySpec(key256, "HMACSHA256");
 
-		MACSigner signer = new MACSigner(key256);
-		assertEquals(1, signer.supportedJWSAlgorithms().size());
-		assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
+		for (MACSigner signer: Arrays.asList(new MACSigner(key256), new MACSigner(secretKey256))) {
+			assertEquals(1, signer.supportedJWSAlgorithms().size());
+			assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
+		}
 
-		MACVerifier verifier = new MACVerifier(key256);
-		assertEquals(3, verifier.supportedJWSAlgorithms().size());
-		assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
-		assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
-		assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS512));
+		for (MACVerifier verifier: Arrays.asList(new MACVerifier(key256), new MACVerifier(secretKey256))) {
+			assertEquals(3, verifier.supportedJWSAlgorithms().size());
+			assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
+			assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
+			assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS512));
+		}
 
 		// 384-bit key
 		byte[] key384 = new byte[48];
 		new SecureRandom().nextBytes(key384);
+		SecretKey secretKey384 = new SecretKeySpec(key384, "HMACSHA384");
 
-		signer = new MACSigner(key384);
-		assertEquals(2, signer.supportedJWSAlgorithms().size());
-		assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
-		assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
+		for (MACSigner signer: Arrays.asList(new MACSigner(key384), new MACSigner(secretKey384))) {
+			assertEquals(2, signer.supportedJWSAlgorithms().size());
+			assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
+			assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
+		}
 
-		verifier = new MACVerifier(key384);
-		assertEquals(3, verifier.supportedJWSAlgorithms().size());
-		assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
-		assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
-		assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS512));
+		for (MACVerifier verifier: Arrays.asList(new MACVerifier(key384), new MACVerifier(secretKey384))) {
+			assertEquals(3, verifier.supportedJWSAlgorithms().size());
+			assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
+			assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
+			assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS512));
+		}
 
 		// 512-bit key
 		byte[] key512 = new byte[64];
 		new SecureRandom().nextBytes(key512);
+		SecretKey secretKey512 = new SecretKeySpec(key512, "HMACSHA512");
 
-		signer = new MACSigner(key512);
+		for (MACSigner signer: Arrays.asList(new MACSigner(key512), new MACSigner(secretKey512))) {
+			assertEquals(3, signer.supportedJWSAlgorithms().size());
+			assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
+			assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
+			assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS512));
+		}
+
+		for (MACVerifier verifier: Arrays.asList(new MACVerifier(key512), new MACVerifier(secretKey512))) {
+			assertEquals(3, verifier.supportedJWSAlgorithms().size());
+			assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
+			assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
+			assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS512));
+		}
+	}
+
+
+	public void testInstanceAlgorithmSupport_SecretKeyGetEncodedReturnsNull()
+		throws JOSEException {
+
+		// 256-bit key
+		byte[] key256 = new byte[32];
+		new SecureRandom().nextBytes(key256);
+		SecretKey secretKey = new SecretKey() {
+			@Override
+			public String getAlgorithm() {
+				return "xxx";
+			}
+
+			@Override
+			public String getFormat() {
+				return null;
+			}
+
+			@Override
+			public byte[] getEncoded() {
+				return null;
+			}
+		};
+
+		MACSigner signer = new MACSigner(secretKey);
 		assertEquals(3, signer.supportedJWSAlgorithms().size());
 		assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
 		assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
 		assertTrue(signer.supportedJWSAlgorithms().contains(JWSAlgorithm.HS512));
 
-		verifier = new MACVerifier(key512);
-		assertEquals(3, verifier.supportedJWSAlgorithms().size());
-		assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS256));
-		assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS384));
-		assertTrue(verifier.supportedJWSAlgorithms().contains(JWSAlgorithm.HS512));
+		assertEquals(secretKey, signer.getSecretKey());
+		assertNull(signer.getSecret());
+		assertNull(signer.getSecretString());
+
+		// HSM-based SecretKeys not supported yet
+		try {
+			new MACVerifier(secretKey);
+			fail();
+		} catch (NullPointerException e) {
+			assertNull(e.getMessage());
+		}
+
 	}
 
 
@@ -261,6 +319,44 @@ public class MACTest extends TestCase {
 		assertTrue("Verified signature", verified);
 
 		assertEquals("State check", JWSObject.State.VERIFIED, jwsObject.getState());
+	}
+
+
+	public void testSignAndVerifyWithSecretKey()
+		throws Exception {
+
+		// Generate random 32-bit shared secret
+		byte[] sharedSecret = new byte[32];
+		new SecureRandom().nextBytes(sharedSecret);
+		SecretKey secretKey = new SecretKeySpec(sharedSecret, "HMACSHA256");
+
+		// Create HMAC signer
+		MACSigner signer = new MACSigner(secretKey);
+		assertEquals(secretKey, signer.getSecretKey());
+		assertArrayEquals(sharedSecret, signer.getSecretKey().getEncoded());
+
+		// Prepare JWS object with "Hello, world!" payload
+		JWSObject jwsObject = new JWSObject(new JWSHeader(JWSAlgorithm.HS256), new Payload("Hello, world!"));
+
+		// Apply the HMAC
+		jwsObject.sign(signer);
+
+		assertEquals(jwsObject.getState(), JWSObject.State.SIGNED);
+
+		// To serialize to compact form, produces something like
+		// eyJhbGciOiJIUzI1NiJ9.SGVsbG8sIHdvcmxkIQ.onO9Ihudz3WkiauDO2Uhyuz0Y18UASXlSc1eS0NkWyA
+		String s = jwsObject.serialize();
+
+		// To parse the JWS and verify it, e.g. on client-side
+		jwsObject = JWSObject.parse(s);
+
+		MACVerifier verifier = new MACVerifier(secretKey);
+		assertNotEquals(secretKey, verifier.getSecretKey());
+		assertArrayEquals(sharedSecret, verifier.getSecretKey().getEncoded());
+
+		assertTrue(jwsObject.verify(verifier));
+
+		assertEquals("Hello, world!", jwsObject.getPayload().toString());
 	}
 
 
