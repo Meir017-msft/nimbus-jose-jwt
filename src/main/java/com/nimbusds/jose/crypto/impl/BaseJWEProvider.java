@@ -36,9 +36,9 @@ import java.util.Set;
  * decrypters.
  *
  * @author Vladimir Dzhuvinov
- * @version 2023-09-11
+ * @version 2023-09-18
  */
-abstract class BaseJWEProvider implements JWEProvider {
+public abstract class BaseJWEProvider implements JWEProvider {
 
 
 	/**

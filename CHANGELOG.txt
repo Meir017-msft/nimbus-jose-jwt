@@ -1591,3 +1591,7 @@ version 9.34 (2023-09-14)
       their key material (iss #520).
     * Deprecates HMAC.compute(String,byte[],byte[],Provider), use
       HMAC.compute(String,SecretKey,byte[],Provider) instead.
+
+version 9.35 (2023-09-18)
+    * Makes the abstract class BaseJWEProvider public (iss #521).
+
