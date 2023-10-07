@@ -1595,3 +1595,5 @@ version 9.34 (2023-09-14)
 version 9.35 (2023-09-18)
     * Makes the abstract class BaseJWEProvider public (iss #521).
 
+version 9.36 (2023-10-07)
+    * Adds new JWKSet.filter method.

@@ -18,6 +18,23 @@
 package com.nimbusds.jose.jwk;
 
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
+import com.nimbusds.jose.jwk.gen.OctetSequenceKeyGenerator;
+import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
+import com.nimbusds.jose.util.*;
+import junit.framework.TestCase;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.KeyUsage;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -38,27 +55,9 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.ECParameterSpec;
 import java.text.ParseException;
 import java.util.*;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 
 import static net.jadler.Jadler.*;
 import static org.junit.Assert.assertArrayEquals;
-
-import junit.framework.TestCase;
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x509.Extension;
-import org.bouncycastle.asn1.x509.KeyUsage;
-import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWEAlgorithm;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
-import com.nimbusds.jose.jwk.gen.OctetSequenceKeyGenerator;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
-import com.nimbusds.jose.util.*;
 
 
 /**
@@ -66,7 +65,7 @@ import com.nimbusds.jose.util.*;
  *
  * @author Vladimir Dzhuvinov
  * @author Vedran Pavic
- * @version 2022-01-24
+ * @version 2023-10-07
  */
 public class JWKSetTest extends TestCase {
 	
@@ -618,6 +617,77 @@ public class JWKSetTest extends TestCase {
 	public void testMIMEType() {
 
 		assertEquals("application/jwk-set+json; charset=UTF-8", JWKSet.MIME_TYPE);
+	}
+
+
+	public void testFilter_nullMatcher()
+		throws JOSEException {
+
+		OctetSequenceKey key = new OctetSequenceKeyGenerator(256).generate();
+
+		try {
+			new JWKSet(key).filter(null);
+			fail();
+		} catch (NullPointerException e) {
+			assertNull(e.getMessage());
+		}
+	}
+
+
+	public void testFilter_match()
+		throws JOSEException {
+
+		JWK key_1 = new OctetSequenceKeyGenerator(256).keyID("1").generate();
+		JWK key_2 = new OctetSequenceKeyGenerator(256).keyID("2").generate();
+		JWK key_3 = new OctetSequenceKeyGenerator(256).keyID("3").generate();
+
+		JWKSet jwkSet = new JWKSet(Arrays.asList(key_1, key_2, key_3));
+
+		JWKMatcher matcher = new JWKMatcher.Builder().keyID("2").build();
+
+		JWKSet filtered = jwkSet.filter(matcher);
+
+		assertEquals(key_2, filtered.getKeys().get(0));
+		assertEquals(1, filtered.size());
+	}
+
+
+	public void testFilter_match_withCustomMembers()
+		throws JOSEException {
+
+		JWK key_1 = new OctetSequenceKeyGenerator(256).keyID("1").generate();
+		JWK key_2 = new OctetSequenceKeyGenerator(256).keyID("2").generate();
+		JWK key_3 = new OctetSequenceKeyGenerator(256).keyID("3").generate();
+
+		Map<String, Object> customMembers = new HashMap<>();
+		customMembers.put("x-custom", "123");
+		customMembers.put("y-custom", "456");
+
+		JWKSet jwkSet = new JWKSet(Arrays.asList(key_1, key_2, key_3), customMembers);
+
+		JWKMatcher matcher = new JWKMatcher.Builder().keyID("2").build();
+
+		JWKSet filtered = jwkSet.filter(matcher);
+
+		assertEquals(key_2, filtered.getKeys().get(0));
+		assertEquals(1, filtered.size());
+
+		assertEquals(customMembers, filtered.getAdditionalMembers());
+	}
+
+
+	public void testFilter_noMatch()
+		throws JOSEException {
+
+		JWK key_1 = new OctetSequenceKeyGenerator(256).keyID("1").generate();
+		JWK key_2 = new OctetSequenceKeyGenerator(256).keyID("2").generate();
+		JWK key_3 = new OctetSequenceKeyGenerator(256).keyID("3").generate();
+
+		JWKSet jwkSet = new JWKSet(Arrays.asList(key_1, key_2, key_3));
+
+		JWKMatcher matcher = new JWKMatcher.Builder().keyID("xxx").build();
+
+		assertTrue(jwkSet.filter(matcher).isEmpty());
 	}
 
 

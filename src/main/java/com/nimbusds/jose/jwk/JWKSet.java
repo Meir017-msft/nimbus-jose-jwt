@@ -18,6 +18,10 @@
 package com.nimbusds.jose.jwk;
 
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.util.*;
+import net.jcip.annotations.Immutable;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,11 +35,6 @@ import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.util.*;
-
-import net.jcip.annotations.Immutable;
-
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.util.*;
 
 
 /**
@@ -69,7 +68,7 @@ import com.nimbusds.jose.util.*;
  *
  * @author Vladimir Dzhuvinov
  * @author Vedran Pavic
- * @version 2022-11-22
+ * @version 2023-10-07
  */
 @Immutable
 public class JWKSet implements Serializable {
@@ -236,7 +235,7 @@ public class JWKSet implements Serializable {
 	/**
 	 * Returns the additional custom members of this (JWK) set.
 	 *
-	 * @return The additional custom members as a unmodifiable map, empty
+	 * @return The additional custom members as an unmodifiable map, empty
 	 *         map if none.
 	 */
 	public Map<String,Object> getAdditionalMembers() {
@@ -266,6 +265,28 @@ public class JWKSet implements Serializable {
 		}
 
 		return new JWKSet(publicKeyList, customMembers);
+	}
+
+
+	/**
+	 * Filters the keys in this JWK set.
+	 *
+	 * @param jwkMatcher The JWK matcher to filter the keys. Must not be
+	 *                   {@code null}.
+	 *
+	 * @return The new filtered JWK set.
+	 */
+	public JWKSet filter(final JWKMatcher jwkMatcher) {
+
+		List<JWK> matches = new LinkedList<>();
+
+		for (JWK key: keys) {
+			if (jwkMatcher.matches(key)) {
+				matches.add(key);
+			}
+		}
+
+		return new JWKSet(matches, customMembers);
 	}
 	
 	
