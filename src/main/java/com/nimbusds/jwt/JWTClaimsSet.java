@@ -73,7 +73,7 @@ import com.nimbusds.jwt.util.DateUtils;
  *
  * @author Vladimir Dzhuvinov
  * @author Justin Richer
- * @version 2021-02-22
+ * @version 2023-10-16
  */
 @Immutable
 public final class JWTClaimsSet implements Serializable {
@@ -498,6 +498,35 @@ public final class JWTClaimsSet implements Serializable {
 
 	/**
 	 * Gets the specified claims (registered or custom) as a
+	 * {@link java.util.List} list of objects.
+	 *
+	 * @param name The name of the claim. Must not be {@code null}.
+	 *
+	 * @return The value of the claim, {@code null} if not specified.
+	 *
+	 * @throws ParseException If the claim value is not of the required
+	 *                        type.
+	 */
+	public List<Object> getListClaim(final String name)
+		throws ParseException {
+
+		Object value = getClaim(name);
+
+		if (value == null) {
+			return null;
+		}
+
+		try {
+			return (List<Object>)getClaim(name);
+
+		} catch (ClassCastException e) {
+			throw new ParseException("The " + name + " claim is not a list / JSON array", 0);
+		}
+	}
+
+
+	/**
+	 * Gets the specified claims (registered or custom) as a
 	 * {@link java.lang.String} array.
 	 *
 	 * @param name The name of the claim. Must not be {@code null}.
@@ -510,19 +539,10 @@ public final class JWTClaimsSet implements Serializable {
 	public String[] getStringArrayClaim(final String name)
 		throws ParseException {
 
-		Object value = getClaim(name);
+		List<?> list = getListClaim(name);
 
-		if (value == null) {
+		if (list == null) {
 			return null;
-		}
-
-		List<?> list;
-
-		try {
-			list = (List<?>)getClaim(name);
-
-		} catch (ClassCastException e) {
-			throw new ParseException("The " + name + " claim is not a list / JSON array", 0);
 		}
 
 		String[] stringArray = new String[list.size()];

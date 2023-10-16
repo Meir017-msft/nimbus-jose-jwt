@@ -1077,4 +1077,43 @@ public class JWTClaimsSetTest extends TestCase {
 			assertEquals("Unexpected type of aud claim", e.getMessage());
 		}
 	}
+
+
+	public void testGetListClaim() throws ParseException {
+
+		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+			.claim("some_list", Arrays.asList("a", 1, true))
+			.build();
+
+		String json = claimsSet.toString();
+
+		claimsSet = JWTClaimsSet.parse(json);
+
+		List<Object> someList = claimsSet.getListClaim("some_list");
+		assertEquals("a", someList.get(0));
+		assertEquals(1L, someList.get(1));
+		assertEquals(true, someList.get(2));
+		assertEquals(3, someList.size());
+	}
+
+
+	public void testGetListClaim_none() throws ParseException {
+
+		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+			.build();
+
+		String json = claimsSet.toString();
+
+		claimsSet = JWTClaimsSet.parse(json);
+
+		assertNull(claimsSet.getListClaim("some_list"));
+	}
+
+
+	public void testGetListClaim_nullValue() throws ParseException {
+
+		JWTClaimsSet claimsSet = JWTClaimsSet.parse("{\"some_list\":null}");
+
+		assertNull(claimsSet.getListClaim("some_list"));
+	}
 }

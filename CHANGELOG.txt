@@ -1597,3 +1597,6 @@ version 9.35 (2023-09-18)
 
 version 9.36 (2023-10-07)
     * Adds new JWKSet.filter method.
+
+version 9.37 (2023-10-16)
+    * Adds JWTClaimsSet.getListClaim method.
