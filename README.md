@@ -3,7 +3,7 @@
 * The most popular and robust Java 7+ and Android library for JSON Web Tokens 
   (JWT)
 * Supports all standard signature (JWS) and encryption (JWE) algorithms, 
-  including recent developments such secp256k1, ECDH-1PU and XC20P
+  including recent developments such `secp256k1`, `ECDH-1PU` and `XC20P`
 * Open source Apache 2.0 license
 
 Check out the [library homepage](https://connect2id.com/products/nimbus-jose-jwt) 
@@ -18,7 +18,7 @@ Create, parse and process:
   * With compact URL-safe serialisation:
     * JSON Web Signature (JWS) objects
     * JSON Web Encryption (JWE) objects
-    * Unsecured (alg=none) JOSE objects
+    * Unsecured (`alg=none`) JOSE objects
     * Signed, encrypted and unsecured JSON Web Tokens (JWTs)
 * With JSON serialisation:
     * JWS JSON objects with one or more signatures
@@ -30,28 +30,28 @@ Create, parse and process:
 
 The library handles the following JOSE algorithms:
 
-* HMAC integrity protection: HS256, HS384 and HS512
-* RSASSA-PKCS1-V1_5 signatures: RS256, RS384 and RS512
-* RSASSA-PSS signatures: PS256, PS384 and PS512
-* EC signatures: ES256, ES256K, ES384, ES512 and EdDSA
-* Key encryption with RSAES-PKCS1-V1_5: RSA1_5 (deprecated)
-* Key encryption with RSAES OAEP: RSA-OAEP, RSA-OAEP-256 and RSA-OAEP-512
-* Key encryption with AES key wrap: A128KW, A192KW and A256KW
-* Key encryption with AES GCM: A128CGMKW, A192CGMKW and A256CGMKW
-* Direct shared symmetric key encryption: dir
-* Key agreement with Elliptic Curve Diffie-Hellman Ephemeral Static: ECDH-ES,
-  ECDH-ES+A128KW, ECDH-ES+A192KW and ECDH-ES+A256KW
+* HMAC integrity protection: `HS256`, `HS384` and `HS512`
+* RSASSA-PKCS1-V1_5 signatures: `RS256`, `RS384` and `RS512`
+* RSASSA-PSS signatures: `PS256`, `PS384` and `PS512`
+* EC signatures: `ES256`, `ES256K`, `ES384`, `ES512` and `EdDSA`
+* Key encryption with RSAES-PKCS1-V1_5: `RSA1_5` (deprecated)
+* Key encryption with RSAES OAEP: `RSA-OAEP`, `RSA-OAEP-256` and `RSA-OAEP-512`
+* Key encryption with AES key wrap: `A128KW`, `A192KW` and `A256KW`
+* Key encryption with AES GCM: `A128CGMKW`, `A192CGMKW` and `A256CGMKW`
+* Direct shared symmetric key encryption: `dir`
+* Key agreement with Elliptic Curve Diffie-Hellman Ephemeral Static: `ECDH-ES`,
+  `ECDH-ES+A128KW`, `ECDH-ES+A192KW` and `ECDH-ES+A256KW`
 * Public key authenticated encryption utilising the One-Pass Unified Model for 
-  Elliptic Curve Diffie-Hellman key agreement: ECDH-1PU, ECDH-1PU+A128KW, 
-  ECDH-1PU+A128KW, ECDH-1PU+A256KW
-* Password-based encryption: PBES2-HS256+A128KW, PBES2-HS384+A192KW and
-  PBES2-HS512+A256KW
-* Content encryption with AES_CBC_HMAC_SHA2: A128CBC-HS256, A192CBC-HS384,
-  A256CBC-HS512, the deprecated A128CBC+HS256 and A256CBC+HS512 are also
+  Elliptic Curve Diffie-Hellman key agreement: `ECDH-1PU`, `ECDH-1PU+A128KW`, 
+  `ECDH-1PU+A128KW`, `ECDH-1PU+A256KW`
+* Password-based encryption: `PBES2-HS256+A128KW`, `PBES2-HS384+A192KW` and
+  `PBES2-HS512+A256KW`
+* Content encryption with AES_CBC_HMAC_SHA2: `A128CBC-HS256`, `A192CBC-HS384`,
+  `A256CBC-HS512`, the deprecated `A128CBC+HS256` and `A256CBC+HS512` are also
   supported
-* Content encryption with AES GCM: A128GCM, A192GCM and A256GCM
-* Content encryption with extended nonce ChaCha20-Poly1305: XC20P
-* JWE Compression with DEFLATE.
+* Content encryption with AES GCM: `A128GCM`, `A192GCM` and `A256GCM`
+* Content encryption with extended nonce ChaCha20-Poly1305: `XC20P`
+* JWE Compression with `DEFLATE`.
 
 
 ## Supported specifications
