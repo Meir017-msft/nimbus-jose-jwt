@@ -21,8 +21,8 @@ Create, parse and process:
     * Unsecured (alg=none) JOSE objects
     * Signed, encrypted and unsecured JSON Web Tokens (JWTs)
 * With JSON serialisation:
-  * JWS JSON objects with one or more signatures
-  * JWE JSON objects with one or more recipients
+    * JWS JSON objects with one or more signatures
+    * JWE JSON objects with one or more recipients
 * JSON Web Key (JWK) objects and JWK sets
 
 
