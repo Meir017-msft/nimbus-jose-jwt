@@ -18,15 +18,16 @@
 package com.nimbusds.jwt;
 
 
+import com.nimbusds.jose.HeaderParameterNames;
+import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jose.util.JSONArrayUtils;
+import com.nimbusds.jose.util.JSONObjectUtils;
+import com.nimbusds.jwt.util.DateUtils;
+import junit.framework.TestCase;
+
 import java.net.URI;
 import java.text.ParseException;
 import java.util.*;
-
-import com.nimbusds.jose.HeaderParameterNames;
-import com.nimbusds.jose.util.Base64URL;
-import com.nimbusds.jose.util.JSONObjectUtils;
-
-import junit.framework.TestCase;
 
 
 /**
@@ -1115,5 +1116,96 @@ public class JWTClaimsSetTest extends TestCase {
 		JWTClaimsSet claimsSet = JWTClaimsSet.parse("{\"some_list\":null}");
 
 		assertNull(claimsSet.getListClaim("some_list"));
+	}
+
+
+	public void testCustomDateClaim() throws ParseException {
+
+		Date now = DateUtils.nowWithSecondsPrecision();
+
+		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+			.claim("date-claim-a", now)
+			.claim("date-claim-b", now.getTime() / 1000)
+			.build();
+
+		String json = claimsSet.toString();
+
+		claimsSet = JWTClaimsSet.parse(json);
+
+		assertEquals(DateUtils.toSecondsSinceEpoch(now), claimsSet.getClaim("date-claim-a"));
+		assertEquals(DateUtils.toSecondsSinceEpoch(now), claimsSet.getClaim("date-claim-b"));
+	}
+
+
+	public void testEntityMappingExample() {
+
+		String stringClaim = "string";
+
+		long intClaim = 10L;
+
+		double decimalFractionClaim = 3.14;
+
+		boolean boolClaim = true;
+
+		List<Object> jsonArrayClaim = Arrays.asList((Object) "a", true, 66);
+
+		Map<String, Object> jsonObjectClaim = new HashMap<>();
+		jsonObjectClaim.put("member-1", "a");
+		jsonObjectClaim.put("member-2", true);
+		jsonObjectClaim.put("member-3", 66);
+
+		JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+			.claim("string", stringClaim)
+			.claim("int", intClaim)
+			.claim("decimal_fraction", decimalFractionClaim)
+			.claim("bool", boolClaim)
+			.claim("json_array", jsonArrayClaim)
+			.claim("json_object", jsonObjectClaim)
+			.build();
+
+		String json = claimsSet.toString();
+
+		System.out.println(json);
+	}
+
+	public void testEntityMappingParseExample() throws ParseException {
+		
+		String json = 
+			"{\n" +
+			"  \"string\": \"string\"," +
+			"  \"bool\": true," +
+			"  \"int\": 10," +
+			"  \"decimal_fraction\": 3.14," +
+			"  \"json_array\": [" +
+			"    \"a\"," +
+			"    true," +
+			"    66" +
+			"  ]," +
+			"  \"json_object\": {" +
+			"    \"member-1\": \"a\"," +
+			"    \"member-2\": true," +
+			"    \"member-3\": 66" +
+			"  }" +
+			"}";
+
+		JWTClaimsSet claimsSet = JWTClaimsSet.parse(json);
+
+		String stringClaim = claimsSet.getStringClaim("string");
+		Long intClaim = claimsSet.getLongClaim("int");
+		Boolean boolClaim = claimsSet.getBooleanClaim("bool");
+		Double decimalFractionClaim = claimsSet.getDoubleClaim("decimal_fraction");
+		List<Object> jsonArrayClaim = claimsSet.getListClaim("json_array");
+		Map<String, Object> jsonObjectClaim = claimsSet.getJSONObjectClaim("json_object");
+
+		assertEquals("string", stringClaim);
+		assertEquals(10L, intClaim.longValue());
+		assertEquals(3.14, decimalFractionClaim.doubleValue());
+		assertTrue(boolClaim);
+
+		assertEquals(Arrays.asList((Object) "a", true, 66L), jsonArrayClaim);
+
+		assertEquals("a", JSONObjectUtils.getString(jsonObjectClaim, "member-1"));
+                assertTrue(JSONObjectUtils.getBoolean(jsonObjectClaim, "member-2"));
+		assertEquals(66L, JSONObjectUtils.getLong(jsonObjectClaim, "member-3"));
 	}
 }
