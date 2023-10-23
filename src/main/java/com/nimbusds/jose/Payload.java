@@ -41,10 +41,10 @@ import net.jcip.annotations.Immutable;
  * <p>Conversion relations:
  *
  * <pre>
- * JSONObject &lt;=&gt; String &lt;=&gt; Base64URL
- *                       &lt;=&gt; byte[]
- *                       &lt;=&gt; JWSObject
- *                       &lt;=&gt; SignedJWT
+ * JSON object &lt;=&gt; String &lt;=&gt; Base64URL
+ *                        &lt;=&gt; byte[]
+ *                        &lt;=&gt; JWSObject
+ *                        &lt;=&gt; SignedJWT
  * </pre>
  *
  * <p>The {@link }
