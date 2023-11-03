@@ -163,19 +163,21 @@
                         <relocation>
                             <pattern>com.google.gson</pattern>
                             <shadedPattern>com.nimbusds.jose.shaded.gson</shadedPattern>
-                            <excludes>
-                                <exclude>module-info.class</exclude>
-                            </excludes>
                         </relocation>
                     </relocations>
                     <artifactSet>
                         <includes>
                             <include>com.google.code.gson:gson</include>
                         </includes>
-                        <excludes>
-                            <exclude>module-info.class</exclude>
-                        </excludes>
                     </artifactSet>
+                    <filters>
+                        <filter>
+                            <artifact>com.google.code.gson:gson</artifact>
+                            <excludes>
+                                <exclude>**/module-info.class</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
                 </configuration>
                 <executions>
                     <execution>
