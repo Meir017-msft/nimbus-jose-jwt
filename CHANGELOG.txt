@@ -1600,3 +1600,7 @@ version 9.36 (2023-10-07)
 
 version 9.37 (2023-10-16)
     * Adds JWTClaimsSet.getListClaim method.
+
+version 9.37.1 (2023-11-08)
+    * The module-info.java from the shaded Gson dependency must not be packed
+      into the published JAR (iss #496).
