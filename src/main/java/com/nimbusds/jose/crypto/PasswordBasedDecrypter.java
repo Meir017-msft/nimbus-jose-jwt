@@ -18,14 +18,14 @@
 package com.nimbusds.jose.crypto;
 
 
-import java.util.Set;
-import javax.crypto.SecretKey;
-
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.impl.*;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.StandardCharset;
 import net.jcip.annotations.ThreadSafe;
+
+import javax.crypto.SecretKey;
+import java.util.Set;
 
 
 /**
@@ -62,10 +62,16 @@ import net.jcip.annotations.ThreadSafe;
  *
  * @author Vladimir Dzhuvinov
  * @author Egor Puzanov
- * @version 2023-09-10
+ * @version 2023-12-03
  */
 @ThreadSafe
 public class PasswordBasedDecrypter extends PasswordBasedCryptoProvider implements JWEDecrypter, CriticalHeaderParamsAware {
+
+
+	/**
+	 * The maximum allowed iteration count (1 million).
+	 */
+	public static final int MAX_ALLOWED_ITERATION_COUNT = 1_000_000;
 
 
 	/**
@@ -180,6 +186,10 @@ public class PasswordBasedDecrypter extends PasswordBasedCryptoProvider implemen
 		}
 
 		final int iterationCount = header.getPBES2Count();
+
+		if (iterationCount > MAX_ALLOWED_ITERATION_COUNT) {
+			throw new JOSEException("The JWE p2c header exceeds the maximum allowed " + MAX_ALLOWED_ITERATION_COUNT + " count");
+		}
 
 		critPolicy.ensureHeaderPasses(header);
 

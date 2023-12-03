@@ -70,3 +70,9 @@ version 9.21 (2022-03-07)
 version 9.22 (2022-04-22)
     * Adds ECDSA R and S signature value checking to prevent exploitation of
       Java runtimes and JCE providers vulnerable to CVE-2022-21449 (iss #472).
+
+version 9.37.2 (2023-12-04)
+    * The PasswordBasedDecrypter (PBKDF2) must enforce a limit on the maximum
+      allowed JWE "p2c" header value to prevent DoS attacks. This limit is now
+      set to 1 million, taking into account that OWASP recommends 600 thousand
+      iterations for PBKDF2-HMAC-SHA256 (iss 526).

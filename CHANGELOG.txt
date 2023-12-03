@@ -1604,3 +1604,9 @@ version 9.37 (2023-10-16)
 version 9.37.1 (2023-11-08)
     * The module-info.java from the shaded Gson dependency must not be packed
       into the published JAR (iss #496).
+
+version 9.37.2 (2023-12-04)
+    * The PasswordBasedDecrypter (PBKDF2) must enforce a limit on the maximum
+      allowed JWE "p2c" header value to prevent DoS attacks. This limit is now
+      set to 1 million, taking into account that OWASP recommends 600 thousand
+      iterations for PBKDF2-HMAC-SHA256 (iss 526).
