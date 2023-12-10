@@ -46,7 +46,7 @@ import com.nimbusds.jose.util.health.HealthReportListener;
  *
  * @author Thomas Rørvik Skjølberg
  * @author Vladimir Dzhuvinov
- * @version 2022-08-30
+ * @version 2023-12-10
  */
 public class JWKSourceBuilder<C extends SecurityContext> {
 	
@@ -76,28 +76,28 @@ public class JWKSourceBuilder<C extends SecurityContext> {
 	 * The default time to live of cached JWK sets, in milliseconds. Set to
 	 * 5 minutes.
 	 */
-	public static final long DEFAULT_CACHE_TIME_TO_LIVE = 5 * 60 * 1000;
+	public static final long DEFAULT_CACHE_TIME_TO_LIVE = 5 * 60 * 1000L;
 	
 	
 	/**
 	 * The default refresh timeout of cached JWK sets, in milliseconds. Set
 	 * to 15 seconds.
 	 */
-	public static final long DEFAULT_CACHE_REFRESH_TIMEOUT = 15 * 1000;
+	public static final long DEFAULT_CACHE_REFRESH_TIMEOUT = 15 * 1000L;
 	
 	
 	/**
 	 * The default afresh-ahead time of cached JWK sets, in milliseconds.
 	 * Set to 30 seconds.
 	 */
-	public static final long DEFAULT_REFRESH_AHEAD_TIME = 30_000;
+	public static final long DEFAULT_REFRESH_AHEAD_TIME = 30_000L;
 	
 	
 	/**
 	 * The default rate limiting minimum allowed time interval between two
 	 * JWK set retrievals, in milliseconds.
 	 */
-	public static final long DEFAULT_RATE_LIMIT_MIN_INTERVAL = 30_000;
+	public static final long DEFAULT_RATE_LIMIT_MIN_INTERVAL = 30_000L;
 	
 	
 	/**
