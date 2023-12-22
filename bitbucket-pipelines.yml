@@ -13,6 +13,7 @@ definitions:
           - maven
           - sonar
         script:
+          - mvn -B package -Pfips -DskipTests
           - mvn -B package org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
         artifacts:
           - target/**
