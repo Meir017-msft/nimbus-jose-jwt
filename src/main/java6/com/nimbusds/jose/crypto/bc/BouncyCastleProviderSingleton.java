@@ -20,6 +20,8 @@ package com.nimbusds.jose.crypto.bc;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.security.Provider;
+
 
 /**
  * BouncyCastle JCA provider singleton, intended to prevent memory leaks by
@@ -49,7 +51,7 @@ public final class BouncyCastleProviderSingleton {
 	/**
 	 * The BouncyCastle provider, lazily instantiated.
 	 */
-	private static BouncyCastleProvider bouncyCastleProvider;
+	private static Provider bouncyCastleProvider;
 
 
 	/**
@@ -63,7 +65,7 @@ public final class BouncyCastleProviderSingleton {
 	 *
 	 * @return The BouncyCastle JCA provider instance.
 	 */
-	public static BouncyCastleProvider getInstance() {
+	public static Provider getInstance() {
 		
 		if (bouncyCastleProvider == null) {
 			bouncyCastleProvider = new BouncyCastleProvider();

@@ -61,30 +61,6 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk18on</artifactId>
-            <version>1.77</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcutil-jdk18on</artifactId>
-            <version>1.77</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bc-fips</artifactId>
-            <version>[1.0.2,2.0.0)</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId>
-            <version>1.77</version>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
             <groupId>com.google.crypto.tink</groupId>
             <artifactId>tink</artifactId>
             <version>1.12.0</version>
@@ -99,6 +75,12 @@
                     <artifactId>gson</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.77</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.bitbucket.b_c</groupId>
@@ -131,7 +113,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.5.1</version>
+                <version>3.11.0</version>
                 <configuration>
                     <source>1.7</source>
                     <target>1.7</target>
@@ -152,6 +134,26 @@
                 <executions>
                     <execution>
                         <id>default-compile</id>
+                        <configuration>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.build.sourceDirectory}</compileSourceRoot>
+                                <compileSourceRoot>${java6path}</compileSourceRoot>
+                            </compileSourceRoots>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>java9</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <release>9</release>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${java9path}</compileSourceRoot>
+                            </compileSourceRoots>
+                            <multiReleaseOutput>true</multiReleaseOutput>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -160,6 +162,8 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.4.1</version>
                 <configuration>
+                    <shadedArtifactAttached>${jar.attachClassifier}</shadedArtifactAttached>
+                    <shadedClassifierName>${jar.classifier}</shadedClassifierName>
                     <relocations>
                         <relocation>
                             <pattern>com.google.gson</pattern>
@@ -367,6 +371,65 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <java9path>${project.basedir}/src/main/java9</java9path>
+                <java6path>${project.basedir}/src/main/java6</java6path>
+                <jar.attachClassifier>false</jar.attachClassifier>
+                <jar.classifier/> <!-- empty -->
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcprov-jdk18on</artifactId>
+                    <version>1.77</version>
+                    <optional>true</optional>
+                </dependency>
+                <dependency>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcutil-jdk18on</artifactId>
+                    <version>1.77</version>
+                    <optional>true</optional>
+                </dependency>
+                <dependency>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcpkix-jdk18on</artifactId>
+                    <version>1.77</version>
+                    <optional>true</optional>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <profile>
+            <id>fips</id>
+            <properties>
+                <java9path>${project.basedir}/src/main/java9-fips</java9path>
+                <java6path>${project.basedir}/src/main/java6-fips</java6path>
+                <jar.attachClassifier>true</jar.attachClassifier>
+                <jar.classifier>fips</jar.classifier>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bc-fips</artifactId>
+                    <version>[1.0.2,2.0.0)</version>
+                    <optional>true</optional>
+                </dependency>
+                <dependency>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcpkix-fips</artifactId>
+                    <version>1.0.7</version>
+                    <optional>true</optional>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
     <distributionManagement>
         <snapshotRepository>

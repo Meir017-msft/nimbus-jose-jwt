@@ -56,9 +56,7 @@ import com.nimbusds.jose.util.Base64URL;
  *     <li>{@link com.nimbusds.jose.JWSAlgorithm#PS512}
  * </ul>
  *
- * <p>Supports the
- * {@link com.nimbusds.jose.crypto.bc.BouncyCastleFIPSProviderSingleton
- * BouncyCastle FIPS provider} for the PSxxx family of JWS algorithms.
+ * <p>Supports the BouncyCastle FIPS provider for the PSxxx family of JWS algorithms.
  * 
  * @author Vladimir Dzhuvinov
  * @version 2015-06-02
