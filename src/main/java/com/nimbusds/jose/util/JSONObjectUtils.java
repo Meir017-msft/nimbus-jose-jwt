@@ -21,7 +21,6 @@ package com.nimbusds.jose.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.ToNumberPolicy;
-import com.google.gson.internal.LinkedTreeMap;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
@@ -421,16 +420,9 @@ public class JSONObjectUtils {
 			if (member == null) {
 				continue;
 			}
-			if (member instanceof HashMap) {
+			if (member instanceof Map) {
 				try {
-					return jsonArray.toArray(new HashMap[0]);
-				} catch (ArrayStoreException e) {
-					break; // throw parse exception below
-				}
-			}
-			if (member instanceof LinkedTreeMap) {
-				try {
-					return jsonArray.toArray(new LinkedTreeMap[0]);
+					return jsonArray.toArray(new Map[0]);
 				} catch (ArrayStoreException e) {
 					break; // throw parse exception below
 				}
