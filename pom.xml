@@ -52,6 +52,7 @@
             <groupId>com.github.stephenc.jcip</groupId>
             <artifactId>jcip-annotations</artifactId>
             <version>1.0-1</version>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -164,10 +165,15 @@
                             <pattern>com.google.gson</pattern>
                             <shadedPattern>com.nimbusds.jose.shaded.gson</shadedPattern>
                         </relocation>
+                        <relocation>
+                            <pattern>net.jcip.annotations</pattern>
+                            <shadedPattern>com.nimbusds.jose.shaded.jcip</shadedPattern>
+                        </relocation>
                     </relocations>
                     <artifactSet>
                         <includes>
                             <include>com.google.code.gson:gson</include>
+                            <include>com.github.stephenc.jcip:jcip-annotations</include>
                         </includes>
                     </artifactSet>
                     <filters>
