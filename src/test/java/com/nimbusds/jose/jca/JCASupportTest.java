@@ -147,6 +147,9 @@ public class JCASupportTest {
 	
 	@Test
 	public void jwsSupport_BC() {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		Provider bc = BouncyCastleProviderSingleton.getInstance();
 
@@ -165,10 +168,11 @@ public class JCASupportTest {
 	}
 	
 	
-	// To run the test without class loading clashes disable the optional
-	// plain BC provider in pom.xml
-//	@Test
+	@Test
 	public void jwsSupport_BC_FIPS() {
+		if (! "fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC-FIPS
+		}
 
 		Provider bc = BouncyCastleFIPSProviderSingleton.getInstance();
 
@@ -256,6 +260,9 @@ public class JCASupportTest {
 	
 	@Test
 	public void jweSupport_BC() {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		Provider bc = BouncyCastleProviderSingleton.getInstance();
 
@@ -314,6 +321,9 @@ public class JCASupportTest {
 	
 	@Test
 	public void encryptionMethodSupport_BC() {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		Provider bc = BouncyCastleProviderSingleton.getInstance();
 

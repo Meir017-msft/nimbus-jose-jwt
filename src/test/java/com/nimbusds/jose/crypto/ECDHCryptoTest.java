@@ -776,6 +776,9 @@ public class ECDHCryptoTest extends TestCase {
 
 	public void testRejectECKeyWithUnsupportedCurve()
 		throws Exception {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		KeyPair keyPair = createUnsupportedECKeyPair();
 		ECPublicKey ecPublicKey = (ECPublicKey)keyPair.getPublic();

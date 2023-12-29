@@ -103,6 +103,9 @@ public class DefaultJWSVerifierFactoryTest extends TestCase {
 
 	public void testSetProvider()
 		throws Exception {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		DefaultJWSVerifierFactory factory = new DefaultJWSVerifierFactory();
 		factory.getJCAContext().setProvider(BouncyCastleProviderSingleton.getInstance());

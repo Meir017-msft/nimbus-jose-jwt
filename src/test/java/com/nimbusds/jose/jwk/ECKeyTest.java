@@ -1115,6 +1115,9 @@ public class ECKeyTest extends TestCase {
 	// iss #217
 	public void testCurveMismatch()
 		throws Exception {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 		
 		// EC key on P_256
 		ECParameterSpec ecParameterSpec = Curve.P_256.toECParameterSpec();

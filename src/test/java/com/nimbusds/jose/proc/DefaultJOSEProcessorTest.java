@@ -179,6 +179,9 @@ public class DefaultJOSEProcessorTest extends TestCase {
 
 	public void testProcessJWE()
 		throws Exception {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		JWEObject jweObject = new JWEObject(new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128GCM), new Payload("Hello world!"));
 
@@ -212,6 +215,9 @@ public class DefaultJOSEProcessorTest extends TestCase {
 
 	public void testProcessJWE_withTypeJOSE()
 		throws Exception {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		JWEObject jweObject = new JWEObject(new JWEHeader.Builder(JWEAlgorithm.DIR, EncryptionMethod.A128GCM).type(JOSEObjectType.JOSE).build(), new Payload("Hello world!"));
 
@@ -245,6 +251,9 @@ public class DefaultJOSEProcessorTest extends TestCase {
 
 	public void testProcessInvalidJWE()
 		throws Exception {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		JWEObject jweObject = new JWEObject(new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128GCM), new Payload("Hello world!"));
 
@@ -284,6 +293,9 @@ public class DefaultJOSEProcessorTest extends TestCase {
 
 	public void testProcessJWEWithTwoKeyCandidates()
 		throws Exception {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		JWEObject jweObject = new JWEObject(new JWEHeader(JWEAlgorithm.DIR, EncryptionMethod.A128GCM), new Payload("Hello world!"));
 

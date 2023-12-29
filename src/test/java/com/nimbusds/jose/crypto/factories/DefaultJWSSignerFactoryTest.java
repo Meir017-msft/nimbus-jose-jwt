@@ -89,6 +89,9 @@ public class DefaultJWSSignerFactoryTest extends TestCase {
 
 	public void testSetProvider()
 		throws Exception {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		factory.getJCAContext().setProvider(BouncyCastleProviderSingleton.getInstance());
 
