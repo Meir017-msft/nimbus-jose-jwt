@@ -3,9 +3,10 @@ module com.nimbusds.jose.jwt {
 	requires static com.google.gson;
 	requires static jcip.annotations;
 
-	requires com.google.crypto.tink;
-	requires org.bouncycastle.fips.pkix;
-	requires org.bouncycastle.fips.core;
+	// optional:
+	requires static com.google.crypto.tink;
+	requires static org.bouncycastle.fips.pkix;
+	requires static org.bouncycastle.fips.core;
 
 	exports com.nimbusds.jose;
 	exports com.nimbusds.jose.crypto;
