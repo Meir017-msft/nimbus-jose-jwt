@@ -447,7 +447,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <classpathDependencyExcludes>
-								<!-- bc required for test compilation, but must not be present with bc-fips at the same time -->
+                                <!-- bc required for test compilation, but must not be present with bc-fips at the same time -->
                                 <classpathDependencyExclude>org.bouncycastle:bcprov-jdk18on</classpathDependencyExclude>
                             </classpathDependencyExcludes>
                             <excludes>
