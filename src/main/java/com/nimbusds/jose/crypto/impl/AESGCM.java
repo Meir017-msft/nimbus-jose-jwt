@@ -1,7 +1,7 @@
 /*
  * nimbus-jose-jwt
  *
- * Copyright 2012-2016, Connect2id Ltd and contributors.
+ * Copyright 2012-2024, Connect2id Ltd and contributors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use
  * this file except in compliance with the License. You may obtain a copy of the
@@ -18,16 +18,16 @@
 package com.nimbusds.jose.crypto.impl;
 
 
-import java.security.*;
-import java.security.spec.InvalidParameterSpecException;
-import javax.crypto.*;
-import javax.crypto.spec.GCMParameterSpec;
-
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.util.ByteUtils;
 import com.nimbusds.jose.util.Container;
 import com.nimbusds.jose.util.KeyUtils;
 import net.jcip.annotations.ThreadSafe;
+
+import javax.crypto.*;
+import javax.crypto.spec.GCMParameterSpec;
+import java.security.*;
+import java.security.spec.InvalidParameterSpecException;
 
 
 /**
@@ -39,7 +39,7 @@ import net.jcip.annotations.ThreadSafe;
  * @author Vladimir Dzhuvinov
  * @author Axel Nennker
  * @author Dimitar A. Stoikov
- * @version 2018-01-11
+ * @version 2024-01-01
  */
 @ThreadSafe
 public class AESGCM {
@@ -121,24 +121,15 @@ public class AESGCM {
 			cipher.init(Cipher.ENCRYPT_MODE, aesKey, gcmSpec);
 
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException e) {
-
 			throw new JOSEException("Couldn't create AES/GCM/NoPadding cipher: " + e.getMessage(), e);
-
-		} catch (NoClassDefFoundError e) {
-			// We have Java 6, GCMParameterSpec not available,
-			// switch to BouncyCastle API
-			return LegacyAESGCM.encrypt(aesKey, iv, plainText, authData);
 		}
 
 		cipher.updateAAD(authData);
 
 		byte[] cipherOutput;
-
 		try {
 			cipherOutput = cipher.doFinal(plainText);
-
 		} catch (IllegalBlockSizeException | BadPaddingException e) {
-
 			throw new JOSEException("Couldn't encrypt with AES/GCM/NoPadding: " + e.getMessage(), e);
 		}
 
@@ -270,7 +261,6 @@ public class AESGCM {
 		final SecretKey aesKey = KeyUtils.toAESKey(secretKey);
 		
 		Cipher cipher;
-
 		try {
 			if (provider != null) {
 				cipher = Cipher.getInstance("AES/GCM/NoPadding", provider);
@@ -282,22 +272,14 @@ public class AESGCM {
 			cipher.init(Cipher.DECRYPT_MODE, aesKey, gcmSpec);
 
 		} catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException e) {
-
 			throw new JOSEException("Couldn't create AES/GCM/NoPadding cipher: " + e.getMessage(), e);
-
-		} catch (NoClassDefFoundError e) {
-			// We have Java 6, GCMParameterSpec not available,
-			// switch to BouncyCastle API
-			return LegacyAESGCM.decrypt(aesKey, iv, cipherText, authData, authTag);
 		}
 
 		cipher.updateAAD(authData);
 
 		try {
 			return cipher.doFinal(ByteUtils.concat(cipherText, authTag));
-
 		} catch (IllegalBlockSizeException | BadPaddingException e) {
-
 			throw new JOSEException("AES/GCM/NoPadding decryption failed: " + e.getMessage(), e);
 		}
 	}
