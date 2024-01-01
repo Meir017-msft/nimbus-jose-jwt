@@ -86,7 +86,7 @@ The library handles the following JOSE algorithms:
 
 The Nimbus JOSE+JWT library requires Java 7+ and has minimal dependencies.
 
-* JCIP for concurrency annotations
+* (shaded) JCIP for concurrency annotations
 * (shaded) GSon for parsing and serialisation of JSON
 * (optional) BouncyCastle as an alternative JCA provider and for selected key
   and certificate utilities. Must not be imported together with the 

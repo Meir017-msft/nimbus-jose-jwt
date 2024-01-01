@@ -20,6 +20,7 @@ package com.nimbusds.jose.crypto.bc;
 
 import org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider;
 
+import java.security.Provider;
 
 /**
  * BouncyCastle FIPS JCA provider singleton, intended to prevent memory leaks
@@ -49,7 +50,7 @@ public final class BouncyCastleFIPSProviderSingleton {
 	/**
 	 * The BouncyCastle FIPS provider, lazily instantiated.
 	 */
-	private static BouncyCastleFipsProvider bouncyCastleFIPSProvider;
+	private static Provider bouncyCastleFIPSProvider;
 
 
 	/**
@@ -63,8 +64,8 @@ public final class BouncyCastleFIPSProviderSingleton {
 	 *
 	 * @return The BouncyCastle FIPS JCA provider instance.
 	 */
-	public static BouncyCastleFipsProvider getInstance() {
-		
+	public static Provider getInstance() {
+
 		if (bouncyCastleFIPSProvider == null) {
 			bouncyCastleFIPSProvider = new BouncyCastleFipsProvider();
 		}

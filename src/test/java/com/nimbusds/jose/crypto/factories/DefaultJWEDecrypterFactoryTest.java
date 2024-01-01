@@ -117,6 +117,9 @@ public class DefaultJWEDecrypterFactoryTest extends TestCase {
 
 	public void testSetProvider()
 		throws Exception {
+		if ("fips".equals(System.getProperty("test.profile"))) {
+			return; // test case build for BC, which conflicts with BC-FIPS
+		}
 
 		DefaultJWEDecrypterFactory factory = new DefaultJWEDecrypterFactory();
 		factory.getJCAContext().setProvider(BouncyCastleProviderSingleton.getInstance());
