@@ -143,7 +143,7 @@
                         <configuration>
                             <compileSourceRoots>
                                 <compileSourceRoot>${project.build.sourceDirectory}</compileSourceRoot>
-                                <compileSourceRoot>${java6path}</compileSourceRoot>
+                                <compileSourceRoot>${java7path}</compileSourceRoot>
                             </compileSourceRoots>
                         </configuration>
                     </execution>
@@ -387,7 +387,7 @@
             </activation>
             <properties>
                 <java9path>${project.basedir}/src/main/java9</java9path>
-                <java6path>${project.basedir}/src/main/java6</java6path>
+                <java7path>${project.basedir}/src/main/java7</java7path>
                 <jar.attachClassifier>false</jar.attachClassifier>
                 <jar.classifier/> <!-- empty -->
                 <test.profile/> <!-- empty -->
@@ -418,7 +418,7 @@
             <id>fips</id>
             <properties>
                 <java9path>${project.basedir}/src/main/java9-fips</java9path>
-                <java6path>${project.basedir}/src/main/java6-fips</java6path>
+                <java7path>${project.basedir}/src/main/java7-fips</java7path>
                 <jar.attachClassifier>true</jar.attachClassifier>
                 <jar.classifier>fips</jar.classifier>
                 <test.profile>fips</test.profile>
