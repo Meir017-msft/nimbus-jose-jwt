@@ -5,7 +5,7 @@
 
     <groupId>com.nimbusds</groupId>
     <artifactId>nimbus-jose-jwt</artifactId>
-    <version>9.37.4-SNAPSHOT</version>
+    <version>9.38-rc1</version>
     <packaging>jar</packaging>
 
     <name>Nimbus JOSE+JWT</name>
@@ -32,7 +32,7 @@
         <connection>scm:git:https://bitbucket.org/connect2id/nimbus-jose-jwt.git</connection>
         <developerConnection> scm:git:git@bitbucket.org:connect2id/nimbus-jose-jwt.git</developerConnection>
         <url>https://bitbucket.org/connect2id/nimbus-jose-jwt</url>
-        <tag>HEAD</tag>
+        <tag>9.38-rc1</tag>
     </scm>
 
     <developers>
@@ -389,8 +389,8 @@
                 <java9path>${project.basedir}/src/main/java9</java9path>
                 <java7path>${project.basedir}/src/main/java7</java7path>
                 <jar.attachClassifier>false</jar.attachClassifier>
-                <jar.classifier/> <!-- empty -->
-                <test.profile/> <!-- empty -->
+                <jar.classifier /> <!-- empty -->
+                <test.profile /> <!-- empty -->
             </properties>
             <dependencies>
                 <dependency>
