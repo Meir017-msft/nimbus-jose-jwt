@@ -252,7 +252,7 @@ public class DefaultJWTProcessor<C extends SecurityContext> implements Configura
 	}
 	
 	
-	private JWTClaimsSet extractJWTClaimsSet(final JWT jwt)
+	protected JWTClaimsSet extractJWTClaimsSet(final JWT jwt)
 		throws BadJWTException {
 		
 		try {
@@ -264,7 +264,7 @@ public class DefaultJWTProcessor<C extends SecurityContext> implements Configura
 	}
 
 
-	private JWTClaimsSet verifyClaims(final JWTClaimsSet claimsSet, final C context)
+	protected JWTClaimsSet verifyClaims(final JWTClaimsSet claimsSet, final C context)
 		throws BadJWTException {
 		
 		if (getJWTClaimsSetVerifier() != null) {
@@ -274,7 +274,7 @@ public class DefaultJWTProcessor<C extends SecurityContext> implements Configura
 	}
 	
 	
-	private List<? extends Key> selectKeys(final JWSHeader header, final JWTClaimsSet claimsSet, final C context)
+	protected List<? extends Key> selectKeys(final JWSHeader header, final JWTClaimsSet claimsSet, final C context)
 		throws KeySourceException, BadJOSEException {
 		
 		if (getJWTClaimsSetAwareJWSKeySelector() != null) {
