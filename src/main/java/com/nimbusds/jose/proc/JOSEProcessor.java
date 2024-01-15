@@ -18,9 +18,9 @@
 package com.nimbusds.jose.proc;
 
 
-import java.text.ParseException;
-
 import com.nimbusds.jose.*;
+
+import java.text.ParseException;
 
 
 /**
@@ -117,8 +117,7 @@ public interface JOSEProcessor<C extends SecurityContext> {
 	 * message context.
 	 *
 	 * @param jweObject The JWE object. Not {@code null}.
-	 * @param context   Optional context of the JWE object, {@code null} if
-	 *                  not required.
+	 * @param context   Optional context, {@code null} if not required.
 	 *
 	 * @return The payload on success.
 	 *

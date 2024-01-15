@@ -63,8 +63,7 @@ public interface JWEKeySelector <C extends SecurityContext> {
 	 *
 	 * @param header  The header of the JWE object. Must not be
 	 *                {@code null}.
-	 * @param context Optional context of the JWE object, {@code null} if
-	 *                not required.
+	 * @param context Optional context, {@code null} if not required.
 	 *
 	 * @return The key candidates in trial order, empty list if none.
 	 *

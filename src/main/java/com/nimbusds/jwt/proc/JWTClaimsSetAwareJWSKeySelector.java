@@ -18,13 +18,13 @@
 package com.nimbusds.jwt.proc;
 
 
-import java.security.Key;
-import java.util.List;
-
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.KeySourceException;
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
+
+import java.security.Key;
+import java.util.List;
 
 
 /**

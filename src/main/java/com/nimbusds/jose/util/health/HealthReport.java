@@ -18,12 +18,11 @@
 package com.nimbusds.jose.util.health;
 
 
-import java.util.Objects;
-
-import net.jcip.annotations.Immutable;
-
 import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jose.util.events.Event;
+import net.jcip.annotations.Immutable;
+
+import java.util.Objects;
 
 
 /**
@@ -73,8 +72,7 @@ public class HealthReport <S, C extends SecurityContext> implements Event<S, C> 
 	 * @param status    The health status. Must not be {@code null}.
 	 * @param timestamp The timestamp, in milliseconds since the Unix
 	 *                  epoch.
-	 * @param context   The optional context, {@code null} if not
-	 *                  specified.
+	 * @param context   The optional context, {@code null} if not required.
 	 */
 	public HealthReport(final S source,
 			    final HealthStatus status,
@@ -94,8 +92,7 @@ public class HealthReport <S, C extends SecurityContext> implements Event<S, C> 
 	 *                  not specified.
 	 * @param timestamp The timestamp, in milliseconds since the Unix
 	 *                  epoch.
-	 * @param context   The optional context, {@code null} if not
-	 *                  specified.
+	 * @param context   The optional context, {@code null} if not required.
 	 */
 	public HealthReport(final S source,
 			    final HealthStatus status,

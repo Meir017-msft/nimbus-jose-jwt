@@ -1624,3 +1624,7 @@ version 9.38-rc1 (2024-01-02)
     * Removes the LegacyAESGCM which was intended for Java 6 runtimes without a
       JCA GCMParameterSpec (iss #529).
     * Sets the BouncyCastle FIPS dependency to the latest 1.0.2.4.
+
+version 9.38-rc2 (2024-01-15)
+    * Exposes the DefaultJWTProcessor extractJWTClaimsSet, verifyJWTClaimsSet
+      and selectKeys as protected.

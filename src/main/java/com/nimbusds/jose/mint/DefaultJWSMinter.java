@@ -97,7 +97,7 @@ public class DefaultJWSMinter<C extends SecurityContext> implements Configurable
 	 *                derive.
 	 * @param payload The {@link Payload}.
 	 * @param context A {@link SecurityContext}, {@code null} if not
-	 *                specified.
+	 *                required.
 	 *
 	 * @return The signed JWS object.
 	 *

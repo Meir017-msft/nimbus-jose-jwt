@@ -18,16 +18,16 @@
 package com.nimbusds.jwt.proc;
 
 
-import java.security.Key;
-import java.text.ParseException;
-import java.util.List;
-import java.util.ListIterator;
-
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.factories.DefaultJWEDecrypterFactory;
 import com.nimbusds.jose.crypto.factories.DefaultJWSVerifierFactory;
 import com.nimbusds.jose.proc.*;
 import com.nimbusds.jwt.*;
+
+import java.security.Key;
+import java.text.ParseException;
+import java.util.List;
+import java.util.ListIterator;
 
 
 /**
@@ -86,7 +86,8 @@ import com.nimbusds.jwt.*;
  * {@link com.nimbusds.jose.proc.DefaultJOSEProcessor} class.
  *
  * @author Vladimir Dzhuvinov
- * @version 2021-06-05
+ * @author Misagh Moayyed
+ * @version 2024-01-15
  */
 public class DefaultJWTProcessor<C extends SecurityContext> implements ConfigurableJWTProcessor<C> {
 
@@ -250,8 +251,18 @@ public class DefaultJWTProcessor<C extends SecurityContext> implements Configura
 		
 		this.claimsVerifier = claimsVerifier;
 	}
-	
-	
+
+
+	/**
+	 * Extracts the claims set from the specified JWT.
+	 *
+	 * @param jwt The JWT. Must not be {@code null}.
+	 *
+	 * @return The JWT claims set.
+	 *
+	 * @throws BadJWTException If the payload of the JWT doesn't represent
+	 *                         a valid JSON object and a JWT claims set.
+	 */
 	protected JWTClaimsSet extractJWTClaimsSet(final JWT jwt)
 		throws BadJWTException {
 		
@@ -264,7 +275,17 @@ public class DefaultJWTProcessor<C extends SecurityContext> implements Configura
 	}
 
 
-	protected JWTClaimsSet verifyClaims(final JWTClaimsSet claimsSet, final C context)
+	/**
+	 * Verifies the specified JWT claims set.
+	 *
+	 * @param claimsSet The JWT claims set. Must not be {@code null}.
+	 * @param context   Optional context, {@code null} if not required.
+	 *
+	 * @return The verified JWT claims set.
+	 *
+	 * @throws BadJWTException If the JWT claims set is rejected.
+	 */
+	protected JWTClaimsSet verifyJWTClaimsSet(final JWTClaimsSet claimsSet, final C context)
 		throws BadJWTException {
 		
 		if (getJWTClaimsSetVerifier() != null) {
@@ -272,8 +293,24 @@ public class DefaultJWTProcessor<C extends SecurityContext> implements Configura
 		}
 		return claimsSet;
 	}
-	
-	
+
+
+	/**
+	 * Selects key candidates for verifying a signed JWT.
+	 *
+	 * @param header    The JWS header. Must not be {@code null}.
+	 * @param claimsSet The JWT claims set (not verified). Must not be
+	 *                  {@code null}.
+	 * @param context   Optional context, {@code null} if not required.
+	 *
+	 * @return The key candidates in trial order, empty list if none.
+	 *
+	 * @throws KeySourceException If a key sourcing exception is
+	 *                            encountered, e.g. on remote JWK
+	 *                            retrieval.
+	 * @throws BadJOSEException   If an internal processing exception is
+	 * 	                      encountered.
+	 */
 	protected List<? extends Key> selectKeys(final JWSHeader header, final JWTClaimsSet claimsSet, final C context)
 		throws KeySourceException, BadJOSEException {
 		
@@ -370,7 +407,7 @@ public class DefaultJWTProcessor<C extends SecurityContext> implements Configura
 			final boolean validSignature = signedJWT.verify(verifier);
 
 			if (validSignature) {
-				return verifyClaims(claimsSet, context);
+				return verifyJWTClaimsSet(claimsSet, context);
 			}
 
 			if (! it.hasNext()) {
@@ -446,7 +483,7 @@ public class DefaultJWTProcessor<C extends SecurityContext> implements Configura
 			}
 
 			JWTClaimsSet claimsSet = extractJWTClaimsSet(encryptedJWT);
-			return verifyClaims(claimsSet, context);
+			return verifyJWTClaimsSet(claimsSet, context);
 		}
 
 		throw new BadJOSEException("Encrypted JWT rejected: No matching decrypter(s) found");

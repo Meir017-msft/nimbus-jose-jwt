@@ -18,11 +18,11 @@
 package com.nimbusds.jose.proc;
 
 
-import java.security.Key;
-import java.util.List;
-
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.KeySourceException;
+
+import java.security.Key;
+import java.util.List;
 
 
 /**
@@ -67,8 +67,7 @@ public interface JWSKeySelector<C extends SecurityContext>  {
 	 *
 	 * @param header  The header of the JWS object. Must not be
 	 *                {@code null}.
-	 * @param context Optional context of the JWS object, {@code null} if
-	 *                not required.
+	 * @param context Optional context, {@code null} if not required.
 	 *
 	 * @return The key candidates in trial order, empty list if none.
 	 *
