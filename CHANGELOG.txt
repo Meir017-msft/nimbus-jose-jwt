@@ -1625,6 +1625,6 @@ version 9.38-rc1 (2024-01-02)
       JCA GCMParameterSpec (iss #529).
     * Sets the BouncyCastle FIPS dependency to the latest 1.0.2.4.
 
-version 9.38-rc2 (2024-01-15)
+version 9.38-rc3 (2024-01-15)
     * Exposes the DefaultJWTProcessor extractJWTClaimsSet, verifyJWTClaimsSet
       and selectKeys as protected.
