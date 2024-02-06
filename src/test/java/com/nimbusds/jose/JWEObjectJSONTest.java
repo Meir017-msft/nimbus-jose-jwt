@@ -25,11 +25,13 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
-import junit.framework.TestCase;
+import org.junit.Test;
 
 import java.net.URI;
 import java.text.ParseException;
 import java.util.*;
+
+import static org.junit.Assert.*;
 
 
 /**
@@ -37,9 +39,9 @@ import java.util.*;
  *
  * @author Egor Puzanov
  * @author Vladimir Dzhuvinov
- * @version 2023-09-13
+ * @version 2024-02-06
  */
-public class JWEObjectJSONTest extends TestCase {
+public class JWEObjectJSONTest {
 
 	private static final String jweMultiRecipientJsonString =
 		"{" +
@@ -93,6 +95,8 @@ public class JWEObjectJSONTest extends TestCase {
 			"\"iv\":\"BCNhlw39FueuKrwH\"" +
 		"}";
 
+
+	@Test
 	public void testGeneralJSONParser_twoRecipients()
 		throws Exception {
 
@@ -130,6 +134,8 @@ public class JWEObjectJSONTest extends TestCase {
 		assertEquals(2, recipients.size());
 	}
 
+
+	@Test
 	public void testGeneralJSONParser_singleRecipient_flattened()
 		throws Exception {
 
@@ -169,6 +175,7 @@ public class JWEObjectJSONTest extends TestCase {
 	}
 
 
+	@Test
 	public void testGetEncryptedKeyMethod()
 		throws Exception {
 
@@ -176,7 +183,7 @@ public class JWEObjectJSONTest extends TestCase {
 		JWEObjectJSON jwe;
 
 		jwe = new JWEObjectJSON(header, new Payload("test!"));
-		assertEquals(null, jwe.getEncryptedKey());
+                assertNull(jwe.getEncryptedKey());
 
 		jwe = JWEObjectJSON.parse(jweGeneralJsonString);
 		assertEquals("cfFf2HsKIMMlroDhhbUdsRoptOnxtuJKWBp-oAqWDsUCqryGYl5R-g", jwe.getEncryptedKey().toString());
@@ -194,6 +201,7 @@ public class JWEObjectJSONTest extends TestCase {
 	}
 
 
+	@Test
 	public void testPayloadConstructorIllegalArgumentExceptions() {
 
 		final JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A128CBC_HS256);
@@ -215,6 +223,7 @@ public class JWEObjectJSONTest extends TestCase {
 	}
 
 
+	@Test
 	public void testPartsConstructorIllegalArgumentExceptions() {
 
 		final JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A128CBC_HS256);
@@ -235,6 +244,7 @@ public class JWEObjectJSONTest extends TestCase {
 	}
 
 
+	@Test
 	public void testParseIllegalArgumentExceptions() throws ParseException {
 
 		try {
@@ -255,6 +265,7 @@ public class JWEObjectJSONTest extends TestCase {
 	}
 
 
+	@Test
 	public void testJWEObjectConstructor()
 		throws Exception {
 
@@ -286,6 +297,8 @@ public class JWEObjectJSONTest extends TestCase {
 		assertEquals(JWEObject.State.ENCRYPTED, jwe.getState());
 	}
 
+
+	@Test
 	public void testFlattenedJSONSerializer()
 		throws Exception {
 
@@ -297,6 +310,8 @@ public class JWEObjectJSONTest extends TestCase {
 		assertEquals(rawJson.keySet(), jwe.toFlattenedJSONObject().keySet());
 	}
 
+
+	@Test
 	public void testGeneralJSONSerializer()
 		throws Exception {
 
@@ -309,6 +324,8 @@ public class JWEObjectJSONTest extends TestCase {
 		assertEquals(rawJson.keySet(), jwe.toGeneralJSONObject().keySet());
 	}
 
+
+	@Test
 	public void testAADParsing()
 		throws Exception {
 
@@ -322,6 +339,8 @@ public class JWEObjectJSONTest extends TestCase {
 		assertEquals(aad, jwe.toFlattenedJSONObject().get("aad").toString());
 	}
 
+
+	@Test
 	public void testHeaderDuplicates()
 		throws Exception {
 
@@ -337,6 +356,8 @@ public class JWEObjectJSONTest extends TestCase {
 		}
 	}
 
+
+	@Test
 	public void testRejectUnsupportedJWEAlgorithmOnEncrypt() {
 
 		JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A128CBC_HS256);
@@ -367,6 +388,7 @@ public class JWEObjectJSONTest extends TestCase {
 	}
 
 
+	@Test
 	public void testRejectUnsupportedJWEMethodOnEncrypt() {
 
 		JWEHeader header = new JWEHeader(JWEAlgorithm.RSA1_5, EncryptionMethod.A128CBC_HS256);
@@ -398,6 +420,7 @@ public class JWEObjectJSONTest extends TestCase {
 
 
 	// https://datatracker.ietf.org/doc/html/rfc7516#appendix-A.4.7
+	@Test
 	public void testParseExample_RFC7516_A_4_7()
 		throws ParseException {
 
@@ -480,18 +503,15 @@ public class JWEObjectJSONTest extends TestCase {
 	}
 
 
+	@Test(expected = NullPointerException.class)
 	public void testParseRecipient_null()
 		throws ParseException {
 
-		try {
-			JWEObjectJSON.Recipient.parse(null);
-			fail();
-		} catch (NullPointerException e) {
-			assertNull(e.getMessage());
-		}
+		JWEObjectJSON.Recipient.parse(null);
 	}
 
 
+	@Test
 	public void testConstructor_jweObject_stateUnencrypted() {
 
 		JWEObject jweObject = new JWEObject(
@@ -515,6 +535,7 @@ public class JWEObjectJSONTest extends TestCase {
 	}
 
 
+	@Test
 	public void testConstructor_jweObject_stateEncrypted()
 		throws JOSEException {
 
@@ -545,6 +566,7 @@ public class JWEObjectJSONTest extends TestCase {
 	}
 
 
+	@Test
 	public void testConstructor_jweObject_stateDecrypted()
 		throws JOSEException {
 

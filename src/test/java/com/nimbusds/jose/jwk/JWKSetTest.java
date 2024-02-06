@@ -25,13 +25,13 @@ import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
 import com.nimbusds.jose.jwk.gen.OctetSequenceKeyGenerator;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.util.*;
-import junit.framework.TestCase;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x509.Extension;
 import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+import org.junit.Test;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -57,7 +57,7 @@ import java.text.ParseException;
 import java.util.*;
 
 import static net.jadler.Jadler.*;
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.*;
 
 
 /**
@@ -65,11 +65,12 @@ import static org.junit.Assert.assertArrayEquals;
  *
  * @author Vladimir Dzhuvinov
  * @author Vedran Pavic
- * @version 2023-10-07
+ * @version 2024-02-06
  */
-public class JWKSetTest extends TestCase {
+public class JWKSetTest {
 	
-	
+
+	@Test
 	public void testEmptyConstructor()
 		throws ParseException {
 		
@@ -89,6 +90,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testParsePublicJWKSet()
 		throws Exception {
 
@@ -157,6 +159,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testSerializeAndParsePublicJWKSet()
 		throws Exception {
 		
@@ -219,6 +222,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testParseOctetSequenceJWKSet()
 		throws Exception {
 
@@ -262,6 +266,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testParsePrivateJWKSet() {
 
 		// The string is from the JPSK spec
@@ -406,6 +411,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testPublicJSONObjectSerialization()
 		throws Exception {
 
@@ -506,7 +512,9 @@ public class JWKSetTest extends TestCase {
 		assertEquals("AQAB", rsaKey.getPublicExponent().toString());
 		assertFalse(key.isPrivate());
 	}
-	
+
+
+	@Test
 	public void testGetByKeyId() throws Exception{
 		// The string is from the JWK spec
 		String s = "{\"keys\":" +
@@ -570,6 +578,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testOctJWKSetPublicExport()
 		throws Exception {
 
@@ -594,6 +603,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testOctJWKSetToPublic() {
 
 		OctetSequenceKey oct1 = new OctetSequenceKey.Builder(new Base64URL("abc")).build();
@@ -614,26 +624,24 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testMIMEType() {
 
 		assertEquals("application/jwk-set+json; charset=UTF-8", JWKSet.MIME_TYPE);
 	}
 
 
+	@Test (expected = NullPointerException.class)
 	public void testFilter_nullMatcher()
 		throws JOSEException {
 
 		OctetSequenceKey key = new OctetSequenceKeyGenerator(256).generate();
 
-		try {
-			new JWKSet(key).filter(null);
-			fail();
-		} catch (NullPointerException e) {
-			assertNull(e.getMessage());
-		}
+		new JWKSet(key).filter(null);
 	}
 
 
+	@Test
 	public void testFilter_match()
 		throws JOSEException {
 
@@ -652,6 +660,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testFilter_match_withCustomMembers()
 		throws JOSEException {
 
@@ -676,6 +685,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testFilter_noMatch()
 		throws JOSEException {
 
@@ -691,6 +701,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testLoadFromInputStream()
 		throws Exception {
 
@@ -760,6 +771,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testLoadFromFile()
 		throws Exception {
 
@@ -833,7 +845,8 @@ public class JWKSetTest extends TestCase {
 		Files.delete(file.toPath());
 	}
 	
-	
+
+	@Test
 	public void testLoadFromNonExistingFile()
 		throws ParseException {
 		
@@ -846,6 +859,7 @@ public class JWKSetTest extends TestCase {
 	}
 
 
+	@Test
 	public void testLoadFromURL()
 		throws Exception {
 
@@ -924,7 +938,8 @@ public class JWKSetTest extends TestCase {
 		closeJadler();
 	}
 	
-	
+
+	@Test
 	public void testLoadFromKeyStore()
 		throws Exception {
 		
@@ -1041,7 +1056,8 @@ public class JWKSetTest extends TestCase {
 		assertEquals(3, jwkSet.getKeys().size());
 	}
 	
-	
+
+	@Test
 	public void testImmutableKeyList() {
 		
 		JWKSet jwkSet = new JWKSet();
@@ -1057,7 +1073,8 @@ public class JWKSetTest extends TestCase {
 		}
 	}
 	
-	
+
+	@Test
 	public void testImmutableAdditionalTopLevelParams() {
 		
 		JWKSet jwkSet = new JWKSet();
@@ -1069,7 +1086,8 @@ public class JWKSetTest extends TestCase {
 		}
 	}
 	
-	
+
+	@Test
 	public void testParse_missingKeysField() {
 		
 		try {
@@ -1080,7 +1098,8 @@ public class JWKSetTest extends TestCase {
 		}
 	}
 	
-	
+
+	@Test
 	public void testContainsJWK() throws JOSEException {
 		
 		JWK rsaJWK = new RSAKeyGenerator(2048).keyID("1").generate();
@@ -1173,7 +1192,8 @@ public class JWKSetTest extends TestCase {
 		assertTrue(rsaKey.toPublicKey() instanceof RSAPublicKey);
 	}
 	
-	
+
+	@Test
 	public void testParseJSONObject_illegalKeysType() {
 		
 		List<Object> keys = JSONArrayUtils.newJSONArray();
@@ -1190,7 +1210,8 @@ public class JWKSetTest extends TestCase {
 		}
 	}
 	
-	
+
+	@Test
 	public void testParseJSONObject_emptyKeyJSONObject() {
 		
 		List<Object> keys = JSONArrayUtils.newJSONArray();
@@ -1207,7 +1228,8 @@ public class JWKSetTest extends TestCase {
 		}
 	}
 	
-	
+
+	@Test
 	public void testParse_ignoreUnknownKeyType()
 		throws ParseException, JOSEException {
 		
@@ -1225,7 +1247,8 @@ public class JWKSetTest extends TestCase {
 		JWKSet.parse(input);
 	}
 	
-	
+
+	@Test
 	public void testToString()
 		throws JOSEException, ParseException {
 	
@@ -1248,7 +1271,8 @@ public class JWKSetTest extends TestCase {
 		}
 	}
 	
-	
+
+	@Test
 	public void testEqualityAndHashCode() throws JOSEException, ParseException {
 		
 		RSAKey rsaJWK = new RSAKeyGenerator(2048).generate();

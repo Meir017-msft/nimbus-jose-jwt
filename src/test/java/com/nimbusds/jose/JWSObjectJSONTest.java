@@ -18,12 +18,6 @@
 package com.nimbusds.jose;
 
 
-import java.text.ParseException;
-import java.util.Collections;
-import java.util.Map;
-
-import junit.framework.TestCase;
-
 import com.nimbusds.jose.crypto.*;
 import com.nimbusds.jose.jwk.*;
 import com.nimbusds.jose.jwk.gen.ECKeyGenerator;
@@ -31,6 +25,11 @@ import com.nimbusds.jose.jwk.gen.OctetKeyPairGenerator;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jose.util.JSONObjectUtils;
+import junit.framework.TestCase;
+
+import java.text.ParseException;
+import java.util.Collections;
+import java.util.Map;
 
 
 /**
@@ -38,7 +37,7 @@ import com.nimbusds.jose.util.JSONObjectUtils;
  *
  * @author Alexander Martynov
  * @author Vladimir Dzhuvinov
- * @version 2021-10-09
+ * @version 2024-02-06
  */
 public class JWSObjectJSONTest extends TestCase {
 	
@@ -51,7 +50,7 @@ public class JWSObjectJSONTest extends TestCase {
 	static {
 		
 		try {
-			EC_JWK = new ECKeyGenerator(Curve.SECP256K1)
+			EC_JWK = new ECKeyGenerator(Curve.P_256)
 				.keyID("123")
 				.generate();
 		} catch (JOSEException e) {
@@ -90,7 +89,7 @@ public class JWSObjectJSONTest extends TestCase {
 		assertTrue(jwsObject.getSignatures().isEmpty());
 		assertEquals(JWSObjectJSON.State.UNSIGNED, jwsObject.getState());
 		
-		JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.ES256K);
+		JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.ES256);
 		jwsObject.sign(jwsHeader, new ECDSASigner(EC_JWK));
 		assertEquals(JWSObjectJSON.State.SIGNED, jwsObject.getState());
 		
@@ -165,7 +164,7 @@ public class JWSObjectJSONTest extends TestCase {
 		
 		assertEquals(JWSObjectJSON.State.UNSIGNED, jwsObject.getState());
 		
-		JWSHeader jwsHeader1 = new JWSHeader(JWSAlgorithm.ES256K);
+		JWSHeader jwsHeader1 = new JWSHeader(JWSAlgorithm.ES256);
 		jwsObject.sign(jwsHeader1, new ECDSASigner(EC_JWK));
 		assertEquals(JWSObjectJSON.State.SIGNED, jwsObject.getState());
 		
@@ -269,7 +268,7 @@ public class JWSObjectJSONTest extends TestCase {
 		assertEquals(PAYLOAD, jwsObject.getPayload());
 		assertTrue(jwsObject.getSignatures().isEmpty());
 		
-		JWSHeader jwsHeader1 = new JWSHeader(JWSAlgorithm.ES256K);
+		JWSHeader jwsHeader1 = new JWSHeader(JWSAlgorithm.ES256);
 		UnprotectedHeader unprotectedHeader1 = new UnprotectedHeader.Builder()
 			.keyID(EC_JWK.getKeyID())
 			.build();
@@ -371,7 +370,7 @@ public class JWSObjectJSONTest extends TestCase {
 		assertEquals(PAYLOAD, jwsObject.getPayload());
 		assertTrue(jwsObject.getSignatures().isEmpty());
 		
-		JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.ES256K);
+		JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.ES256);
 		jwsObject.sign(jwsHeader, new ECDSASigner(EC_JWK));
 		
 		JWSObjectJSON.Signature sig = jwsObject.getSignatures().get(0);
@@ -427,7 +426,7 @@ public class JWSObjectJSONTest extends TestCase {
 		assertEquals(PAYLOAD, jwsObject.getPayload());
 		assertTrue(jwsObject.getSignatures().isEmpty());
 		
-		JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.ES256K);
+		JWSHeader jwsHeader = new JWSHeader(JWSAlgorithm.ES256);
 		UnprotectedHeader unprotectedHeader = new UnprotectedHeader.Builder()
 			.keyID(EC_JWK.getKeyID())
 			.build();
@@ -485,7 +484,7 @@ public class JWSObjectJSONTest extends TestCase {
 		
 		JWSObjectJSON jwsObject = new JWSObjectJSON(PAYLOAD);
 		
-		jwsObject.sign(new JWSHeader(JWSAlgorithm.ES256K), new ECDSASigner(EC_JWK));
+		jwsObject.sign(new JWSHeader(JWSAlgorithm.ES256), new ECDSASigner(EC_JWK));
 		jwsObject.sign(new JWSHeader(JWSAlgorithm.EdDSA), new Ed25519Signer(OKP_JWK));
 		
 		assertEquals(2, jwsObject.getSignatures().size());
@@ -731,7 +730,7 @@ public class JWSObjectJSONTest extends TestCase {
 		assertEquals(PAYLOAD, jwsObject.getPayload());
 		assertTrue(jwsObject.getSignatures().isEmpty());
 		
-		JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.ES256K)
+		JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.ES256)
 			.keyID(EC_JWK.getKeyID())
 			.build();
 		UnprotectedHeader unprotectedHeader = new UnprotectedHeader.Builder()
@@ -755,7 +754,7 @@ public class JWSObjectJSONTest extends TestCase {
 		assertEquals(PAYLOAD, jwsObject.getPayload());
 		assertTrue(jwsObject.getSignatures().isEmpty());
 		
-		JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.ES256K)
+		JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.ES256)
 			.keyID(EC_JWK.getKeyID())
 			.build();
 		

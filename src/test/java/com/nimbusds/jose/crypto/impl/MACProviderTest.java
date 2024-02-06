@@ -22,15 +22,19 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.util.StandardCharset;
 import junit.framework.TestCase;
 import org.junit.Assert;
+import org.junit.Test;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.SecureRandom;
 import java.util.Collections;
 
-public class MACProviderTest extends TestCase {
+import static org.junit.Assert.*;
+
+public class MACProviderTest {
 
 
+        @Test
         public void testSupportedAlgorithms() {
 
                 assertTrue(MACProvider.SUPPORTED_ALGORITHMS.contains(JWSAlgorithm.HS256));
@@ -54,6 +58,7 @@ public class MACProviderTest extends TestCase {
         }
 
 
+        @Test
         public void testWithSecretKeyThatDoesNotExposeKeyMaterial()
                 throws KeyLengthException {
 
@@ -82,25 +87,23 @@ public class MACProviderTest extends TestCase {
         }
 
 
-        public void testSecretKeyConstructor_nullSecretKey()
+        @Test (expected = NullPointerException.class)
+        public void testSecretKeyConstructor_nullSecretKey_regularProvider()
                 throws KeyLengthException {
 
-                try {
-                        new RegularProvider(null);
-                        fail();
-                } catch (NullPointerException e) {
-                        assertNull(e.getMessage());
-                }
-
-                try {
-                        new HSMProvider(null);
-                        fail();
-                } catch (NullPointerException e) {
-                        assertNull(e.getMessage());
-                }
+                new RegularProvider(null);
         }
 
 
+        @Test (expected = NullPointerException.class)
+        public void testSecretKeyConstructor_nullSecretKey_hsmProvider()
+                throws KeyLengthException {
+
+                new HSMProvider(null);
+        }
+
+
+        @Test
         public void testSecretKeyConstructor_secretKeyTooShort() {
 
                 byte[] keyBytes = new byte[(256 - 1) / 8];
@@ -116,6 +119,7 @@ public class MACProviderTest extends TestCase {
         }
 
 
+        @Test
         public void testSecretKeyConstructor_256BitSecretKey()
                 throws KeyLengthException {
 
