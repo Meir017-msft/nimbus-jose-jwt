@@ -1609,7 +1609,7 @@ version 9.37.2 (2023-12-04)
     * The PasswordBasedDecrypter (PBKDF2) must enforce a limit on the maximum
       allowed JWE "p2c" header value to prevent DoS attacks. This limit is now
       set to 1 million, taking into account that OWASP recommends 600 thousand
-      iterations for PBKDF2-HMAC-SHA256 (iss #526).
+      iterations for PBKDF2-HMAC-SHA256 (iss #526). Allocated CVE-2023-52428.
 
 version 9.37.3 (2023-12-08)
     * Updates to com.google.crypto.tink:tink:1.12.0
