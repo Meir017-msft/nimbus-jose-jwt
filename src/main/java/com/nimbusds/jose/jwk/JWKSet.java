@@ -101,7 +101,7 @@ public class JWKSet implements Serializable {
 	 */
 	public JWKSet() {
 
-		this(Collections.emptyList());
+		this(Collections.<JWK>emptyList());
 	}
 
 
@@ -127,7 +127,7 @@ public class JWKSet implements Serializable {
 	 */
 	public JWKSet(final List<JWK> keys) {
 
-		this(keys, Collections.emptyMap());
+		this(keys, Collections.<String, Object>emptyMap());
 	}
 
 
