@@ -68,7 +68,7 @@ import java.util.*;
  *
  * @author Vladimir Dzhuvinov
  * @author Vedran Pavic
- * @version 2023-10-07
+ * @version 2024-03-17
  */
 @Immutable
 public class JWKSet implements Serializable {
@@ -101,7 +101,7 @@ public class JWKSet implements Serializable {
 	 */
 	public JWKSet() {
 
-		this(Collections.<JWK>emptyList());
+		this(Collections.emptyList());
 	}
 
 
@@ -127,7 +127,7 @@ public class JWKSet implements Serializable {
 	 */
 	public JWKSet(final List<JWK> keys) {
 
-		this(keys, Collections.<String, Object>emptyMap());
+		this(keys, Collections.emptyMap());
 	}
 
 
@@ -287,6 +287,23 @@ public class JWKSet implements Serializable {
 		}
 
 		return new JWKSet(matches, customMembers);
+	}
+
+
+	/**
+	 * Returns {@code true} if this JWK set contains non-public keys.
+	 *
+	 * @return {@code true} if non-public keys are found, {@code false} if
+	 *         there are only public keys in the JWK set.
+	 */
+	public boolean containsNonPublicKeys() {
+
+		for (JWK jwk: getKeys()) {
+			if (jwk.isPrivate()) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	

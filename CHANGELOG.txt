@@ -1628,3 +1628,6 @@ version 9.38-rc1 (2024-01-02)
 version 9.38-rc3 (2024-01-15)
     * Exposes the DefaultJWTProcessor extractJWTClaimsSet, verifyJWTClaimsSet
       and selectKeys as protected.
+
+version 9.38-rc4 (2024-03-17)
+    * Adds JWKSet.containsNonPublicKeys helper method.

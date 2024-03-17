@@ -65,7 +65,7 @@ import static org.junit.Assert.*;
  *
  * @author Vladimir Dzhuvinov
  * @author Vedran Pavic
- * @version 2024-02-06
+ * @version 2024-03-17
  */
 public class JWKSetTest {
 	
@@ -87,6 +87,7 @@ public class JWKSetTest {
 		
 		assertTrue(jwkSet.getKeys().isEmpty());
 		assertTrue(jwkSet.getAdditionalMembers().isEmpty());
+		assertFalse(jwkSet.containsNonPublicKeys());
 	}
 
 
@@ -156,6 +157,8 @@ public class JWKSetTest {
 		             rsaKey.getModulus().toString());
 		assertEquals("AQAB", rsaKey.getPublicExponent().toString());
 		assertFalse(key.isPrivate());
+
+		assertFalse(keySet.containsNonPublicKeys());
 	}
 
 
@@ -263,6 +266,8 @@ public class JWKSetTest {
 		assertNull(key.getAlgorithm());
 		assertEquals("HMAC key used in JWS A.1 example", key.getKeyID());
 		assertEquals(new Base64URL("AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"), ((OctetSequenceKey)key).getKeyValue());
+
+		assertTrue(keySet.containsNonPublicKeys());
 	}
 
 
@@ -323,6 +328,8 @@ public class JWKSetTest {
 
 			fail(e.getMessage());
 		}
+
+		assertTrue(keySet.containsNonPublicKeys());
 
 		List<JWK> keyList = keySet.getKeys();
 		assertEquals(2, keyList.size());
