@@ -76,6 +76,11 @@ public class RSASSA {
 			return signature;
 
 		} else if (alg.equals(JWSAlgorithm.PS256)
+				&& (signature = getSignerAndVerifier("SHA256withRSA/PSS", provider)) != null) {
+
+			return signature;
+
+		} else if (alg.equals(JWSAlgorithm.PS256)
 				&& (signature = getSignerAndVerifier("SHA256withRSAandMGF1", provider)) != null) {
 
 			return signature;
@@ -86,12 +91,22 @@ public class RSASSA {
 			return signature;
 
 		} else if (alg.equals(JWSAlgorithm.PS384)
+				&& (signature = getSignerAndVerifier("SHA384withRSA/PSS", provider)) != null) {
+
+			return signature;
+
+		} else if (alg.equals(JWSAlgorithm.PS384)
 				&& (signature = getSignerAndVerifier("SHA384withRSAandMGF1", provider)) != null) {
 
 			return signature;
 
 		} else if (alg.equals(JWSAlgorithm.PS512) // JWA mandates salt length equals hash
 				&& (signature = getSignerAndVerifier("RSASSA-PSS", provider, new PSSParameterSpec("SHA-512", "MGF1", MGF1ParameterSpec.SHA512, 64, 1))) != null) {
+
+			return signature;
+
+		} else if (alg.equals(JWSAlgorithm.PS512)
+				&& (signature = getSignerAndVerifier("SHA512withRSA/PSS", provider)) != null) {
 
 			return signature;
 
