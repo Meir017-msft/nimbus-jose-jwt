@@ -1629,5 +1629,7 @@ version 9.38-rc3 (2024-01-15)
     * Exposes the DefaultJWTProcessor extractJWTClaimsSet, verifyJWTClaimsSet
       and selectKeys as protected.
 
-version 9.38-rc4 (2024-03-17)
+version 9.38-rc4 (2024-04-05)
+    * Adds Android "SHA{256|384|512}withRSA/PSS" JCA algorithm support (iss
+      #541).
     * Adds JWKSet.containsNonPublicKeys helper method.
